@@ -9,3 +9,4 @@ node_modules/
 *.bak
 .claude/plans/
 /demos/demo1-paperclip/
+.vercel
