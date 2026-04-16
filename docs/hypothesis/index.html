@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypothesis Annotator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .success { color: #22c55e; }
+  .terminal .error { color: #ef4444; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#128278;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="Hypothesis Annotator" data-zh="智能标注Agent"></span>
+    </h1>
+    <p class="text-lg text-gray-400" data-en="AI-powered web annotation — fetch, analyze, annotate on Hypothes.is" data-zh="AI驱动的网页标注 — 抓取、分析、标注到Hypothes.is"></p>
+    <p class="text-gray-500 mt-2" data-en="Color-coded tags: critical data, non-consensus, strategy, AI critique" data-zh="彩色标签分类：关键数据、非共识、策略、AI批评"></p>
+  </div>
+</header>
+
+<!-- How It Works -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-gray-500" data-en="# Step 1: Fetch and parse article" data-zh="# 第1步：抓取并解析文章"></div>
+      <div><span class="prompt">$</span> <span class="text-white">/annotate</span> <span class="text-yellow-400">https://arxiv.org/abs/2403.12345</span></div>
+      <div class="output" data-en="  Fetching article... 4,200 words extracted" data-zh="  抓取文章... 提取 4,200 词"></div>
+      <div class="mt-3 text-gray-500" data-en="# Step 2: AI deep analysis with GLM" data-zh="# 第2步：GLM深度分析"></div>
+      <div class="output" data-en="  Analyzing with GLM-4... identifying key claims..." data-zh="  使用GLM-4分析... 识别关键论点..."></div>
+      <div class="output" data-en="  Classification: 2 critical data, 1 non-consensus, 2 strategy, 1 critique" data-zh="  分类：2个关键数据、1个非共识、2个策略、1个批评"></div>
+      <div class="mt-3 text-gray-500" data-en="# Step 3: Post annotations to Hypothes.is" data-zh="# 第3步：发布标注到Hypothes.is"></div>
+      <div class="success" data-en="  &#10003; 6 annotations posted to hypothes.is" data-zh="  &#10003; 6条标注已发布到hypothes.is"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#128308;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Critical Data Detection" data-zh="关键数据检测"></h3>
+        <p class="text-sm text-gray-400" data-en="Automatically identifies key statistics, benchmarks, and quantitative claims" data-zh="自动识别关键统计数据、基准测试和定量论断"></p>
+      </div>
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#128993;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Non-Consensus Finder" data-zh="非共识发现"></h3>
+        <p class="text-sm text-gray-400" data-en="Flags claims that contradict mainstream research or established norms" data-zh="标记与主流研究或既定规范相矛盾的论断"></p>
+      </div>
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#128994;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Strategy Extraction" data-zh="策略提取"></h3>
+        <p class="text-sm text-gray-400" data-en="Highlights actionable methodologies and reproducible approaches" data-zh="高亮可操作的方法论和可复现的技术路径"></p>
+      </div>
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#128172;</div>
+        <h3 class="text-white font-bold mb-2" data-en="AI Critique" data-zh="AI批评"></h3>
+        <p class="text-sm text-gray-400" data-en="Generates constructive criticism on methodology, assumptions, and gaps" data-zh="对方法论、假设和研究空白生成建设性批评"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sample Output -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Sample Annotation Output" data-zh="示例标注输出"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-white font-bold mb-3" data-en="Annotations for: 'Scaling Laws for Neural LMs'" data-zh="标注目标：'神经语言模型的缩放法则'"></div>
+      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="error mt-2" data-en="  &#128308; [Critical Data] Loss scales as N^{-0.076}" data-zh="  &#128308; [关键数据] 损失按 N^{-0.076} 缩放"></div>
+      <div class="output" data-en="     Tag: critical-data | Paragraph 3, Line 12" data-zh="     标签：关键数据 | 第3段, 第12行"></div>
+      <div class="error mt-2" data-en="  &#128308; [Critical Data] Compute-optimal: 10x data per 10x params" data-zh="  &#128308; [关键数据] 计算最优：参数每增10倍，数据增10倍"></div>
+      <div class="output" data-en="     Tag: critical-data | Table 2" data-zh="     标签：关键数据 | 表2"></div>
+      <div class="warn mt-2" data-en="  &#128993; [Non-Consensus] Contradicts Chinchilla on data ratio" data-zh="  &#128993; [非共识] 与Chinchilla在数据比例上矛盾"></div>
+      <div class="output" data-en="     Tag: non-consensus | Section 4.2" data-zh="     标签：非共识 | 第4.2节"></div>
+      <div class="success mt-2" data-en="  &#128994; [Strategy] Use power-law to predict loss at scale" data-zh="  &#128994; [策略] 用幂律预测大规模训练损失"></div>
+      <div class="output" data-en="     Tag: strategy | Section 5.1" data-zh="     标签：策略 | 第5.1节"></div>
+      <div class="success mt-2" data-en="  &#128994; [Strategy] Train smaller models first to extrapolate" data-zh="  &#128994; [策略] 先训小模型再外推"></div>
+      <div class="output" data-en="     Tag: strategy | Section 5.3" data-zh="     标签：策略 | 第5.3节"></div>
+      <div class="highlight mt-2" data-en="  &#128172; [AI Critique] Assumes IID data; real data has distribution shift" data-zh="  &#128172; [AI批评] 假设IID数据，现实数据存在分布偏移"></div>
+      <div class="output" data-en="     Tag: ai-critique | Section 3" data-zh="     标签：AI批评 | 第3节"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Hypothes.is API</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">GLM-4 (BigModel)</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Web Scraping</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
+    </div>
+  </div>
+</section>
+
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
+</footer>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function applyLang(l) {
+    lang = l; localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+    });
+    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>

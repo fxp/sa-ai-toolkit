@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise Demo Generator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .success { color: #22c55e; }
+  .terminal .error { color: #ef4444; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#127970;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="Enterprise Demo Generator" data-zh="企业方案一键生成"></span>
+    </h1>
+    <p class="text-lg text-gray-400" data-en="Input company name → Score 14 demos → Generate full package" data-zh="输入企业名称 → 14个Demo评分 → 生成完整方案包"></p>
+    <p class="text-gray-500 mt-2" data-en="Profile, scoring matrix, runbook, narrative — all automated" data-zh="企业画像、评分矩阵、执行手册、叙事大纲 — 全自动"></p>
+  </div>
+</header>
+
+<!-- How It Works -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-gray-500" data-en="# Generate enterprise demo package" data-zh="# 生成企业演示方案包"></div>
+      <div><span class="prompt">$</span> <span class="text-white">/gen</span> <span class="text-yellow-400">CATL</span></div>
+      <div class="mt-2 output" data-en="  [1/5] Searching company info..." data-zh="  [1/5] 搜索企业信息..."></div>
+      <div class="output" data-en="        Industry: Battery Manufacturing | 130K employees" data-zh="        行业：电池制造 | 13万员工"></div>
+      <div class="output" data-en="  [2/5] Identifying pain points..." data-zh="  [2/5] 识别痛点..."></div>
+      <div class="output" data-en="        Found: quality control, predictive maintenance, R&D efficiency" data-zh="        发现：质量控制、预测性维护、研发效率"></div>
+      <div class="output" data-en="  [3/5] Scoring 14 demos (pain x industry x impact)..." data-zh="  [3/5] 评分14个Demo（痛点 x 行业 x 冲击力）..."></div>
+      <div class="highlight" data-en="        Top 3: SAM3 (9.2), TimesFM (8.8), Knowledge Base (8.5)" data-zh="        Top 3：SAM3 (9.2)、TimesFM (8.8)、知识库 (8.5)"></div>
+      <div class="output" data-en="  [4/5] Generating customized content for each demo..." data-zh="  [4/5] 为每个Demo生成定制化内容..."></div>
+      <div class="output" data-en="  [5/5] Building output package..." data-zh="  [5/5] 构建输出方案包..."></div>
+      <div class="success mt-3" data-en="  &#10003; 23 files written to outputs/CATL/" data-zh="  &#10003; 23个文件已写入 outputs/宁德时代/"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#128269;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Auto Company Profiling" data-zh="自动企业画像"></h3>
+        <p class="text-sm text-gray-400" data-en="Web search to identify industry, size, products, pain points, and competitors" data-zh="通过网络搜索识别行业、规模、产品、痛点和竞争对手"></p>
+      </div>
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#128200;</div>
+        <h3 class="text-white font-bold mb-2" data-en="3D Scoring Matrix" data-zh="三维评分矩阵"></h3>
+        <p class="text-sm text-gray-400" data-en="Score each demo on pain-point fit, industry relevance, and wow-factor" data-zh="从痛点匹配度、行业相关性、震撼效果三维度评分"></p>
+      </div>
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#128221;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Full Package Output" data-zh="完整方案包输出"></h3>
+        <p class="text-sm text-gray-400" data-en="Profile, scoring matrix, runbook, narrative, and per-demo customization" data-zh="企业画像、评分矩阵、执行手册、叙事大纲、逐Demo定制"></p>
+      </div>
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-3xl mb-3">&#127981;</div>
+        <h3 class="text-white font-bold mb-2" data-en="10 Industry Presets" data-zh="10大行业预置"></h3>
+        <p class="text-sm text-gray-400" data-en="Manufacturing, finance, retail, healthcare, tech, energy, and more" data-zh="制造业、金融、零售、医疗、科技、能源等"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sample Scoring Matrix -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Sample Scoring Matrix" data-zh="示例评分矩阵"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed overflow-x-auto">
+      <div class="text-white font-bold mb-3" data-en="CATL — Demo Scoring Matrix" data-zh="宁德时代 — Demo评分矩阵"></div>
+      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="output" data-en="  Demo               Pain  Industry  Impact  Total" data-zh="  Demo               痛点  行业      冲击力  总分"></div>
+      <div class="output">  &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="success">  SAM3 Inspection      3.0    3.0       3.2   <span class="text-white font-bold">9.2</span></div>
+      <div class="success">  TimesFM Predict      3.0    2.8       3.0   <span class="text-white font-bold">8.8</span></div>
+      <div class="success">  Knowledge Base       2.8    2.7       3.0   <span class="text-white font-bold">8.5</span></div>
+      <div class="highlight">  Roleplay Training    2.5    2.5       2.8   <span class="text-white">7.8</span></div>
+      <div class="highlight">  CEO Dashboard        2.5    2.3       2.8   <span class="text-white">7.6</span></div>
+      <div class="highlight">  Auto Research        2.3    2.5       2.5   <span class="text-white">7.3</span></div>
+      <div class="output">  Board Simulation     2.0    2.0       2.5   <span class="text-white">6.5</span></div>
+      <div class="output">  Swarm Intel          1.8    2.0       2.5   <span class="text-white">6.3</span></div>
+      <div class="output mt-2">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="mt-3 text-white font-bold" data-en="  Output Files:" data-zh="  输出文件："></div>
+      <div class="success">  outputs/CATL/profile.md</div>
+      <div class="success">  outputs/CATL/scoring-matrix.md</div>
+      <div class="success">  outputs/CATL/runbook.md</div>
+      <div class="success">  outputs/CATL/narrative.md</div>
+      <div class="success">  outputs/CATL/demos/sam3-inspection.md</div>
+      <div class="success">  outputs/CATL/demos/timesfm-predict.md</div>
+      <div class="output" data-en="  ... (23 files total)" data-zh="  ... (共23个文件)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Web Search API</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Skills SDK</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Markdown</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">CrewAI</span>
+    </div>
+  </div>
+</section>
+
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
+</footer>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function applyLang(l) {
+    lang = l; localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+    });
+    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>

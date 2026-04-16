@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GStack AI Engineering Toolkit</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .success { color: #22c55e; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#128736;&#65039;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="GStack AI Engineering Toolkit" data-zh="GStack AI工程工具集"></span>
+    </h1>
+    <p class="text-lg text-gray-400" data-en="23 skills chained into a complete engineering workflow" data-zh="23个技能串联成完整的工程工作流"></p>
+    <p class="text-gray-500 mt-2" data-en="/office-hours → /autoplan → /qa → /ship" data-zh="/office-hours → /autoplan → /qa → /ship"></p>
+  </div>
+</header>
+
+<!-- How It Works -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-gray-500" data-en="# Phase 1: Discovery — ask the right questions" data-zh="# 阶段1：探索 — 问对问题"></div>
+      <div><span class="prompt">$</span> <span class="text-white">/office-hours</span></div>
+      <div class="output" data-en="  Q1: What is the desperate problem you solve?" data-zh="  Q1：你解决的最紧迫的问题是什么？"></div>
+      <div class="output" data-en="  Q2: Who is the narrowest wedge customer?" data-zh="  Q2：最窄切入点的客户是谁？"></div>
+      <div class="highlight" data-en="  &#10003; 6 forcing questions answered" data-zh="  &#10003; 6 个核心问题已回答"></div>
+      <div class="mt-4 text-gray-500" data-en="# Phase 2: Plan — auto-review pipeline" data-zh="# 阶段2：规划 — 自动审查管线"></div>
+      <div><span class="prompt">$</span> <span class="text-white">/autoplan</span></div>
+      <div class="output" data-en="  Running CEO review... &#10003;" data-zh="  运行CEO审查... &#10003;"></div>
+      <div class="output" data-en="  Running Design review... &#10003;" data-zh="  运行设计审查... &#10003;"></div>
+      <div class="output" data-en="  Running Eng review... &#10003;" data-zh="  运行工程审查... &#10003;"></div>
+      <div class="highlight" data-en="  &#10003; Plan score: 9.2/10" data-zh="  &#10003; 方案评分：9.2/10"></div>
+      <div class="mt-4 text-gray-500" data-en="# Phase 3: QA — find and fix bugs atomically" data-zh="# 阶段3：QA — 发现并原子修复Bug"></div>
+      <div><span class="prompt">$</span> <span class="text-white">/qa</span></div>
+      <div class="output" data-en="  Testing 24 pages... found 3 issues" data-zh="  测试 24 个页面... 发现 3 个问题"></div>
+      <div class="success" data-en="  Fix #1: nav link 404 → commit abc1234" data-zh="  修复 #1：导航链接404 → 提交 abc1234"></div>
+      <div class="success" data-en="  Fix #2: mobile overflow → commit def5678" data-zh="  修复 #2：移动端溢出 → 提交 def5678"></div>
+      <div class="success" data-en="  Fix #3: contrast ratio → commit ghi9012" data-zh="  修复 #3：对比度不足 → 提交 ghi9012"></div>
+      <div class="mt-4 text-gray-500" data-en="# Phase 4: Ship — push to production" data-zh="# 阶段4：上线 — 推送到生产环境"></div>
+      <div><span class="prompt">$</span> <span class="text-white">/ship</span></div>
+      <div class="output" data-en="  Tests passing... Diff reviewed... VERSION bumped" data-zh="  测试通过... Diff已审查... VERSION已更新"></div>
+      <div class="success" data-en="  &#10003; PR #42 created → merged → deployed" data-zh="  &#10003; PR #42 已创建 → 已合并 → 已部署"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="card rounded-xl p-5 text-center transition">
+        <div class="text-3xl mb-3">&#127891;</div>
+        <h3 class="text-white font-bold mb-2 text-sm">/office-hours</h3>
+        <p class="text-xs text-gray-400" data-en="YC-style forcing questions for product clarity" data-zh="YC风格的核心问题，厘清产品方向"></p>
+      </div>
+      <div class="card rounded-xl p-5 text-center transition">
+        <div class="text-3xl mb-3">&#128203;</div>
+        <h3 class="text-white font-bold mb-2 text-sm">/autoplan</h3>
+        <p class="text-xs text-gray-400" data-en="CEO + Design + Eng multi-lens review pipeline" data-zh="CEO+设计+工程多视角审查管线"></p>
+      </div>
+      <div class="card rounded-xl p-5 text-center transition">
+        <div class="text-3xl mb-3">&#128027;</div>
+        <h3 class="text-white font-bold mb-2 text-sm">/qa</h3>
+        <p class="text-xs text-gray-400" data-en="Headless browser testing with atomic bug fixes" data-zh="无头浏览器测试+原子化Bug修复"></p>
+      </div>
+      <div class="card rounded-xl p-5 text-center transition">
+        <div class="text-3xl mb-3">&#128640;</div>
+        <h3 class="text-white font-bold mb-2 text-sm">/ship</h3>
+        <p class="text-xs text-gray-400" data-en="Test, review, bump, commit, PR, deploy" data-zh="测试、审查、版本号、提交、PR、部署"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sample Output -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="23 Skills at a Glance" data-zh="23个技能一览"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-white font-bold mb-3" data-en="Skill Chain Overview" data-zh="技能链概览"></div>
+      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="highlight" data-en="  Discovery:   /office-hours  /learn  /investigate" data-zh="  探索层：   /office-hours  /learn  /investigate"></div>
+      <div class="highlight" data-en="  Planning:    /autoplan  /plan-ceo  /plan-eng  /plan-design" data-zh="  规划层：   /autoplan  /plan-ceo  /plan-eng  /plan-design"></div>
+      <div class="highlight" data-en="  Building:    /design-html  /design-shotgun  /browse  /gstack" data-zh="  构建层：   /design-html  /design-shotgun  /browse  /gstack"></div>
+      <div class="highlight" data-en="  Testing:     /qa  /qa-only  /benchmark  /health" data-zh="  测试层：   /qa  /qa-only  /benchmark  /health"></div>
+      <div class="highlight" data-en="  Shipping:    /ship  /review  /land-and-deploy  /canary" data-zh="  交付层：   /ship  /review  /land-and-deploy  /canary"></div>
+      <div class="highlight" data-en="  Operations:  /retro  /checkpoint  /careful  /freeze" data-zh="  运维层：   /retro  /checkpoint  /careful  /freeze"></div>
+      <div class="output mt-2">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="success" data-en="  Total: 23 skills | All chainable | Claude Code native" data-zh="  共计：23个技能 | 全部可串联 | Claude Code 原生"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Playwright</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Skills SDK</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">GitHub API</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Vercel</span>
+    </div>
+  </div>
+</section>
+
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
+</footer>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function applyLang(l) {
+    lang = l; localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+    });
+    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>

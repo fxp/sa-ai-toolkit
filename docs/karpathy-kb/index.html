@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karpathy Knowledge Base</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .success { color: #22c55e; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<!-- Language Toggle -->
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<!-- Header -->
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#128218;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="Karpathy Knowledge Base" data-zh="Karpathy知识库"></span>
+    </h1>
+    <p class="text-lg text-gray-400" data-en="Three-folder method for LLM-maintained personal knowledge" data-zh="三文件夹方法，LLM维护的个人知识库"></p>
+    <p class="text-gray-500 mt-2" data-en="raw → wiki → outputs | Auto-linking, lint checks, contradiction detection" data-zh="raw → wiki → outputs | 自动链接、规范检查、矛盾检测"></p>
+  </div>
+</header>
+
+<!-- How It Works -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-gray-500 mb-2" data-en="# Step 1: Ingest raw content" data-zh="# 第1步：导入原始内容"></div>
+      <div><span class="prompt">$</span> <span class="text-white">kb ingest</span> <span class="text-yellow-400">./raw/karpathy-lecture-notes.md</span></div>
+      <div class="output" data-en="  Parsing 3,200 words... extracting concepts..." data-zh="  解析 3,200 词... 提取概念..."></div>
+      <div class="highlight" data-en="  &#10003; 14 concepts extracted, 8 new to wiki" data-zh="  &#10003; 提取 14 个概念，8 个为新概念"></div>
+      <div class="mt-4 text-gray-500" data-en="# Step 2: Compile wiki with cross-references" data-zh="# 第2步：编译wiki并交叉引用"></div>
+      <div><span class="prompt">$</span> <span class="text-white">kb compile</span></div>
+      <div class="output" data-en="  Linking concepts across 47 wiki pages..." data-zh="  跨 47 个wiki页面链接概念..."></div>
+      <div class="output" data-en="  Running lint checks..." data-zh="  运行规范检查..."></div>
+      <div class="warn" data-en="  &#9888; 2 contradictions found (backprop vs. lecture-03)" data-zh="  &#9888; 发现 2 处矛盾（反向传播 vs. 第3讲）"></div>
+      <div class="highlight" data-en="  &#10003; 23 cross-references added" data-zh="  &#10003; 新增 23 个交叉引用"></div>
+      <div class="mt-4 text-gray-500" data-en="# Step 3: Generate outputs" data-zh="# 第3步：生成输出"></div>
+      <div><span class="prompt">$</span> <span class="text-white">kb export</span> <span class="text-yellow-400">--format summary</span></div>
+      <div class="success" data-en="  &#10003; outputs/weekly-digest.md (1,400 words)" data-zh="  &#10003; outputs/每周摘要.md (1,400 字)"></div>
+      <div class="success" data-en="  &#10003; outputs/concept-map.svg (47 nodes)" data-zh="  &#10003; outputs/概念图.svg (47 个节点)"></div>
+      <div class="success" data-en="  &#10003; outputs/contradiction-report.md" data-zh="  &#10003; outputs/矛盾报告.md"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#128193;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Three-Folder Method" data-zh="三文件夹方法"></h3>
+        <p class="text-sm text-gray-400" data-en="raw/ for ingestion, wiki/ for structured knowledge, outputs/ for deliverables" data-zh="raw/ 用于导入，wiki/ 存储结构化知识，outputs/ 生成交付物"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#128279;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Auto Cross-Linking" data-zh="自动交叉链接"></h3>
+        <p class="text-sm text-gray-400" data-en="LLM detects related concepts and creates bidirectional wiki links automatically" data-zh="LLM自动检测相关概念并创建双向wiki链接"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#9888;&#65039;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Contradiction Detection" data-zh="矛盾检测"></h3>
+        <p class="text-sm text-gray-400" data-en="Lint checks find conflicting statements across your knowledge base" data-zh="规范检查发现知识库中的矛盾陈述"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sample Output -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Sample Compilation Report" data-zh="示例编译报告"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-white font-bold mb-3">&#128203; Compilation Report — 2024-03-15</div>
+      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="output" data-en="  Wiki pages:        47 (+8 new)" data-zh="  Wiki页面：        47 (+8 新增)"></div>
+      <div class="output" data-en="  Concepts:          312 (+14 new)" data-zh="  概念：            312 (+14 新增)"></div>
+      <div class="highlight" data-en="  Cross-references:  189 (+23 new)" data-zh="  交叉引用：        189 (+23 新增)"></div>
+      <div class="warn" data-en="  Contradictions:    2 (needs review)" data-zh="  矛盾：            2 (待审阅)"></div>
+      <div class="output" data-en="  Orphan pages:      0" data-zh="  孤立页面：        0"></div>
+      <div class="success" data-en="  Lint score:        96/100" data-zh="  规范得分：        96/100"></div>
+      <div class="output mt-3">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="warn mt-2" data-en="  CONTRADICTION #1: backprop.md vs lecture-03.md" data-zh="  矛盾 #1：反向传播.md vs 第3讲.md"></div>
+      <div class="output" data-en="    backprop.md says 'gradient clipping at 1.0'" data-zh="    反向传播.md 说 '梯度裁剪阈值 1.0'"></div>
+      <div class="output" data-en="    lecture-03.md says 'gradient clipping at 5.0'" data-zh="    第3讲.md 说 '梯度裁剪阈值 5.0'"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Markdown</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Wiki Links</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Lint Engine</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">SVG Export</span>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
+</footer>
+
+<!-- i18n Script -->
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY)
+    || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function applyLang(l) {
+    lang = l;
+    localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) {
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; }
+        else {
+          const children = Array.from(el.childNodes).filter(n => n.nodeType === 1);
+          if (children.length > 0 && el.childNodes.length > 1) {
+            el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; });
+          } else if (children.length === 0) { el.textContent = text; }
+          else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; }
+        }
+      }
+    });
+    const label = document.getElementById('lang-label');
+    if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>

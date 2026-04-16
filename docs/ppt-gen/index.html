@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand PPT Generator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .success { color: #22c55e; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#128202;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="Brand PPT Generator" data-zh="品牌PPT生成"></span>
+    </h1>
+    <p class="text-lg text-gray-400" data-en="Input content + brand identity → professional PPTX in seconds" data-zh="输入内容+品牌标识 → 秒级生成专业PPTX"></p>
+    <p class="text-gray-500 mt-2" data-en="Brand colors, fonts, logo placement — all automated" data-zh="品牌色、字体、Logo位置 — 全自动化"></p>
+  </div>
+</header>
+
+<!-- How It Works -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-gray-500" data-en="# Generate a branded deck" data-zh="# 生成品牌化演示文稿"></div>
+      <div><span class="prompt">$</span> <span class="text-white">/present</span> <span class="text-yellow-400">export PPT for CATL</span></div>
+      <div class="output" data-en="  Loading brand profile: CATL (宁德时代)" data-zh="  加载品牌配置：宁德时代"></div>
+      <div class="output" data-en="  Primary color: #00A651 (CATL Green)" data-zh="  主色：#00A651（宁德时代绿）"></div>
+      <div class="output" data-en="  Accent color:  #003C71 (CATL Blue)" data-zh="  辅色：#003C71（宁德时代蓝）"></div>
+      <div class="output" data-en="  Font: Source Han Sans / Noto Sans SC" data-zh="  字体：思源黑体 / Noto Sans SC"></div>
+      <div class="mt-3 output" data-en="  Generating slides..." data-zh="  生成幻灯片..."></div>
+      <div class="output" data-en="  [1/12] Title slide with logo" data-zh="  [1/12] 带Logo的标题页"></div>
+      <div class="output" data-en="  [2/12] Agenda" data-zh="  [2/12] 议程页"></div>
+      <div class="output" data-en="  [3/12] Company pain points" data-zh="  [3/12] 企业痛点"></div>
+      <div class="output" data-en="  [4-10/12] Demo showcase slides" data-zh="  [4-10/12] Demo展示页"></div>
+      <div class="output" data-en="  [11/12] Scoring matrix" data-zh="  [11/12] 评分矩阵"></div>
+      <div class="output" data-en="  [12/12] Next steps + CTA" data-zh="  [12/12] 下一步+行动号召"></div>
+      <div class="success mt-3" data-en="  &#10003; CATL_AI_Training.pptx (12 slides, 2.4 MB)" data-zh="  &#10003; 宁德时代_AI培训.pptx (12页, 2.4 MB)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Brand Color Palette -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Brand Color System" data-zh="品牌色彩系统"></h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="w-16 h-16 rounded-xl mx-auto mb-4" style="background: #2563EB;"></div>
+        <h3 class="text-white font-bold mb-1">Primary Blue</h3>
+        <p class="text-sm text-gray-400 font-mono">#2563EB</p>
+        <p class="text-xs text-gray-500 mt-1" data-en="Headers, CTAs, key highlights" data-zh="标题、CTA、重点高亮"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="w-16 h-16 rounded-xl mx-auto mb-4" style="background: #F59E0B;"></div>
+        <h3 class="text-white font-bold mb-1">Accent Orange</h3>
+        <p class="text-sm text-gray-400 font-mono">#F59E0B</p>
+        <p class="text-xs text-gray-500 mt-1" data-en="Warnings, emphasis, callouts" data-zh="警告、强调、提示框"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="w-16 h-16 rounded-xl mx-auto mb-4" style="background: #0F172A;"></div>
+        <h3 class="text-white font-bold mb-1">Dark Background</h3>
+        <p class="text-sm text-gray-400 font-mono">#0F172A</p>
+        <p class="text-xs text-gray-500 mt-1" data-en="Slide backgrounds, code blocks" data-zh="幻灯片背景、代码块"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#127912;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Auto Brand Detection" data-zh="自动品牌识别"></h3>
+        <p class="text-sm text-gray-400" data-en="Scrapes company website for colors, fonts, and logo" data-zh="从企业官网自动提取品牌色、字体和Logo"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#128196;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Slide Templates" data-zh="幻灯片模板"></h3>
+        <p class="text-sm text-gray-400" data-en="12 slide types: title, agenda, pain point, demo, matrix, CTA" data-zh="12种幻灯片类型：标题、议程、痛点、Demo、矩阵、CTA"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#128229;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Multi-Format Export" data-zh="多格式导出"></h3>
+        <p class="text-sm text-gray-400" data-en="PPTX, PDF, Google Slides, or web-based presentation" data-zh="支持PPTX、PDF、Google Slides或网页演示"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sample Slide Structure -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Slide Structure Preview" data-zh="幻灯片结构预览"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-white font-bold mb-3" data-en="12-Slide Deck Layout" data-zh="12页演示文稿布局"></div>
+      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="highlight">  [01] Title          <span class="output">Logo + Company + Date</span></div>
+      <div class="highlight">  [02] Agenda         <span class="output">4-item overview</span></div>
+      <div class="warn">  [03] Pain Points    <span class="output">Industry challenges</span></div>
+      <div class="success">  [04] Demo: SAM3     <span class="output">Visual inspection</span></div>
+      <div class="success">  [05] Demo: TimesFM  <span class="output">Predictive maintenance</span></div>
+      <div class="success">  [06] Demo: Roleplay <span class="output">Customer training</span></div>
+      <div class="success">  [07] Demo: Research <span class="output">Auto industry research</span></div>
+      <div class="success">  [08] Demo: KB       <span class="output">Knowledge management</span></div>
+      <div class="success">  [09] Demo: Agent    <span class="output">Autonomous workflows</span></div>
+      <div class="success">  [10] Demo: PPT      <span class="output">Content generation</span></div>
+      <div class="warn">  [11] Scoring Matrix <span class="output">14-demo comparison</span></div>
+      <div class="highlight">  [12] Next Steps     <span class="output">CTA + contact</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">python-pptx</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Brand Scraper</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Jinja2 Templates</span>
+    </div>
+  </div>
+</section>
+
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
+</footer>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function applyLang(l) {
+    lang = l; localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+    });
+    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>

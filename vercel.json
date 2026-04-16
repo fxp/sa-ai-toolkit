@@ -15,7 +15,23 @@
     { "source": "/autoresearch", "destination": "/docs/autoresearch/index.html", "statusCode": 308 },
     { "source": "/autoresearch/", "destination": "/docs/autoresearch/index.html", "statusCode": 308 },
     { "source": "/industrial-ai", "destination": "/docs/industrial-ai/index.html", "statusCode": 308 },
-    { "source": "/industrial-ai/", "destination": "/docs/industrial-ai/index.html", "statusCode": 308 }
+    { "source": "/industrial-ai/", "destination": "/docs/industrial-ai/index.html", "statusCode": 308 },
+    { "source": "/karpathy-kb", "destination": "/docs/karpathy-kb/index.html", "statusCode": 308 },
+    { "source": "/karpathy-kb/", "destination": "/docs/karpathy-kb/index.html", "statusCode": 308 },
+    { "source": "/gstack", "destination": "/docs/gstack/index.html", "statusCode": 308 },
+    { "source": "/gstack/", "destination": "/docs/gstack/index.html", "statusCode": 308 },
+    { "source": "/hypothesis", "destination": "/docs/hypothesis/index.html", "statusCode": 308 },
+    { "source": "/hypothesis/", "destination": "/docs/hypothesis/index.html", "statusCode": 308 },
+    { "source": "/ppt-gen", "destination": "/docs/ppt-gen/index.html", "statusCode": 308 },
+    { "source": "/ppt-gen/", "destination": "/docs/ppt-gen/index.html", "statusCode": 308 },
+    { "source": "/maestro", "destination": "/docs/maestro/index.html", "statusCode": 308 },
+    { "source": "/maestro/", "destination": "/docs/maestro/index.html", "statusCode": 308 },
+    { "source": "/playwright", "destination": "/docs/playwright/index.html", "statusCode": 308 },
+    { "source": "/playwright/", "destination": "/docs/playwright/index.html", "statusCode": 308 },
+    { "source": "/enterprise-gen", "destination": "/docs/enterprise-gen/index.html", "statusCode": 308 },
+    { "source": "/enterprise-gen/", "destination": "/docs/enterprise-gen/index.html", "statusCode": 308 },
+    { "source": "/sa-toolkit", "destination": "/docs/sa-toolkit/index.html", "statusCode": 308 },
+    { "source": "/sa-toolkit/", "destination": "/docs/sa-toolkit/index.html", "statusCode": 308 }
   ],
   "rewrites": [
     { "source": "/", "destination": "/docs/index.html" }

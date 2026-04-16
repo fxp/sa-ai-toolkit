@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SA AI Toolkit</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .success { color: #22c55e; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#129520;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="SA AI Toolkit" data-zh="SA销售工具包"></span>
+    </h1>
+    <p class="text-lg text-gray-400" data-en="Three skills for Solution Architects: generate, customize, present" data-zh="面向解决方案架构师的三大技能：生成、定制、交付"></p>
+    <p class="text-gray-500 mt-2" data-en="/gen → /customize → /present" data-zh="/gen → /customize → /present"></p>
+  </div>
+</header>
+
+<!-- Three Skills -->
+<section class="py-12 px-6">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Three Skills, One Workflow" data-zh="三大技能，一套工作流"></h2>
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <!-- /gen -->
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-center mb-4">
+          <div class="text-4xl mb-2">&#9881;</div>
+          <h3 class="text-white font-bold text-xl">/gen</h3>
+          <p class="text-sm text-gray-400 mt-1" data-en="Generate" data-zh="生成"></p>
+        </div>
+        <div class="terminal p-4 text-xs leading-relaxed">
+          <div><span class="prompt">$</span> <span class="text-white">/gen</span> <span class="text-yellow-400">CATL</span></div>
+          <div class="output mt-1" data-en="  Searching company..." data-zh="  搜索企业..."></div>
+          <div class="output" data-en="  Industry: Battery Mfg" data-zh="  行业：电池制造"></div>
+          <div class="output" data-en="  Scoring 20 demos..." data-zh="  评分20个Demo..."></div>
+          <div class="success" data-en="  &#10003; 18 demos selected" data-zh="  &#10003; 选出18个Demo"></div>
+          <div class="success" data-en="  &#10003; 23 files written" data-zh="  &#10003; 写入23个文件"></div>
+        </div>
+        <ul class="mt-4 space-y-1 text-xs text-gray-400">
+          <li data-en="&#8226; Auto company profiling" data-zh="&#8226; 自动企业画像"></li>
+          <li data-en="&#8226; 3D demo scoring" data-zh="&#8226; 三维Demo评分"></li>
+          <li data-en="&#8226; Industry-specific content" data-zh="&#8226; 行业定制化内容"></li>
+          <li data-en="&#8226; Full output package" data-zh="&#8226; 完整输出方案包"></li>
+        </ul>
+      </div>
+
+      <!-- /customize -->
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-center mb-4">
+          <div class="text-4xl mb-2">&#9998;</div>
+          <h3 class="text-white font-bold text-xl">/customize</h3>
+          <p class="text-sm text-gray-400 mt-1" data-en="Customize" data-zh="定制"></p>
+        </div>
+        <div class="terminal p-4 text-xs leading-relaxed">
+          <div><span class="prompt">$</span> <span class="text-white">/customize</span></div>
+          <div class="text-yellow-400 mt-1" data-en="  add difficulty levels" data-zh="  增加难度等级"></div>
+          <div class="output" data-en="  Updated roleplay.md" data-zh="  已更新 roleplay.md"></div>
+          <div class="output" data-en="  L1: Basic → L5: Audit" data-zh="  L1:基础 → L5:审计"></div>
+          <div class="mt-2"><span class="prompt">$</span> <span class="text-white">/customize</span></div>
+          <div class="text-yellow-400" data-en="  replace ERP with SAP" data-zh="  把ERP替换为SAP"></div>
+          <div class="success" data-en="  &#10003; 7 files updated" data-zh="  &#10003; 7个文件已更新"></div>
+        </div>
+        <ul class="mt-4 space-y-1 text-xs text-gray-400">
+          <li data-en="&#8226; Term replacement" data-zh="&#8226; 术语替换"></li>
+          <li data-en="&#8226; Add/remove demos" data-zh="&#8226; 增删Demo"></li>
+          <li data-en="&#8226; Audience switching" data-zh="&#8226; 切换受众版本"></li>
+          <li data-en="&#8226; Deep single-demo edit" data-zh="&#8226; 深度定制单个Demo"></li>
+        </ul>
+      </div>
+
+      <!-- /present -->
+      <div class="card rounded-xl p-6 transition">
+        <div class="text-center mb-4">
+          <div class="text-4xl mb-2">&#127916;</div>
+          <h3 class="text-white font-bold text-xl">/present</h3>
+          <p class="text-sm text-gray-400 mt-1" data-en="Present" data-zh="交付"></p>
+        </div>
+        <div class="terminal p-4 text-xs leading-relaxed">
+          <div><span class="prompt">$</span> <span class="text-white">/present</span> <span class="text-yellow-400">export PPT</span></div>
+          <div class="output mt-1" data-en="  Brand: CATL Green" data-zh="  品牌：宁德时代绿"></div>
+          <div class="output" data-en="  Generating 12 slides..." data-zh="  生成12页幻灯片..."></div>
+          <div class="success" data-en="  &#10003; .pptx exported" data-zh="  &#10003; .pptx 已导出"></div>
+          <div class="mt-2"><span class="prompt">$</span> <span class="text-white">/present</span> <span class="text-yellow-400">rehearsal</span></div>
+          <div class="output" data-en="  Loading speaker notes..." data-zh="  加载演讲备注..."></div>
+          <div class="success" data-en="  &#10003; Rehearsal mode ready" data-zh="  &#10003; 彩排模式就绪"></div>
+        </div>
+        <ul class="mt-4 space-y-1 text-xs text-gray-400">
+          <li data-en="&#8226; Brand PPT export" data-zh="&#8226; 品牌PPT导出"></li>
+          <li data-en="&#8226; Word document" data-zh="&#8226; Word文档"></li>
+          <li data-en="&#8226; Web demo launcher" data-zh="&#8226; 启动Web演示"></li>
+          <li data-en="&#8226; Rehearsal mode" data-zh="&#8226; 彩排模式"></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sample Workflow -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="End-to-End Workflow" data-zh="端到端工作流"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-white font-bold mb-3" data-en="Preparing for CATL Training Session" data-zh="准备宁德时代培训"></div>
+      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="highlight" data-en="  Phase 1: /gen CATL                    (2 min)" data-zh="  阶段1：/gen 宁德时代                 (2分钟)"></div>
+      <div class="output" data-en="    → 18 demos scored, 23 files generated" data-zh="    → 18个Demo评分，23个文件生成"></div>
+      <div class="highlight mt-2" data-en="  Phase 2: /customize (3 rounds)        (5 min)" data-zh="  阶段2：/customize（3轮）              (5分钟)"></div>
+      <div class="output" data-en="    → Added difficulty levels to roleplay" data-zh="    → 给角色扮演增加了难度等级"></div>
+      <div class="output" data-en="    → Replaced 'ERP' with '宁德SAP S4/HANA'" data-zh="    → 把'ERP'替换为'宁德SAP S4/HANA'"></div>
+      <div class="output" data-en="    → Added battery-specific QC scenarios" data-zh="    → 增加电池特定质检场景"></div>
+      <div class="highlight mt-2" data-en="  Phase 3: /present export PPT           (1 min)" data-zh="  阶段3：/present 导出PPT               (1分钟)"></div>
+      <div class="output" data-en="    → 12-slide branded deck ready" data-zh="    → 12页品牌化演示文稿就绪"></div>
+      <div class="output mt-3">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="success" data-en="  Total prep time: 8 minutes (vs. 2 days manual)" data-zh="  总准备时间：8分钟（vs. 手工2天）"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Skills SDK</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">python-pptx</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Web Search</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Markdown</span>
+    </div>
+  </div>
+</section>
+
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
+</footer>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function applyLang(l) {
+    lang = l; localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+    });
+    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>

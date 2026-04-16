@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playwright E2E Testing</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .success { color: #22c55e; }
+  .terminal .error { color: #ef4444; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#127760;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="Playwright E2E Testing" data-zh="浏览器自动化测试"></span>
+    </h1>
+    <p class="text-lg text-gray-400" data-en="Python browser automation with responsive testing and performance metrics" data-zh="Python浏览器自动化，支持响应式测试和性能指标"></p>
+    <p class="text-gray-500 mt-2" data-en="Chromium, Firefox, WebKit — all from Python" data-zh="Chromium、Firefox、WebKit — 全部用Python控制"></p>
+  </div>
+</header>
+
+<!-- How It Works -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-gray-500" data-en="# Run the E2E test suite" data-zh="# 运行端到端测试套件"></div>
+      <div><span class="prompt">$</span> <span class="text-white">python -m pytest</span> <span class="text-yellow-400">tests/e2e/ -v</span></div>
+      <div class="mt-3 output" data-en="  Launching Chromium (headless)..." data-zh="  启动 Chromium (无头模式)..."></div>
+      <div class="mt-2 success" data-en="  &#10003; test_homepage_load        page loaded in 342ms" data-zh="  &#10003; test_homepage_load        页面加载 342ms"></div>
+      <div class="success" data-en="  &#10003; test_search_flow          typed query, got 24 results" data-zh="  &#10003; test_search_flow          输入查询，获得24条结果"></div>
+      <div class="success" data-en="  &#10003; test_responsive_mobile    375x812 screenshot captured" data-zh="  &#10003; test_responsive_mobile    375x812 截图已捕获"></div>
+      <div class="success" data-en="  &#10003; test_responsive_tablet    768x1024 screenshot captured" data-zh="  &#10003; test_responsive_tablet    768x1024 截图已捕获"></div>
+      <div class="success" data-en="  &#10003; test_responsive_desktop   1920x1080 screenshot captured" data-zh="  &#10003; test_responsive_desktop   1920x1080 截图已捕获"></div>
+      <div class="success" data-en="  &#10003; test_form_submission      form submitted, redirect OK" data-zh="  &#10003; test_form_submission      表单提交成功，重定向正常"></div>
+      <div class="success" data-en="  &#10003; test_performance_metrics  LCP: 1.2s, FID: 45ms, CLS: 0.02" data-zh="  &#10003; test_performance_metrics  LCP: 1.2s, FID: 45ms, CLS: 0.02"></div>
+      <div class="mt-3 success font-bold" data-en="  7 passed in 8.4s" data-zh="  7项全部通过，耗时 8.4s"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#128187;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Multi-Browser" data-zh="多浏览器"></h3>
+        <p class="text-sm text-gray-400" data-en="Run tests across Chromium, Firefox, and WebKit simultaneously" data-zh="同时在Chromium、Firefox和WebKit上运行测试"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#128241;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Responsive Testing" data-zh="响应式测试"></h3>
+        <p class="text-sm text-gray-400" data-en="Auto-test mobile, tablet, and desktop viewports with screenshots" data-zh="自动测试手机、平板、桌面视口并截图"></p>
+      </div>
+      <div class="card rounded-xl p-6 text-center transition">
+        <div class="text-3xl mb-3">&#9889;</div>
+        <h3 class="text-white font-bold mb-2" data-en="Performance Metrics" data-zh="性能指标"></h3>
+        <p class="text-sm text-gray-400" data-en="Capture Core Web Vitals: LCP, FID, CLS, TTFB" data-zh="捕获核心Web指标：LCP、FID、CLS、TTFB"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sample Output -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Performance Report" data-zh="性能报告"></h2>
+    <div class="terminal p-6 glow text-sm leading-relaxed">
+      <div class="text-white font-bold mb-3" data-en="Core Web Vitals — Production Site" data-zh="核心Web指标 — 生产站点"></div>
+      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="output" data-en="  Metric          Value     Threshold    Status" data-zh="  指标            数值      阈值         状态"></div>
+      <div class="output">  &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="success">  LCP              1.2s      &lt; 2.5s       &#10003; GOOD</div>
+      <div class="success">  FID              45ms      &lt; 100ms      &#10003; GOOD</div>
+      <div class="success">  CLS              0.02      &lt; 0.1        &#10003; GOOD</div>
+      <div class="success">  TTFB             180ms     &lt; 800ms      &#10003; GOOD</div>
+      <div class="warn">  FCP              1.8s      &lt; 1.8s       &#9888; NEEDS WORK</div>
+      <div class="success">  Speed Index      2.1s      &lt; 3.4s       &#10003; GOOD</div>
+      <div class="output mt-2">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+      <div class="highlight" data-en="  Overall Score: 92/100 (Good)" data-zh="  综合得分：92/100（良好）"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="py-12 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="flex flex-wrap justify-center gap-3">
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Playwright</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Python</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">pytest</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Chromium</span>
+      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Web Vitals</span>
+    </div>
+  </div>
+</section>
+
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
+</footer>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function applyLang(l) {
+    lang = l; localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+    });
+    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
+  applyLang(lang);
+})();
+</script>
+</body>
+</html>
