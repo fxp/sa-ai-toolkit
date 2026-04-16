@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.env
+
+# Node
+node_modules/
+
+# Large/unnecessary demos
+demos/demo1-paperclip/
+demos/bonus-mirofish/backend/
+
+# Temp files
+~$*
+*.bak
+.DS_Store
+.claude/
+.git/
+
+# Docs source
+*.md
+!docs/**
+!demos/demo-metr-org-uplift/**
+!demos/orchestrator/**
+!demos/bonus-autoresearch/website/**
