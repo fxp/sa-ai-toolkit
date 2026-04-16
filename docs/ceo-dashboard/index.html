@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEO Weekly Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .metric-card {
+            background-color: #444;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .metric-card h3 {
+            margin-top: 0;
+            color: #ffcc00;
+        }
+        .metric-card p {
+            margin-bottom: 0;
+            color: #ccc;
+        }
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        .metric-card .change {
+            color: #ffcc00;
+        }
+        .metric-card .risk {
+            color: #ff6347;
+        }
+        .chart-container {
+            background-color: #444;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container canvas {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="metric-card">
+            <h3>销售额</h3>
+            <p class="value">¥2847万</p>
+            <p class="change">(+12%)</p>
+        </div>
+        <div class="metric-card">
+            <h3>NPS</h3>
+            <p class="value">72</p>
+        </div>
+        <div class="metric-card">
+            <h3>Sprint完成率</h3>
+            <p class="value">87%</p>
+        </div>
+        <div class="metric-card">
+            <h3>招聘</h3>
+            <p class="value">在面12人</p>
+        </div>
+        <div class="metric-card risk">
+            <h3>风险</h3>
+            <p class="value">大客户A续约谈判</p>
+        </div>
+        <div class="chart-container">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('salesChart').getContext('2d');
+        var salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Sales (¥)',
+                    data: [2000, 2300, 2500, 3000, 3200, 2800, 3000, 3400, 3500, 3100, 2900, 2800],
+                    backgroundColor: 'rgba(255, 204, 0, 0.2)',
+                    borderColor: 'rgba(255, 204, 0, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

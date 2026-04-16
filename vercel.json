@@ -1,20 +1,9 @@
 {
   "buildCommand": null,
-  "outputDirectory": ".",
+  "outputDirectory": "docs",
   "framework": null,
+  "cleanUrls": true,
   "trailingSlash": true,
-  "redirects": [
-    { "source": "/org-uplift", "destination": "/org-uplift/", "statusCode": 308 },
-    { "source": "/autoresearch", "destination": "/autoresearch/", "statusCode": 308 }
-  ],
-  "rewrites": [
-    { "source": "/org-uplift/", "destination": "/demos/demo-metr-org-uplift/index.html" },
-    { "source": "/org-uplift/:path*", "destination": "/demos/demo-metr-org-uplift/:path*" },
-    { "source": "/ceo-dashboard/", "destination": "/demos/orchestrator/ceo-dashboard.html" },
-    { "source": "/autoresearch/", "destination": "/demos/bonus-autoresearch/website/index.html" },
-    { "source": "/autoresearch/:path*", "destination": "/demos/bonus-autoresearch/website/:path*" },
-    { "source": "/", "destination": "/docs/index.html" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
