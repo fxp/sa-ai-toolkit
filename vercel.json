@@ -1,15 +1,32 @@
 {
   "buildCommand": null,
-  "outputDirectory": "docs",
+  "outputDirectory": ".",
   "framework": null,
-  "cleanUrls": true,
-  "trailingSlash": true,
+  "functions": {
+    "api/*.py": {
+      "runtime": "@vercel/python@4.5.0"
+    }
+  },
+  "redirects": [
+    { "source": "/org-uplift", "destination": "/docs/org-uplift/index.html", "statusCode": 308 },
+    { "source": "/org-uplift/", "destination": "/docs/org-uplift/index.html", "statusCode": 308 },
+    { "source": "/ceo-dashboard", "destination": "/docs/ceo-dashboard/index.html", "statusCode": 308 },
+    { "source": "/ceo-dashboard/", "destination": "/docs/ceo-dashboard/index.html", "statusCode": 308 },
+    { "source": "/autoresearch", "destination": "/docs/autoresearch/index.html", "statusCode": 308 },
+    { "source": "/autoresearch/", "destination": "/docs/autoresearch/index.html", "statusCode": 308 },
+    { "source": "/industrial-ai", "destination": "/docs/industrial-ai/index.html", "statusCode": 308 },
+    { "source": "/industrial-ai/", "destination": "/docs/industrial-ai/index.html", "statusCode": 308 }
+  ],
+  "rewrites": [
+    { "source": "/", "destination": "/docs/index.html" }
+  ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" }
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
       ]
     }
   ]

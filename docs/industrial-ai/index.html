@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Industrial AI Pipeline</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
+  .terminal { background: #0a0a1a; border: 1px solid #1e293b; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .terminal .prompt { color: #10b981; }
+  .terminal .output { color: #94a3b8; }
+  .terminal .highlight { color: #60a5fa; }
+  .terminal .warn { color: #f59e0b; }
+  .terminal .error { color: #ef4444; }
+  .terminal .success { color: #22c55e; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  .btn-action { transition: all 0.2s; }
+  .btn-action:hover { transform: translateY(-1px); }
+  .btn-action:active { transform: translateY(0); }
+  .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(59,130,246,0.2); } 50% { box-shadow: 0 0 40px rgba(59,130,246,0.4); } }
+  .result-active { animation: pulse-glow 2s ease-in-out; }
+  .pipeline-step { transition: all 0.3s; }
+  .pipeline-step.active { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
+  .pipeline-step.done { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+</style>
+</head>
+<body class="text-gray-300 min-h-screen">
+
+<!-- Language Toggle -->
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span id="lang-icon">&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
+
+<!-- Header -->
+<header class="pt-16 pb-8 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-5xl mb-4">&#9881;</div>
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
+      <span class="gradient-text" data-en="Industrial AI Pipeline" data-zh="工业AI全链路管线">Industrial AI Pipeline</span>
+    </h1>
+    <p class="text-lg text-gray-400 mb-2">SAM3 + SAM-Audio + TimesFM + LLM</p>
+    <p class="text-gray-500" data-en="Perceive &rarr; Predict &rarr; Diagnose" data-zh="感知 &rarr; 预测 &rarr; 归因"></p>
+  </div>
+</header>
+
+<!-- Pipeline Steps -->
+<section class="px-6 pb-6">
+  <div class="max-w-4xl mx-auto">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div id="step-detect" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
+        <div class="text-2xl mb-2">&#128065;</div>
+        <div class="text-sm font-bold text-white" data-en="Perceive" data-zh="感知"></div>
+        <div class="text-xs text-gray-500" data-en="SAM3 + SAM-Audio" data-zh="SAM3 + SAM-Audio"></div>
+      </div>
+      <div id="step-predict" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
+        <div class="text-2xl mb-2">&#128200;</div>
+        <div class="text-sm font-bold text-white" data-en="Predict" data-zh="预测"></div>
+        <div class="text-xs text-gray-500" data-en="TimesFM" data-zh="TimesFM"></div>
+      </div>
+      <div id="step-diagnose" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
+        <div class="text-2xl mb-2">&#129520;</div>
+        <div class="text-sm font-bold text-white" data-en="Diagnose" data-zh="归因"></div>
+        <div class="text-xs text-gray-500" data-en="LLM Root Cause" data-zh="LLM 根因分析"></div>
+      </div>
+      <div id="step-full" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
+        <div class="text-2xl mb-2">&#9889;</div>
+        <div class="text-sm font-bold text-white" data-en="Full Pipeline" data-zh="全链路"></div>
+        <div class="text-xs text-gray-500" data-en="End-to-End" data-zh="端到端"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Action Buttons -->
+<section class="px-6 pb-6">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex flex-wrap gap-3 justify-center">
+      <button onclick="runFullPipeline()" class="btn-action px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 flex items-center gap-2" data-en="Run Full Pipeline" data-zh="运行全链路">
+        <span>&#9654;</span> <span data-en="Run Full Pipeline" data-zh="运行全链路"></span>
+      </button>
+      <button onclick="runDetect()" class="btn-action px-6 py-3 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-500 flex items-center gap-2">
+        <span>&#128065;</span> <span data-en="Detect" data-zh="检测"></span>
+      </button>
+      <button onclick="runPredict()" class="btn-action px-6 py-3 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-500 flex items-center gap-2">
+        <span>&#128200;</span> <span data-en="Predict" data-zh="预测"></span>
+      </button>
+      <button onclick="runDiagnose()" class="btn-action px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-500 flex items-center gap-2">
+        <span>&#129520;</span> <span data-en="Diagnose" data-zh="归因分析"></span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Output Area -->
+<section class="px-6 pb-16">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-bold text-white" data-en="Output" data-zh="输出结果"></h2>
+      <button onclick="clearOutput()" class="text-xs text-gray-500 hover:text-gray-300 transition" data-en="Clear" data-zh="清除"></button>
+    </div>
+    <div id="output" class="terminal p-6 min-h-[300px] text-sm leading-relaxed glow">
+      <div class="text-gray-600 italic" data-en="Click a button above to run the pipeline..." data-zh="点击上方按钮运行管线..."></div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
+  <p data-en="Industrial AI Pipeline | SAM3 + SAM-Audio + TimesFM + LLM" data-zh="工业AI全链路管线 | SAM3 + SAM-Audio + TimesFM + LLM"></p>
+  <p class="mt-1">
+    <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to SA AI Toolkit" data-zh="&larr; 返回 SA AI Toolkit"></a>
+  </p>
+</footer>
+
+<!-- Scripts -->
+<script>
+// ==================== i18n ====================
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY)
+    || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+
+  function applyLang(l) {
+    lang = l;
+    localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute('data-' + l);
+      if (text) {
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.placeholder = text;
+        } else {
+          const children = Array.from(el.childNodes).filter(n => n.nodeType === 1);
+          if (children.length > 0 && el.childNodes.length > 1) {
+            el.childNodes.forEach(n => {
+              if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text;
+            });
+          } else if (children.length === 0) {
+            el.textContent = text;
+          } else {
+            const first = el.firstChild;
+            if (first && first.nodeType === 3) first.textContent = text;
+          }
+        }
+      }
+    });
+
+    const label = document.getElementById('lang-label');
+    if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+
+  document.getElementById('lang-toggle').addEventListener('click', () => {
+    applyLang(lang === 'en' ? 'zh' : 'en');
+  });
+
+  window._getLang = () => lang;
+  applyLang(lang);
+})();
+
+// ==================== Output Helpers ====================
+const output = document.getElementById('output');
+
+function clearOutput() {
+  output.innerHTML = '<div class="text-gray-600 italic" data-en="Click a button above to run the pipeline..." data-zh="点击上方按钮运行管线..."></div>';
+  // Re-apply i18n
+  const l = window._getLang();
+  output.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    el.textContent = el.getAttribute('data-' + l);
+  });
+  // Reset pipeline steps
+  document.querySelectorAll('.pipeline-step').forEach(s => s.classList.remove('active', 'done'));
+}
+
+function showLoading(message) {
+  const l = window._getLang();
+  const msg = typeof message === 'object' ? (message[l] || message.en) : message;
+  output.innerHTML = '<div class="flex items-center gap-3"><span class="spinner"></span><span class="text-gray-400">' + msg + '</span></div>';
+}
+
+function appendLine(html) {
+  const placeholder = output.querySelector('.italic');
+  if (placeholder) placeholder.remove();
+  const loader = output.querySelector('.spinner');
+  if (loader) loader.parentElement.remove();
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  output.appendChild(div);
+  output.scrollTop = output.scrollHeight;
+}
+
+function appendSection(title, items) {
+  const l = window._getLang();
+  const t = typeof title === 'object' ? (title[l] || title.en) : title;
+  let html = '<div class="mt-4 mb-2 text-white font-bold border-b border-gray-700 pb-1">' + t + '</div>';
+  items.forEach(item => {
+    if (typeof item === 'object' && item.label) {
+      const label = typeof item.label === 'object' ? (item.label[l] || item.label.en) : item.label;
+      const value = typeof item.value === 'object' ? (item.value[l] || item.value.en) : item.value;
+      const cls = item.cls || 'output';
+      html += '<div class="' + cls + ' ml-2"><span class="text-gray-500">' + label + ':</span> ' + value + '</div>';
+    } else {
+      html += '<div class="output ml-2">' + item + '</div>';
+    }
+  });
+  appendLine(html);
+}
+
+function appendTimestamp() {
+  const now = new Date().toLocaleTimeString();
+  appendLine('<div class="text-gray-600 text-xs mt-1">[' + now + ']</div>');
+}
+
+function setStepState(stepId, state) {
+  const el = document.getElementById(stepId);
+  if (!el) return;
+  el.classList.remove('active', 'done');
+  if (state) el.classList.add(state);
+}
+
+function setButtons(disabled) {
+  document.querySelectorAll('.btn-action').forEach(b => b.disabled = disabled);
+}
+
+async function apiFetch(url, options) {
+  try {
+    const resp = await fetch(url, options);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return await resp.json();
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+// ==================== API Calls ====================
+
+async function runDetect() {
+  setButtons(true);
+  setStepState('step-detect', 'active');
+  showLoading({ en: 'Running detection (SAM3 + SAM-Audio)...', zh: '正在执行检测 (SAM3 + SAM-Audio)...' });
+
+  const data = await apiFetch('/api/detect');
+  output.innerHTML = '';
+  appendTimestamp();
+
+  if (data.error) {
+    appendLine('<div class="error">Error: ' + data.error + '</div>');
+    appendSection({ en: 'Simulated Detection Results', zh: '模拟检测结果' }, [
+      { label: { en: 'SAM3 Visual Defects', zh: 'SAM3 视觉缺陷' }, value: '2 defects found (crack @B7, chip @A3)', cls: 'warn' },
+      { label: { en: 'SAM3 Confidence', zh: 'SAM3 置信度' }, value: '0.94, 0.87' },
+      { label: { en: 'SAM-Audio Anomaly', zh: 'SAM-Audio 异常' }, value: 'Bearing wear signature @1200Hz', cls: 'warn' },
+      { label: { en: 'SAM-Audio SNR', zh: 'SAM-Audio 信噪比' }, value: '23.4 dB' },
+      { label: { en: 'Status', zh: '状态' }, value: 'ANOMALY DETECTED', cls: 'error' },
+    ]);
+  } else {
+    appendSection({ en: 'Detection Results', zh: '检测结果' }, formatDetectResults(data));
+  }
+
+  setStepState('step-detect', 'done');
+  setButtons(false);
+}
+
+async function runPredict() {
+  setButtons(true);
+  setStepState('step-predict', 'active');
+  showLoading({ en: 'Running prediction (TimesFM)...', zh: '正在执行预测 (TimesFM)...' });
+
+  const data = await apiFetch('/api/predict');
+  output.innerHTML = '';
+  appendTimestamp();
+
+  if (data.error) {
+    appendLine('<div class="error">Error: ' + data.error + '</div>');
+    appendSection({ en: 'Simulated Prediction Results', zh: '模拟预测结果' }, [
+      { label: { en: 'Yield Forecast (7d)', zh: '产量预测 (7天)' }, value: '-0.05%/day trend', cls: 'warn' },
+      { label: { en: 'Remaining Useful Life', zh: '剩余使用寿命' }, value: '175 hours (7.3 days)', cls: 'warn' },
+      { label: { en: 'Confidence Interval', zh: '置信区间' }, value: '95% CI: [148h, 203h]' },
+      { label: { en: 'Maintenance Window', zh: '维护窗口' }, value: 'Recommended within 120 hours', cls: 'highlight' },
+      { label: { en: 'Model', zh: '模型' }, value: 'TimesFM-2.0 (200M params)' },
+    ]);
+  } else {
+    appendSection({ en: 'Prediction Results', zh: '预测结果' }, formatPredictResults(data));
+  }
+
+  setStepState('step-predict', 'done');
+  setButtons(false);
+}
+
+async function runDiagnose() {
+  setButtons(true);
+  setStepState('step-diagnose', 'active');
+  showLoading({ en: 'Running root cause analysis (LLM)...', zh: '正在执行根因分析 (LLM)...' });
+
+  const data = await apiFetch('/api/diagnose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  output.innerHTML = '';
+  appendTimestamp();
+
+  if (data.error) {
+    appendLine('<div class="error">Error: ' + data.error + '</div>');
+    appendSection({ en: 'Simulated Root Cause Analysis', zh: '模拟根因分析' }, [
+      { label: { en: 'Primary Cause', zh: '主因' }, value: 'Blade #7 wear (probability: 90%)', cls: 'error' },
+      { label: { en: 'Secondary Cause', zh: '次因' }, value: 'Slurry viscosity drift (probability: 60%)', cls: 'warn' },
+      { label: { en: 'Evidence Chain', zh: '证据链' }, value: 'Visual crack @B7 + Audio 1200Hz + Yield decline', cls: 'highlight' },
+      { label: { en: 'Recommendation', zh: '建议措施' }, value: 'Replace Blade #7, recalibrate slurry pump', cls: 'success' },
+      { label: { en: 'Priority', zh: '优先级' }, value: 'HIGH - schedule within 24h', cls: 'error' },
+    ]);
+  } else {
+    appendSection({ en: 'Root Cause Analysis', zh: '根因分析' }, formatDiagnoseResults(data));
+  }
+
+  setStepState('step-diagnose', 'done');
+  setButtons(false);
+}
+
+async function runFullPipeline() {
+  setButtons(true);
+  output.innerHTML = '';
+  appendTimestamp();
+  appendLine('<div class="text-white font-bold text-base mb-2" data-en="Full Pipeline Execution" data-zh="全链路执行">&#9889; Full Pipeline Execution</div>');
+
+  // Step 1: Detect
+  setStepState('step-detect', 'active');
+  appendLine('<div class="flex items-center gap-2 mt-3"><span class="spinner"></span><span class="text-gray-400" data-en="[1/3] Running detection..." data-zh="[1/3] 正在检测...">[1/3] Running detection...</span></div>');
+
+  const detectData = await apiFetch('/api/detect');
+  output.querySelector('.spinner').parentElement.remove();
+  if (detectData.error) {
+    appendLine('<div class="warn">[1/3] Detect: using simulated results</div>');
+    appendSection({ en: 'Perception (SAM3 + SAM-Audio)', zh: '感知层 (SAM3 + SAM-Audio)' }, [
+      { label: { en: 'Visual', zh: '视觉' }, value: '2 defects (crack @B7, chip @A3)', cls: 'warn' },
+      { label: { en: 'Audio', zh: '声纹' }, value: 'Bearing wear @1200Hz', cls: 'warn' },
+    ]);
+  } else {
+    appendSection({ en: 'Perception (SAM3 + SAM-Audio)', zh: '感知层 (SAM3 + SAM-Audio)' }, formatDetectResults(detectData));
+  }
+  setStepState('step-detect', 'done');
+
+  // Step 2: Predict
+  setStepState('step-predict', 'active');
+  appendLine('<div class="flex items-center gap-2 mt-2"><span class="spinner"></span><span class="text-gray-400" data-en="[2/3] Running prediction..." data-zh="[2/3] 正在预测...">[2/3] Running prediction...</span></div>');
+
+  const predictData = await apiFetch('/api/predict');
+  output.querySelector('.spinner').parentElement.remove();
+  if (predictData.error) {
+    appendLine('<div class="warn">[2/3] Predict: using simulated results</div>');
+    appendSection({ en: 'Prediction (TimesFM)', zh: '预测层 (TimesFM)' }, [
+      { label: { en: 'Yield Trend', zh: '产量趋势' }, value: '-0.05%/day', cls: 'warn' },
+      { label: { en: 'RUL', zh: '剩余寿命' }, value: '175h (7.3 days)', cls: 'warn' },
+    ]);
+  } else {
+    appendSection({ en: 'Prediction (TimesFM)', zh: '预测层 (TimesFM)' }, formatPredictResults(predictData));
+  }
+  setStepState('step-predict', 'done');
+
+  // Step 3: Diagnose
+  setStepState('step-diagnose', 'active');
+  appendLine('<div class="flex items-center gap-2 mt-2"><span class="spinner"></span><span class="text-gray-400" data-en="[3/3] Running diagnosis..." data-zh="[3/3] 正在归因分析...">[3/3] Running diagnosis...</span></div>');
+
+  const diagnoseData = await apiFetch('/api/diagnose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  output.querySelector('.spinner').parentElement.remove();
+  if (diagnoseData.error) {
+    appendLine('<div class="warn">[3/3] Diagnose: using simulated results</div>');
+    appendSection({ en: 'Diagnosis (LLM)', zh: '归因层 (LLM)' }, [
+      { label: { en: 'Root Cause', zh: '根因' }, value: 'Blade #7 wear [90%]', cls: 'error' },
+      { label: { en: 'Contributing', zh: '次因' }, value: 'Slurry viscosity drift [60%]', cls: 'warn' },
+      { label: { en: 'Action', zh: '措施' }, value: 'Replace blade, recalibrate pump', cls: 'success' },
+    ]);
+  } else {
+    appendSection({ en: 'Diagnosis (LLM)', zh: '归因层 (LLM)' }, formatDiagnoseResults(diagnoseData));
+  }
+  setStepState('step-diagnose', 'done');
+  setStepState('step-full', 'done');
+
+  // Summary
+  appendLine('<div class="mt-4 pt-3 border-t border-gray-700"><span class="success font-bold" data-en="Pipeline complete." data-zh="管线执行完毕。">Pipeline complete.</span></div>');
+
+  setButtons(false);
+}
+
+// ==================== Result Formatters ====================
+
+function formatDetectResults(data) {
+  const items = [];
+  if (data.visual_defects !== undefined) items.push({ label: { en: 'Visual Defects', zh: '视觉缺陷' }, value: JSON.stringify(data.visual_defects), cls: 'warn' });
+  if (data.audio_anomaly !== undefined) items.push({ label: { en: 'Audio Anomaly', zh: '声纹异常' }, value: JSON.stringify(data.audio_anomaly), cls: 'warn' });
+  if (data.confidence !== undefined) items.push({ label: { en: 'Confidence', zh: '置信度' }, value: data.confidence });
+  if (data.status !== undefined) items.push({ label: { en: 'Status', zh: '状态' }, value: data.status, cls: data.status === 'OK' ? 'success' : 'error' });
+  // Catch-all for other fields
+  Object.keys(data).forEach(k => {
+    if (!['visual_defects','audio_anomaly','confidence','status','error'].includes(k)) {
+      items.push({ label: k, value: typeof data[k] === 'object' ? JSON.stringify(data[k]) : String(data[k]) });
+    }
+  });
+  return items.length ? items : [{ label: 'Response', value: JSON.stringify(data) }];
+}
+
+function formatPredictResults(data) {
+  const items = [];
+  if (data.yield_forecast !== undefined) items.push({ label: { en: 'Yield Forecast', zh: '产量预测' }, value: JSON.stringify(data.yield_forecast), cls: 'warn' });
+  if (data.rul !== undefined) items.push({ label: { en: 'Remaining Useful Life', zh: '剩余使用寿命' }, value: data.rul, cls: 'warn' });
+  if (data.confidence_interval !== undefined) items.push({ label: { en: 'Confidence Interval', zh: '置信区间' }, value: JSON.stringify(data.confidence_interval) });
+  if (data.maintenance_window !== undefined) items.push({ label: { en: 'Maintenance Window', zh: '维护窗口' }, value: data.maintenance_window, cls: 'highlight' });
+  Object.keys(data).forEach(k => {
+    if (!['yield_forecast','rul','confidence_interval','maintenance_window','error'].includes(k)) {
+      items.push({ label: k, value: typeof data[k] === 'object' ? JSON.stringify(data[k]) : String(data[k]) });
+    }
+  });
+  return items.length ? items : [{ label: 'Response', value: JSON.stringify(data) }];
+}
+
+function formatDiagnoseResults(data) {
+  const items = [];
+  if (data.primary_cause !== undefined) items.push({ label: { en: 'Primary Cause', zh: '主因' }, value: data.primary_cause, cls: 'error' });
+  if (data.secondary_cause !== undefined) items.push({ label: { en: 'Secondary Cause', zh: '次因' }, value: data.secondary_cause, cls: 'warn' });
+  if (data.root_causes !== undefined) items.push({ label: { en: 'Root Causes', zh: '根因' }, value: JSON.stringify(data.root_causes), cls: 'error' });
+  if (data.evidence !== undefined) items.push({ label: { en: 'Evidence', zh: '证据' }, value: JSON.stringify(data.evidence), cls: 'highlight' });
+  if (data.recommendation !== undefined) items.push({ label: { en: 'Recommendation', zh: '建议措施' }, value: data.recommendation, cls: 'success' });
+  if (data.priority !== undefined) items.push({ label: { en: 'Priority', zh: '优先级' }, value: data.priority, cls: data.priority === 'HIGH' ? 'error' : 'warn' });
+  Object.keys(data).forEach(k => {
+    if (!['primary_cause','secondary_cause','root_causes','evidence','recommendation','priority','error'].includes(k)) {
+      items.push({ label: k, value: typeof data[k] === 'object' ? JSON.stringify(data[k]) : String(data[k]) });
+    }
+  });
+  return items.length ? items : [{ label: 'Response', value: JSON.stringify(data) }];
+}
+</script>
+
+</body>
+</html>
