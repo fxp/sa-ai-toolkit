@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SA AI Toolkit — Enterprise AI Demo Platform</title>
+<title>SA AI Toolkit</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; }
+  body { background: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
   .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
   .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
@@ -18,9 +18,19 @@
   .terminal .highlight { color: #60a5fa; }
   @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
   .float { animation: float 3s ease-in-out infinite; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
 </style>
 </head>
 <body class="text-gray-300 min-h-screen">
+
+<!-- Language Toggle (top-right, always visible) -->
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span id="lang-icon">&#127760;</span>
+    <span id="lang-label">EN / 中文</span>
+  </button>
+</div>
 
 <!-- Hero -->
 <section class="relative overflow-hidden py-20 px-6">
@@ -28,11 +38,11 @@
   <div class="max-w-4xl mx-auto relative text-center">
     <div class="text-6xl mb-4 float">&#129438;</div>
     <h1 class="text-5xl font-extrabold mb-4"><span class="gradient-text">SA AI Toolkit</span></h1>
-    <p class="text-xl text-gray-400 mb-2">Enterprise AI Demo Platform for Solution Architects</p>
-    <p class="text-gray-500 mb-8">Input a company name. Get 20+ customized AI demos. Ready to present.</p>
+    <p class="text-xl text-gray-400 mb-2" data-en="Enterprise AI Demo Platform for Solution Architects" data-zh="面向解决方案架构师的企业AI演示平台"></p>
+    <p class="text-gray-500 mb-8" data-en="Input a company name. Get 20+ customized AI demos. Ready to present." data-zh="输入一家企业名称，获得20+定制化AI演示方案，直接用于现场培训。"></p>
     <div class="flex justify-center gap-4">
-      <a href="https://github.com/fxp/sa-ai-toolkit" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 transition">GitHub Repo</a>
-      <a href="#demos" class="px-6 py-3 bg-gray-800 text-gray-300 rounded-lg font-bold hover:bg-gray-700 transition border border-gray-700">Explore Demos</a>
+      <a href="https://github.com/fxp/sa-ai-toolkit" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 transition" data-en="GitHub Repo" data-zh="GitHub 仓库"></a>
+      <a href="#demos" class="px-6 py-3 bg-gray-800 text-gray-300 rounded-lg font-bold hover:bg-gray-700 transition border border-gray-700" data-en="Explore Demos" data-zh="浏览演示"></a>
     </div>
   </div>
 </section>
@@ -40,35 +50,35 @@
 <!-- How It Works -->
 <section class="py-16 px-6">
   <div class="max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold text-white text-center mb-12">3 Commands. Any Company. Any Industry.</h2>
+    <h2 class="text-3xl font-bold text-white text-center mb-12" data-en="3 Commands. Any Company. Any Industry." data-zh="3个命令，任何企业，任何行业。"></h2>
     <div class="terminal p-6 glow mb-8">
       <div class="space-y-3 text-sm">
         <div><span class="prompt">$</span> <span class="text-white">/gen</span> <span class="text-yellow-400">CATL</span></div>
-        <div class="output">  Searching company info... Industry: Battery Manufacturing</div>
-        <div class="output">  Scoring 20 demos... Selected 18 (all applicable for manufacturing!)</div>
-        <div class="output">  Generating customized content...</div>
-        <div class="highlight">  &#10003; 23 files written to outputs/CATL/</div>
+        <div class="output" data-en="  Searching company info... Industry: Battery Manufacturing" data-zh="  搜索企业信息... 行业：电池制造"></div>
+        <div class="output" data-en="  Scoring 20 demos... Selected 18 (all applicable for manufacturing!)" data-zh="  评分20个Demo... 选出18个（制造业全部适用！）"></div>
+        <div class="output" data-en="  Generating customized content..." data-zh="  生成定制化内容..."></div>
+        <div class="highlight" data-en="  &#10003; 23 files written to outputs/CATL/" data-zh="  &#10003; 23个文件已写入 outputs/宁德时代/"></div>
         <div class="mt-4"><span class="prompt">$</span> <span class="text-white">/customize</span> <span class="text-yellow-400">add 5 difficulty levels to roleplay</span></div>
-        <div class="output">  Updated demos/roleplay.md (L1: Basic → L5: Regulatory audit)</div>
+        <div class="output" data-en="  Updated demos/roleplay.md (L1: Basic → L5: Regulatory audit)" data-zh="  已更新 demos/roleplay.md (L1:基础 → L5:监管审计)"></div>
         <div class="mt-4"><span class="prompt">$</span> <span class="text-white">/present</span> <span class="text-yellow-400">export PPT</span></div>
-        <div class="highlight">  &#10003; CATL_AI_Training.pptx generated (brand green #00A651)</div>
+        <div class="highlight" data-en="  &#10003; CATL_AI_Training.pptx generated (brand green #00A651)" data-zh="  &#10003; 宁德时代_AI培训.pptx 已生成（品牌绿 #00A651）"></div>
       </div>
     </div>
     <div class="grid md:grid-cols-3 gap-4">
       <div class="card rounded-xl p-6 text-center transition">
         <div class="text-3xl mb-3">&#9881;</div>
         <h3 class="text-white font-bold mb-2">/gen</h3>
-        <p class="text-sm text-gray-400">Auto-profile the company, score demos, generate customized content</p>
+        <p class="text-sm text-gray-400" data-en="Auto-profile the company, score demos, generate customized content" data-zh="自动采集企业画像，评分选Demo，生成定制化内容"></p>
       </div>
       <div class="card rounded-xl p-6 text-center transition">
         <div class="text-3xl mb-3">&#9998;</div>
         <h3 class="text-white font-bold mb-2">/customize</h3>
-        <p class="text-sm text-gray-400">Replace terms, add demos, switch audience, deepen any section</p>
+        <p class="text-sm text-gray-400" data-en="Replace terms, add demos, switch audience, deepen any section" data-zh="替换术语、增删Demo、切换受众、深度定制"></p>
       </div>
       <div class="card rounded-xl p-6 text-center transition">
         <div class="text-3xl mb-3">&#127916;</div>
         <h3 class="text-white font-bold mb-2">/present</h3>
-        <p class="text-sm text-gray-400">Export PPT/Word, launch web demos, run rehearsal mode</p>
+        <p class="text-sm text-gray-400" data-en="Export PPT/Word, launch web demos, run rehearsal mode" data-zh="导出PPT/Word，启动Web演示，运行彩排模式"></p>
       </div>
     </div>
   </div>
@@ -77,107 +87,98 @@
 <!-- Demo Showcase -->
 <section id="demos" class="py-16 px-6 bg-gray-900/50">
   <div class="max-w-5xl mx-auto">
-    <h2 class="text-3xl font-bold text-white text-center mb-4">20 Enterprise AI Demos</h2>
-    <p class="text-gray-400 text-center mb-12">Each demo is a real, runnable experiment — not a slide</p>
+    <h2 class="text-3xl font-bold text-white text-center mb-4" data-en="20 Enterprise AI Demos" data-zh="20个企业AI实操演示"></h2>
+    <p class="text-gray-400 text-center mb-12" data-en="Each demo is a real, runnable experiment — not a slide" data-zh="每个Demo都是可运行的真实实验——不是PPT"></p>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- Highlight demos -->
-      <div class="card rounded-xl p-5 transition col-span-full md:col-span-2 lg:col-span-3 glow">
+      <!-- Highlight: Industrial Pipeline -->
+      <div class="card rounded-xl p-5 transition col-span-full glow">
         <div class="flex items-start gap-4">
-          <div class="text-4xl">&#128270;</div>
+          <div class="text-4xl flex-shrink-0">&#128270;</div>
           <div>
-            <div class="flex items-center gap-2 mb-1">
-              <h3 class="text-white font-bold text-lg">Industrial AI Pipeline</h3>
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 class="text-white font-bold text-lg" data-en="Industrial AI Pipeline" data-zh="工业AI全链路管线"></h3>
               <span class="tag bg-red-900/50 text-red-300">NEW</span>
-              <span class="tag bg-purple-900/50 text-purple-300">Runnable</span>
+              <span class="tag bg-purple-900/50 text-purple-300" data-en="Runnable" data-zh="可运行"></span>
             </div>
-            <p class="text-gray-400 text-sm mb-3">SAM3 (vision) + SAM-Audio (acoustic) + TimesFM (prediction) + LLM (root cause). A complete Perceive → Predict → Diagnose pipeline for manufacturing.</p>
+            <p class="text-gray-400 text-sm mb-3" data-en="SAM3 (vision) + SAM-Audio (acoustic) + TimesFM (prediction) + LLM (root cause). A complete Perceive → Predict → Diagnose pipeline." data-zh="SAM3(视觉) + SAM-Audio(声纹) + TimesFM(预测) + LLM(归因)。完整的 感知→预测→归因 管线。"></p>
             <div class="terminal p-3 text-xs">
               <div><span class="prompt">$</span> python pipeline.py run</div>
-              <div class="output">  SAM3: 2 defects (scratch, coating uneven) | Audio: bearing wear @1200Hz</div>
-              <div class="output">  TimesFM: yield dropping -0.05%/day, RUL 175h</div>
-              <div class="highlight">  Root cause: Blade#7 worn [90%] | Slurry viscosity [60%]</div>
+              <div class="output">  SAM3: 2 defects | Audio: bearing wear @1200Hz</div>
+              <div class="output">  TimesFM: yield -0.05%/day, RUL 175h</div>
+              <div class="highlight">  Root cause: Blade#7 worn [90%] | Slurry [60%]</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card rounded-xl p-5 transition col-span-full md:col-span-2 lg:col-span-3 glow">
+      <!-- Highlight: Org-Uplift -->
+      <div class="card rounded-xl p-5 transition col-span-full glow">
         <div class="flex items-start gap-4">
-          <div class="text-4xl">&#127922;</div>
+          <div class="text-4xl flex-shrink-0">&#127922;</div>
           <div>
-            <div class="flex items-center gap-2 mb-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
               <h3 class="text-white font-bold text-lg">Org-Uplift Game</h3>
               <span class="tag bg-green-900/50 text-green-300">Web App</span>
-              <span class="tag bg-blue-900/50 text-blue-300">Interactive</span>
+              <span class="tag bg-blue-900/50 text-blue-300" data-en="Interactive" data-zh="交互式"></span>
             </div>
-            <p class="text-gray-400 text-sm mb-3">Based on METR research: "What if your team had 200-hour AI agents?" 4 rounds, dice rolls, bottleneck tracking, auto-simulation. 3-5x productivity uplift.</p>
-            <div class="flex gap-2 mt-2">
-              <span class="text-xs text-gray-500">Features:</span>
+            <p class="text-gray-400 text-sm mb-3" data-en="Based on METR research: 'What if your team had 200-hour AI agents?' 4 rounds, dice rolls, bottleneck tracking. 3-5x productivity." data-zh="基于METR研究：'如果你的团队拥有200小时AI Agent？' 4回合推演，骰子判定，瓶颈追踪。3-5倍生产力。"></p>
+            <div class="flex gap-2 mt-2 flex-wrap">
               <span class="tag bg-gray-800 text-gray-300">Standup</span>
-              <span class="tag bg-gray-800 text-gray-300">Work Sim</span>
-              <span class="tag bg-gray-800 text-gray-300">Agent Execution</span>
-              <span class="tag bg-gray-800 text-gray-300">Auto Mode</span>
-              <span class="tag bg-gray-800 text-gray-300">Final Report</span>
+              <span class="tag bg-gray-800 text-gray-300" data-en="Work Sim" data-zh="工作模拟"></span>
+              <span class="tag bg-gray-800 text-gray-300" data-en="Agent Exec" data-zh="Agent执行"></span>
+              <span class="tag bg-gray-800 text-gray-300" data-en="Auto Mode" data-zh="一键模拟"></span>
+              <span class="tag bg-gray-800 text-gray-300" data-en="Report" data-zh="报告"></span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Regular demos -->
+      <!-- Demo cards -->
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#127891;</div>
-        <h3 class="text-white font-bold text-sm">AI Roleplay Training</h3>
-        <p class="text-xs text-gray-400 mt-1">Angry customers, tough negotiations — AI characters with dynamic emotions and scoring</p>
-        <span class="tag bg-yellow-900/40 text-yellow-300 mt-2 inline-block">All Industries</span>
+        <h3 class="text-white font-bold text-sm" data-en="AI Roleplay Training" data-zh="AI角色扮演培训"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="Dynamic emotional AI characters for customer service, negotiation, interview training" data-zh="动态情绪AI角色，用于客服、谈判、面试场景训练"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#128200;</div>
-        <h3 class="text-white font-bold text-sm">FinRobot Research</h3>
-        <p class="text-xs text-gray-400 mt-1">3-agent CoT: Data→Concept→Thesis. Full equity research in 30 min</p>
-        <span class="tag bg-blue-900/40 text-blue-300 mt-2 inline-block">Finance/Strategy</span>
+        <h3 class="text-white font-bold text-sm" data-en="FinRobot Research" data-zh="FinRobot行业研究"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="3-agent CoT: Data → Concept → Thesis. Full equity research in 30 min" data-zh="三Agent CoT：数据→概念→论文。30分钟完成完整行研"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#128218;</div>
-        <h3 class="text-white font-bold text-sm">Karpathy Knowledge Base</h3>
-        <p class="text-xs text-gray-400 mt-1">3-folder method: raw→wiki→outputs. LLM compiles and maintains your knowledge</p>
-        <span class="tag bg-yellow-900/40 text-yellow-300 mt-2 inline-block">All Industries</span>
+        <h3 class="text-white font-bold text-sm" data-en="Karpathy Knowledge Base" data-zh="Karpathy知识库"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="3-folder method: raw → wiki → outputs. LLM maintains your knowledge" data-zh="三文件夹方法：raw→wiki→outputs。LLM维护你的知识库"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#128161;</div>
-        <h3 class="text-white font-bold text-sm">CEO Board Simulation</h3>
-        <p class="text-xs text-gray-400 mt-1">Multi-agent strategic debate: CEO, CTO, CMO, CFO argue resource allocation</p>
-        <span class="tag bg-purple-900/40 text-purple-300 mt-2 inline-block">Strategy</span>
+        <h3 class="text-white font-bold text-sm" data-en="CEO Board Simulation" data-zh="CEO董事会模拟"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="Multi-agent strategic debate: CEO, CTO, CMO, CFO" data-zh="多Agent战略辩论：CEO、CTO、CMO、CFO"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#127757;</div>
-        <h3 class="text-white font-bold text-sm">Swarm Intelligence</h3>
-        <p class="text-xs text-gray-400 mt-1">MiroFish: simulate thousands of agents discussing your product launch</p>
-        <span class="tag bg-purple-900/40 text-purple-300 mt-2 inline-block">Strategy</span>
+        <h3 class="text-white font-bold text-sm" data-en="Swarm Intelligence" data-zh="群体智能推演"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="MiroFish: simulate thousands of agents discussing your product" data-zh="MiroFish：模拟万人讨论你的产品发布"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#9889;</div>
-        <h3 class="text-white font-bold text-sm">PCB Circuit Synthesis</h3>
-        <p class="text-xs text-gray-400 mt-1">Natural language → KiCad schematic → BOM → JLCPCB quote</p>
-        <span class="tag bg-orange-900/40 text-orange-300 mt-2 inline-block">Manufacturing</span>
+        <h3 class="text-white font-bold text-sm" data-en="PCB Circuit Synthesis" data-zh="LLM写PCB电路"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="Natural language → KiCad schematic → BOM → quote" data-zh="自然语言→KiCad原理图→BOM→报价"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#128640;</div>
-        <h3 class="text-white font-bold text-sm">Kaggle Pipeline</h3>
-        <p class="text-xs text-gray-400 mt-1">Auto-discover → deep research → compete → publish paper. End-to-end</p>
-        <span class="tag bg-green-900/40 text-green-300 mt-2 inline-block">R&D</span>
+        <h3 class="text-white font-bold text-sm" data-en="Kaggle Pipeline" data-zh="Kaggle全自动管线"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="Auto-discover → deep research → compete → publish paper" data-zh="自动发现→深度研究→参赛→出论文，端到端"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#128202;</div>
-        <h3 class="text-white font-bold text-sm">PPT Generation</h3>
-        <p class="text-xs text-gray-400 mt-1">Brand colors + logo → 12-page deck in 30 seconds</p>
-        <span class="tag bg-yellow-900/40 text-yellow-300 mt-2 inline-block">All Industries</span>
+        <h3 class="text-white font-bold text-sm" data-en="PPT Generation" data-zh="品牌PPT生成"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="Brand colors + logo → 12-page deck in 30 seconds" data-zh="品牌色+Logo→30秒生成12页deck"></p>
       </div>
       <div class="card rounded-xl p-4 transition">
         <div class="text-2xl mb-2">&#129302;</div>
-        <h3 class="text-white font-bold text-sm">Autonomous Agent</h3>
-        <p class="text-xs text-gray-400 mt-1">Agent that works 24/7 within YAML-defined boundaries</p>
-        <span class="tag bg-yellow-900/40 text-yellow-300 mt-2 inline-block">All Industries</span>
+        <h3 class="text-white font-bold text-sm" data-en="Autonomous Agent" data-zh="自主持续工作Agent"></h3>
+        <p class="text-xs text-gray-400 mt-1" data-en="Agent works 24/7 within YAML-defined boundaries" data-zh="Agent在YAML定义的边界内7×24自主工作"></p>
       </div>
     </div>
   </div>
@@ -186,34 +187,34 @@
 <!-- Tested Companies -->
 <section class="py-16 px-6">
   <div class="max-w-4xl mx-auto">
-    <h2 class="text-3xl font-bold text-white text-center mb-12">Tested With Real Companies</h2>
+    <h2 class="text-3xl font-bold text-white text-center mb-12" data-en="Tested With Real Companies" data-zh="真实企业全流程验证"></h2>
     <div class="grid md:grid-cols-2 gap-6">
       <div class="card rounded-xl p-6 transition">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-red-900/50 flex items-center justify-center text-red-400 font-bold">&#25307;</div>
+          <div class="w-10 h-10 rounded-full bg-red-900/50 flex items-center justify-center text-red-400 font-bold text-lg">招</div>
           <div>
-            <h3 class="text-white font-bold">China Merchants Bank</h3>
-            <p class="text-xs text-gray-400">Banking/Finance | 12万 employees</p>
+            <h3 class="text-white font-bold" data-en="China Merchants Bank" data-zh="招商银行"></h3>
+            <p class="text-xs text-gray-400" data-en="Banking/Finance | 120K employees" data-zh="银行/金融 | 12万员工"></p>
           </div>
         </div>
         <div class="space-y-1 text-sm text-gray-400">
-          <div>&#10003; 16 demos generated, 3 skipped (no hardware/CV)</div>
-          <div>&#10003; Real terms: 招行App, 金葵花, 招赢睿远, 闪电贷</div>
-          <div>&#10003; Top demo: Roleplay (VIP client complaint)</div>
+          <div data-en="&#10003; 16 demos generated, 3 skipped (no hardware/CV)" data-zh="&#10003; 生成16个Demo，跳过3个（无硬件/CV需求）"></div>
+          <div>&#10003; 招行App, 金葵花, 招赢睿远, 闪电贷</div>
+          <div data-en="&#10003; Top: Roleplay (VIP client complaint)" data-zh="&#10003; Top1: 角色扮演（金葵花客户投诉）"></div>
         </div>
       </div>
       <div class="card rounded-xl p-6 transition">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-green-900/50 flex items-center justify-center text-green-400 font-bold">&#23425;</div>
+          <div class="w-10 h-10 rounded-full bg-green-900/50 flex items-center justify-center text-green-400 font-bold text-lg">宁</div>
           <div>
-            <h3 class="text-white font-bold">CATL (宁德时代)</h3>
-            <p class="text-xs text-gray-400">Battery Manufacturing | 13万 employees</p>
+            <h3 class="text-white font-bold" data-en="CATL (宁德时代)" data-zh="宁德时代"></h3>
+            <p class="text-xs text-gray-400" data-en="Battery Manufacturing | 130K employees" data-zh="电池制造 | 13万员工"></p>
           </div>
         </div>
         <div class="space-y-1 text-sm text-gray-400">
-          <div>&#10003; 18 demos generated, ALL applicable!</div>
-          <div>&#10003; Real terms: 麒麟电池, CTP3.0, 神行超充, 极限制造</div>
-          <div>&#10003; Top demo: SAM3 (PPB-level cell inspection)</div>
+          <div data-en="&#10003; 18 demos generated, ALL applicable!" data-zh="&#10003; 生成18个Demo，全部适用！"></div>
+          <div>&#10003; 麒麟电池, CTP3.0, 神行超充, 极限制造</div>
+          <div data-en="&#10003; Top: SAM3 (PPB-level cell inspection)" data-zh="&#10003; Top1: SAM3（PPB级电芯质检）"></div>
         </div>
       </div>
     </div>
@@ -223,21 +224,19 @@
 <!-- Quick Start -->
 <section class="py-16 px-6 bg-gray-900/50">
   <div class="max-w-3xl mx-auto text-center">
-    <h2 class="text-3xl font-bold text-white mb-8">Get Started</h2>
+    <h2 class="text-3xl font-bold text-white mb-8" data-en="Get Started" data-zh="快速开始"></h2>
     <div class="terminal p-6 text-left text-sm glow">
-      <div class="text-gray-500 mb-2"># Clone the repo</div>
+      <div class="text-gray-500 mb-2" data-en="# Clone the repo" data-zh="# 克隆仓库"></div>
       <div><span class="prompt">$</span> git clone https://github.com/fxp/sa-ai-toolkit.git</div>
-      <div class="mt-3 text-gray-500"># Install skills (copy to Claude Code)</div>
+      <div class="mt-3 text-gray-500" data-en="# Install skills to Claude Code" data-zh="# 安装Skills到Claude Code"></div>
       <div><span class="prompt">$</span> cp -r demos/sa-ai-toolkit/skills/* ~/.claude/skills/</div>
-      <div class="mt-3 text-gray-500"># Generate a demo package for any company</div>
+      <div class="mt-3 text-gray-500" data-en="# Generate demo package for any company" data-zh="# 为任意企业生成演示包"></div>
       <div><span class="prompt">$</span> <span class="text-white">/gen</span> <span class="text-yellow-400">"your target company"</span></div>
-      <div class="mt-3 text-gray-500"># Try the Org-Uplift Game</div>
-      <div><span class="prompt">$</span> cd demos/demo-metr-org-uplift && python3 -m http.server 8765</div>
-      <div class="mt-3 text-gray-500"># Try the Industrial AI Pipeline</div>
+      <div class="mt-3 text-gray-500" data-en="# Try the Industrial AI Pipeline" data-zh="# 试运行工业AI管线"></div>
       <div><span class="prompt">$</span> cd demos/demo-industrial-ai-pipeline && python3 pipeline.py run</div>
     </div>
     <div class="mt-8">
-      <a href="https://github.com/fxp/sa-ai-toolkit" class="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-500 transition inline-block">View on GitHub &#8594;</a>
+      <a href="https://github.com/fxp/sa-ai-toolkit" class="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-500 transition inline-block" data-en="View on GitHub &#8594;" data-zh="在GitHub上查看 &#8594;"></a>
     </div>
   </div>
 </section>
@@ -245,8 +244,61 @@
 <!-- Footer -->
 <footer class="py-8 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
   <p>SA AI Toolkit | Built with Claude Code | MIT License</p>
-  <p class="mt-1">Inspired by <a href="https://metr.org/notes/2026-03-19-org-uplift-game/" class="text-blue-500 hover:underline">METR Research</a></p>
+  <p class="mt-1" data-en="Inspired by " data-zh="灵感来源：">
+    <a href="https://metr.org/notes/2026-03-19-org-uplift-game/" class="text-blue-500 hover:underline">METR Research</a>
+  </p>
 </footer>
+
+<!-- i18n Script -->
+<script>
+(function() {
+  const STORAGE_KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(STORAGE_KEY)
+    || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+
+  function applyLang(l) {
+    lang = l;
+    localStorage.setItem(STORAGE_KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const text = el.getAttribute(`data-${l}`);
+      if (text) {
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.placeholder = text;
+        } else {
+          // Preserve child elements (like <a> tags)
+          const children = Array.from(el.childNodes).filter(n => n.nodeType === 1);
+          if (children.length > 0 && el.childNodes.length > 1) {
+            // Has mixed content — only replace text nodes
+            el.childNodes.forEach(n => {
+              if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text;
+            });
+          } else if (children.length === 0) {
+            el.textContent = text;
+          } else {
+            // Element only has element children, set text before them
+            const first = el.firstChild;
+            if (first && first.nodeType === 3) first.textContent = text;
+          }
+        }
+      }
+    });
+
+    // Update toggle button
+    const label = document.getElementById('lang-label');
+    if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+  }
+
+  // Toggle handler
+  document.getElementById('lang-toggle').addEventListener('click', () => {
+    applyLang(lang === 'en' ? 'zh' : 'en');
+  });
+
+  // Initial apply
+  applyLang(lang);
+})();
+</script>
 
 </body>
 </html>
