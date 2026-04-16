@@ -1,0 +1,21 @@
+{
+  "industry": "banking-finance",
+  "industry_zh": "商业银行 / 金融机构",
+  "typical_roles": ["行长", "合规总监", "信贷总监", "零售业务总监", "IT总监", "风控总监"],
+  "typical_systems": ["核心银行系统", "征信系统", "CRM", "OA审批系统", "监管报送系统", "反洗钱系统"],
+  "typical_pain_points": ["A", "E", "G", "L"],
+  "sensitivity": "high",
+  "compliance": ["银保监会", "人民银行", "数据安全法", "个人信息保护法"],
+  "demo_scenarios": {
+    "01": { "roleA": "客户经理", "systemA": "CRM客户系统", "systemB": "征信数据库", "systemC": "OA审批系统", "queryTarget": "客户授信档案", "dataType": "信用评分数据", "output": "授信审批报告", "keyPoints": "风险评级+额度建议" },
+    "02": { "kbName": "信贷规则库", "docType": "授信政策+监管规定+判例", "question": "小微企业抵押贷款的LTV上限是多少？", "answer": "LTV≤70%，执行日期2024-03-01", "gap": "缺少：跨境业务合规指引", "metaphor": "老信贷经理退休带走20年授信经验" },
+    "03": { "oldLang": "COBOL", "newLang": "Java 17 + Spring Boot", "systemName": "核心银行主机系统", "scale": "200万行COBOL", "coreLogic": "利率计算公式", "validation": "利率结果分厘不差", "oldCost": "5年+2亿预算", "newCost": "3个月+200万" },
+    "04": { "dashName": "行长经营看板", "role": "分行行长", "kpi1": "今日存款余额¥480亿(+3%)", "kpi2": "贷款不良率1.2%", "kpi3": "中间业务收入¥8700万", "kpi4": "员工绩效达标率94%", "risk": "大客户A授信到期续签", "sources": "核心系统+CRM+OA" },
+    "05": { "ticketType": "贷款审批工单", "role": "信贷审核员", "t1": "个人房贷月供查询", "t2": "客户投诉贷款利率不合理", "t3": "账户转账操作确认", "t4": "授信额度调整申请", "t5": "要求联系行长投诉", "autoRate": "60%", "saving": "5个审核员→1个监督员" },
+    "06": { "docType": "监管政策/研报/合规通知", "readerRole": "合规官/研究员", "volume": "每周30-50份政策文件", "keyAnnotation": "适用于持牌机构，执行日期2025-01-01", "aiCritique": "该报告未披露样本量，数据说服力有限", "improvement": "合规官从逐字通读变成审核AI标注的关键条款" },
+    "07": { "topic": "是否引入AI贷款审批系统，替代50%人工审核", "roleA": "行长（支持：效率+竞争力）", "roleB": "合规总监（反对：监管风险）", "roleC": "CTO（建议先POC）", "keyNumber": "信贷审批人力成本8000万/年", "risk": "银保监会对AI决策的监管要求", "poc": "先在消费贷≤50万案件试点6个月" },
+    "08": { "user": "产品经理/业务分析师", "project": "客户流失预警看板：NPS+留存率+趋势图+离行预测", "q1": "目标用户是哪个岗位？", "q2": "数据从哪个系统取？", "q3": "离行的定义是什么？", "mvp": "只做数据展示，不做预测", "old": "3周排期+2次评审", "ai": "1天" },
+    "09": { "topic": "AI授信审批对小微企业不良率的影响研究", "keywords": "AI credit scoring SME default rate NPL", "experiment": "传统人工审批 vs AI辅助审批（对照实验）", "kpi": "不良率降低2%，审批时间减少70%", "abstract": "本研究验证了AI信贷模型在小微企业授信中的风险识别有效性" },
+    "10": { "pptType": "月度经营分析报告", "presenter": "分行行长", "audience": "总行管理委员会", "content": "存款¥480亿(+3%)，贷款不良率1.2%，中间业务¥8700万，零售业务增长12%", "brand": "招行红+深蓝，右上角加密级标识", "oldTime": "4-6小时", "scale": "全行28个分行，每月28份月报" }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "industry": "manufacturing",
+  "industry_zh": "制造业",
+  "typical_roles": ["生产总监", "质量总监", "工艺总工", "设备主管", "供应链总监", "IE工程师"],
+  "typical_systems": ["MES生产系统", "ERP", "WMS仓库系统", "QMS质量系统", "SCADA设备监控", "PLM产品数据"],
+  "typical_pain_points": ["A", "D", "J", "K"],
+  "sensitivity": "medium",
+  "compliance": ["ISO9001", "IATF16949", "行业质量认证"],
+  "demo_scenarios": {
+    "01": { "roleA": "生产主管", "systemA": "MES生产系统", "systemB": "质检系统", "systemC": "ERP", "queryTarget": "今日生产订单", "dataType": "设备故障记录", "output": "工单+采购单", "keyPoints": "延误风险+对策建议" },
+    "02": { "kbName": "工艺知识库", "docType": "工艺规程+质量标准+不良分析", "question": "铝合金5052焊接后的时效处理参数？", "answer": "175℃×8h，公差±5℃，炉内均匀性≤±3℃", "gap": "缺少：夜班操作补充规程", "metaphor": "首席工艺工程师离职带走20年核心工艺经验" },
+    "03": { "oldLang": "VB6", "newLang": "Python 3 + FastAPI", "systemName": "生产调度VB6系统", "scale": "50万行VB6", "coreLogic": "排程优化算法", "validation": "排程结果与原系统完全一致", "oldCost": "3年+8000万", "newCost": "6周+工程师团队" },
+    "04": { "dashName": "生产总监看板", "role": "生产总监", "kpi1": "今日产量完成率94%（目标100%）", "kpi2": "设备稼动率88%", "kpi3": "质量合格率98.2%", "kpi4": "订单准时交付率96%", "risk": "3号产线关键设备保养窗口到期（标红）", "sources": "MES+ERP+WMS+QMS" },
+    "05": { "ticketType": "设备维修工单", "role": "设备主管", "t1": "例行月度PM检查到期，按工卡执行", "t2": "3号产线主轴异常振动，需停线检修", "t3": "润滑油例行更换，库存足够", "t4": "导航软件/控制程序升级", "t5": "操作员报告异响，位置不明确", "autoRate": "60%", "saving": "3个设备主管→1个监督员" },
+    "06": { "docType": "技术标准/质量通报/行业法规", "readerRole": "质量工程师", "volume": "每月20份技术通报+行业标准更新", "keyAnnotation": "批号2024XX-001需进行100%复检，不合格品隔离处理", "aiCritique": "该标准与GB/T 2024版本存在潜在冲突，建议澄清", "improvement": "质量工程师从逐页通读变成审核AI标注的关键条款" },
+    "07": { "topic": "是否投资2亿引进全自动化产线，替代现有半自动产线", "roleA": "CEO（支持：提升竞争力）", "roleB": "CFO（反对：ROI不确定，IRR假设乐观）", "roleC": "生产VP（中立：评估产能切换风险）", "keyNumber": "新产线投资2亿，IRR预测18%，回收期5年", "risk": "ROI测算依赖产量增长假设，需求侧不确定", "poc": "先在1号产线试点3个月，验证产能和质量数据" },
+    "08": { "user": "工艺工程师/IE工程师", "project": "产线效率追踪系统：OEE实时计算+故障热力图+改善建议", "q1": "要追踪哪几条产线？", "q2": "数据从哪个系统取？", "q3": "OEE的计算口径是什么？", "mvp": "只追踪3条关键产线，不做预测", "old": "6周开发+验收", "ai": "3天" },
+    "09": { "topic": "铝合金焊接变形的工艺参数优化研究", "keywords": "aluminum welding distortion control fixture design", "experiment": "传统工艺参数 vs 优化焊接参数（多因子实验）", "kpi": "变形量降低30%，合格率提升15%，返工率降低50%", "abstract": "本研究提出了一种基于田口方法的铝合金焊接变形控制工艺优化方案" },
+    "10": { "pptType": "月度质量月报", "presenter": "质量总监", "audience": "集团董事会", "content": "产品合格率98.2%，不合格品12件，主要缺陷：焊接气孔（5件），下步：换用保护气体", "brand": "集团蓝+银灰，每页脚注版本号和密级", "oldTime": "3-4小时", "scale": "全厂12条产线，每月12份质量分析" }
+  }
+}

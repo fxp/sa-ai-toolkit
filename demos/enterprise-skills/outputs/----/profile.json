@@ -1,0 +1,23 @@
+{
+  "company_name": "招商银行",
+  "company_slug": "----",
+  "industry": "banking-finance",
+  "industry_zh": "banking-finance",
+  "size": "large",
+  "audience_dept": "全行中高层管理者",
+  "audience_roles": [
+    "全行中高层管理者"
+  ],
+  "pain_points": [
+    "A",
+    "D",
+    "E",
+    "G",
+    "L"
+  ],
+  "data_sensitivity": "medium",
+  "offline_required": false,
+  "demo_goal": "推动AI采用",
+  "presentation_minutes": 90,
+  "target_demo_count": 11
+}

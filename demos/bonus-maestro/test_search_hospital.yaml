@@ -1,0 +1,14 @@
+# Demo: Maestro — 搜索宠物医院流程
+appId: com.newco.smartpet
+name: "SmartPet 搜索宠物医院"
+---
+- launchApp
+- tapOn: "搜索宠物医院"
+- inputText: "朝阳区"
+- tapOn: "搜索"
+- assertVisible: "搜索结果"
+- tapOn:
+    index: 0
+- assertVisible: "查看详情"
+- tapOn: "预约"
+- assertVisible: "选择时间"

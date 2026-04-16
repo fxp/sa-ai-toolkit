@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw 架构图集</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #0f172a; color: #e2e8f0; padding: 40px 20px; }
+.container { max-width: 1200px; margin: 0 auto; }
+h1 { text-align: center; font-size: 28px; margin-bottom: 12px; color: #f97316; }
+h2 { font-size: 22px; margin: 60px 0 20px; color: #38bdf8; border-left: 4px solid #f97316; padding-left: 16px; }
+h3 { font-size: 16px; color: #94a3b8; text-align: center; margin-bottom: 40px; }
+.diagram { background: #1e293b; border-radius: 16px; padding: 40px; margin-bottom: 40px; overflow-x: auto; }
+.diagram svg { display: block; margin: 0 auto; }
+.note { background: #1e293b; border-left: 4px solid #f97316; padding: 16px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.8; color: #cbd5e1; }
+.gap-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+.gap-card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+.gap-card h4 { color: #fb923c; font-size: 15px; margin-bottom: 8px; }
+.gap-card p { color: #94a3b8; font-size: 13px; line-height: 1.7; }
+.gap-card .severity { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+.severity.critical { background: #dc262622; color: #f87171; border: 1px solid #dc262644; }
+.severity.high { background: #f9731622; color: #fb923c; border: 1px solid #f9731644; }
+.severity.medium { background: #eab30822; color: #fbbf24; border: 1px solid #eab30844; }
+.legend { display: flex; gap: 20px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8; }
+.legend-color { width: 16px; height: 16px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🦞 OpenClaw 架构全景</h1>
+<h3>从个人助手到企业级部署的架构演进</h3>
+
+<!-- ==================== DIAGRAM 1: OpenClaw Current Architecture ==================== -->
+<h2>图一：OpenClaw 系统架构（现状）</h2>
+<div class="diagram">
+<svg viewBox="0 0 960 680" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, sans-serif">
+  <!-- Background grid -->
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="arrow" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0 L10,3 L0,6" fill="#64748b"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0 L10,3 L0,6" fill="#38bdf8"/></marker>
+    <marker id="arrow-orange" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0 L10,3 L0,6" fill="#f97316"/></marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="480" y="30" text-anchor="middle" fill="#f97316" font-size="16" font-weight="700">OpenClaw 系统架构</text>
+  <text x="480" y="50" text-anchor="middle" fill="#64748b" font-size="11">Personal AI Agent — Single-User Trust Model</text>
+
+  <!-- Layer 1: Channels (top) -->
+  <rect x="40" y="70" width="880" height="80" rx="8" fill="#1e293b" stroke="#334155"/>
+  <text x="60" y="92" fill="#38bdf8" font-size="11" font-weight="600">消息渠道层 (Channels)</text>
+  
+  <g transform="translate(60,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">WhatsApp</text>
+  </g>
+  <g transform="translate(150,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">Telegram</text>
+  </g>
+  <g transform="translate(240,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">Slack</text>
+  </g>
+  <g transform="translate(330,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">Discord</text>
+  </g>
+  <g transform="translate(420,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">飞书</text>
+  </g>
+  <g transform="translate(510,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">微信</text>
+  </g>
+  <g transform="translate(600,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">Signal</text>
+  </g>
+  <g transform="translate(690,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">iMessage</text>
+  </g>
+  <g transform="translate(780,100)">
+    <rect width="80" height="36" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="40" y="22" text-anchor="middle" fill="#94a3b8" font-size="10">WebChat</text>
+  </g>
+
+  <!-- Arrow down -->
+  <line x1="480" y1="150" x2="480" y2="175" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Layer 2: Gateway (center, highlighted) -->
+  <rect x="160" y="180" width="640" height="120" rx="12" fill="#0f172a" stroke="#f97316" stroke-width="2"/>
+  <text x="480" y="205" text-anchor="middle" fill="#f97316" font-size="14" font-weight="700">🦞 Gateway 控制平面</text>
+  <text x="480" y="222" text-anchor="middle" fill="#64748b" font-size="10">ws://127.0.0.1:18789 · 单进程 · 单主机</text>
+  
+  <g transform="translate(180,235)">
+    <rect width="120" height="50" rx="6" fill="#1e293b" stroke="#334155"/>
+    <text x="60" y="20" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">WebSocket Server</text>
+    <text x="60" y="36" text-anchor="middle" fill="#64748b" font-size="9">JSON协议 · TypeBox</text>
+  </g>
+  <g transform="translate(320,235)">
+    <rect width="120" height="50" rx="6" fill="#1e293b" stroke="#334155"/>
+    <text x="60" y="20" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">Session Manager</text>
+    <text x="60" y="36" text-anchor="middle" fill="#64748b" font-size="9">会话路由 · 状态</text>
+  </g>
+  <g transform="translate(460,235)">
+    <rect width="120" height="50" rx="6" fill="#1e293b" stroke="#334155"/>
+    <text x="60" y="20" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">Auth &amp; Pairing</text>
+    <text x="60" y="36" text-anchor="middle" fill="#64748b" font-size="9">Token · 设备配对</text>
+  </g>
+  <g transform="translate(600,235)">
+    <rect width="120" height="50" rx="6" fill="#1e293b" stroke="#334155"/>
+    <text x="60" y="20" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600">Cron &amp; Events</text>
+    <text x="60" y="36" text-anchor="middle" fill="#64748b" font-size="9">定时任务 · 心跳</text>
+  </g>
+
+  <!-- Arrow down to agent -->
+  <line x1="480" y1="300" x2="480" y2="330" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="490" y="320" fill="#64748b" font-size="9">RPC</text>
+
+  <!-- Layer 3: Agent Runtime -->
+  <rect x="120" y="335" width="720" height="110" rx="10" fill="#1e293b" stroke="#334155"/>
+  <text x="480" y="358" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="600">Pi Agent Runtime（代理运行时）</text>
+  
+  <g transform="translate(140,370)">
+    <rect width="105" height="60" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="52" y="20" text-anchor="middle" fill="#c4b5fd" font-size="10">Context Builder</text>
+    <text x="52" y="36" text-anchor="middle" fill="#64748b" font-size="9">系统提示词</text>
+    <text x="52" y="48" text-anchor="middle" fill="#64748b" font-size="9">Memory · History</text>
+  </g>
+  <g transform="translate(260,370)">
+    <rect width="105" height="60" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="52" y="20" text-anchor="middle" fill="#c4b5fd" font-size="10">Model Router</text>
+    <text x="52" y="36" text-anchor="middle" fill="#64748b" font-size="9">Claude · GPT</text>
+    <text x="52" y="48" text-anchor="middle" fill="#64748b" font-size="9">DeepSeek · Ollama</text>
+  </g>
+  <g transform="translate(380,370)">
+    <rect width="105" height="60" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="52" y="20" text-anchor="middle" fill="#c4b5fd" font-size="10">Tool Executor</text>
+    <text x="52" y="36" text-anchor="middle" fill="#64748b" font-size="9">Shell · Browser</text>
+    <text x="52" y="48" text-anchor="middle" fill="#64748b" font-size="9">Canvas · File</text>
+  </g>
+  <g transform="translate(500,370)">
+    <rect width="105" height="60" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="52" y="20" text-anchor="middle" fill="#c4b5fd" font-size="10">Skill Engine</text>
+    <text x="52" y="36" text-anchor="middle" fill="#64748b" font-size="9">ClawHub Skills</text>
+    <text x="52" y="48" text-anchor="middle" fill="#64748b" font-size="9">自定义 Skills</text>
+  </g>
+  <g transform="translate(620,370)">
+    <rect width="105" height="60" rx="6" fill="#0f172a" stroke="#334155"/>
+    <text x="52" y="20" text-anchor="middle" fill="#c4b5fd" font-size="10">Stream Engine</text>
+    <text x="52" y="36" text-anchor="middle" fill="#64748b" font-size="9">流式输出</text>
+    <text x="52" y="48" text-anchor="middle" fill="#64748b" font-size="9">Markdown渲染</text>
+  </g>
+
+  <!-- Layer 4: Storage & Workspace -->
+  <rect x="120" y="460" width="340" height="80" rx="10" fill="#1e293b" stroke="#334155"/>
+  <text x="290" y="485" text-anchor="middle" fill="#4ade80" font-size="12" font-weight="600">本地 Workspace</text>
+  <text x="290" y="502" text-anchor="middle" fill="#64748b" font-size="10">IDENTITY.md · USER.md · openclaw.json</text>
+  <text x="290" y="518" text-anchor="middle" fill="#64748b" font-size="10">Sessions · Memory · 文件系统</text>
+  
+  <line x1="290" y1="445" x2="290" y2="460" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 4b: Nodes -->
+  <rect x="500" y="460" width="340" height="80" rx="10" fill="#1e293b" stroke="#334155"/>
+  <text x="670" y="485" text-anchor="middle" fill="#4ade80" font-size="12" font-weight="600">Native Nodes 设备节点</text>
+  <text x="670" y="502" text-anchor="middle" fill="#64748b" font-size="10">macOS App · iOS · Android</text>
+  <text x="670" y="518" text-anchor="middle" fill="#64748b" font-size="10">Camera · Screen · Location · Canvas</text>
+  
+  <line x1="670" y1="300" x2="670" y2="330" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <line x1="670" y1="445" x2="670" y2="460" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- External: LLM Providers -->
+  <rect x="40" y="560" width="880" height="60" rx="8" fill="#0f172a" stroke="#334155" stroke-dasharray="4,4"/>
+  <text x="480" y="585" text-anchor="middle" fill="#64748b" font-size="11">外部 LLM Providers：Claude API · OpenAI · DeepSeek · Ollama (本地) · Nemotron</text>
+  <text x="480" y="602" text-anchor="middle" fill="#475569" font-size="9">Agent Runtime 通过 HTTP/API 调用，模型可切换</text>
+
+  <line x1="480" y1="445" x2="480" y2="560" stroke="#64748b" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Key label -->
+  <rect x="40" y="640" width="880" height="30" rx="4" fill="none"/>
+  <text x="60" y="658" fill="#f97316" font-size="10">⚠ 核心特征：单主机单Gateway · 个人信任模型 · 本地文件存储 · 无身份系统 · 无沙盒隔离</text>
+</svg>
+</div>
+
+<!-- ==================== GAP ANALYSIS ==================== -->
+<h2>图二：OpenClaw 距企业部署的差距</h2>
+
+<div class="gap-list">
+  <div class="gap-card">
+    <span class="severity critical">CRITICAL</span>
+    <h4>🔐 身份系统 (Identity)</h4>
+    <p>当前：单用户信任模型，Token/密码认证，无RBAC。<br>
+    差距：无LDAP/SAML/OIDC集成，无多租户隔离，无用户权限分级，无SSO对接。<br>
+    影响：无法区分"谁在操作Agent"，审计追踪缺失。</p>
+  </div>
+  <div class="gap-card">
+    <span class="severity critical">CRITICAL</span>
+    <h4>🛡️ 沙盒环境 (Sandbox)</h4>
+    <p>当前：可选Docker沙盒模式，但非默认启用。<br>
+    差距：Agent可直接执行Shell命令、访问文件系统、发起网络请求，无内核级隔离。CVE-2026-25253证明了WebSocket端点的RCE风险。<br>
+    影响：一次提示注入可能导致整个主机沦陷。</p>
+  </div>
+  <div class="gap-card">
+    <span class="severity critical">CRITICAL</span>
+    <h4>📋 安全策略 (Policy)</h4>
+    <p>当前：Tool Policy仅支持deny/allow列表，在Agent进程内执行。<br>
+    差距：策略在Agent进程内执行 = 被攻陷的Agent可绕过策略。无进程外策略引擎，无YAML驱动的声明式安全策略。<br>
+    影响：行为安全(behavioral) vs 结构安全(structural)的本质差别。</p>
+  </div>
+  <div class="gap-card">
+    <span class="severity high">HIGH</span>
+    <h4>🌐 网络管控 (Network)</h4>
+    <p>当前：默认绑定127.0.0.1，支持Tailscale。<br>
+    差距：无出站流量控制（Agent可访问任意URL），无域名白名单，无DLP（数据防泄漏）。<br>
+    影响：Agent可能被提示注入诱导向外部泄露敏感数据。</p>
+  </div>
+  <div class="gap-card">
+    <span class="severity high">HIGH</span>
+    <h4>🔍 审计与合规 (Audit)</h4>
+    <p>当前：本地日志文件，无结构化审计。<br>
+    差距：无集中式审计日志，无操作追溯，无合规报告（SOC2/ISO27001），无不可篡改的操作记录。<br>
+    影响：出事后无法回溯"Agent做了什么、谁授权的"。</p>
+  </div>
+  <div class="gap-card">
+    <span class="severity high">HIGH</span>
+    <h4>📦 供应链安全 (Supply Chain)</h4>
+    <p>当前：ClawHub技能注册表无严格审核。<br>
+    差距：Cisco发现第三方Skill含数据窃取和提示注入。ClawHavoc事件中12%的Skills含恶意代码。<br>
+    影响：安装一个Skill = 给Agent注入不受控代码。</p>
+  </div>
+  <div class="gap-card">
+    <span class="severity medium">MEDIUM</span>
+    <h4>📊 多租户 (Multi-tenancy)</h4>
+    <p>当前：一台主机一个Gateway，一个用户。<br>
+    差距：无部门级隔离，无资源配额，无按团队分配Agent的能力。<br>
+    影响：无法在企业内规模化部署。</p>
+  </div>
+  <div class="gap-card">
+    <span class="severity medium">MEDIUM</span>
+    <h4>💰 成本治理 (Cost)</h4>
+    <p>当前：无内建成本追踪。<br>
+    差距：无Token用量计量，无部门级成本分摊，无预算告警，无用量限流。<br>
+    影响：一个失控的Agent循环调用API可能产生巨额费用。</p>
+  </div>
+</div>
+
+<!-- ==================== DIAGRAM 2: Enterprise Architecture ==================== -->
+<h2>图三：企业级 OpenClaw 架构设计</h2>
+<div class="diagram">
+<svg viewBox="0 0 960 820" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0 L10,3 L0,6" fill="#475569"/></marker>
+  </defs>
+
+  <text x="480" y="30" text-anchor="middle" fill="#f97316" font-size="16" font-weight="700">企业级 OpenClaw 架构</text>
+  <text x="480" y="50" text-anchor="middle" fill="#64748b" font-size="11">Multi-tenant · Zero Trust · Defense in Depth</text>
+
+  <!-- Layer 0: Enterprise Identity -->
+  <rect x="40" y="65" width="880" height="55" rx="8" fill="#dc262612" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="60" y="85" fill="#f87171" font-size="12" font-weight="700">🔐 企业身份层 (Enterprise Identity)</text>
+  <text x="60" y="105" fill="#94a3b8" font-size="10">LDAP / Active Directory / OIDC / SAML SSO  ·  RBAC角色矩阵  ·  MFA多因素认证  ·  JWT令牌签发</text>
+
+  <!-- Layer 1: API Gateway / Reverse Proxy -->
+  <rect x="40" y="135" width="880" height="55" rx="8" fill="#f9731612" stroke="#f97316" stroke-width="1.5"/>
+  <text x="60" y="155" fill="#fb923c" font-size="12" font-weight="700">🌐 API Gateway / 反向代理</text>
+  <text x="60" y="175" fill="#94a3b8" font-size="10">Nginx/Envoy  ·  mTLS终止  ·  速率限制  ·  WAF  ·  Origin锁定  ·  请求审计日志  ·  负载均衡</text>
+
+  <!-- Arrow -->
+  <line x1="480" y1="190" x2="480" y2="210" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Layer 2: Multi-Gateway Cluster -->
+  <rect x="40" y="215" width="880" height="145" rx="10" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/>
+  <text x="60" y="240" fill="#f97316" font-size="13" font-weight="700">🦞 OpenClaw Gateway 集群（多租户）</text>
+
+  <!-- Gateway instances -->
+  <g transform="translate(60,250)">
+    <rect width="190" height="90" rx="8" fill="#0f172a" stroke="#475569"/>
+    <text x="95" y="22" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">Gateway-销售部</text>
+    <text x="95" y="42" text-anchor="middle" fill="#64748b" font-size="9">Agent: 销售助手</text>
+    <text x="95" y="58" text-anchor="middle" fill="#64748b" font-size="9">Skills: CRM · 邮件 · 日历</text>
+    <text x="95" y="74" text-anchor="middle" fill="#64748b" font-size="9">Workspace: /sales/</text>
+  </g>
+  <g transform="translate(270,250)">
+    <rect width="190" height="90" rx="8" fill="#0f172a" stroke="#475569"/>
+    <text x="95" y="22" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">Gateway-研发部</text>
+    <text x="95" y="42" text-anchor="middle" fill="#64748b" font-size="9">Agent: 代码助手</text>
+    <text x="95" y="58" text-anchor="middle" fill="#64748b" font-size="9">Skills: Git · CI/CD · Code Review</text>
+    <text x="95" y="74" text-anchor="middle" fill="#64748b" font-size="9">Workspace: /engineering/</text>
+  </g>
+  <g transform="translate(480,250)">
+    <rect width="190" height="90" rx="8" fill="#0f172a" stroke="#475569"/>
+    <text x="95" y="22" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">Gateway-战略部</text>
+    <text x="95" y="42" text-anchor="middle" fill="#64748b" font-size="9">Agent: 分析助手</text>
+    <text x="95" y="58" text-anchor="middle" fill="#64748b" font-size="9">Skills: Research · MiroFish</text>
+    <text x="95" y="74" text-anchor="middle" fill="#64748b" font-size="9">Workspace: /strategy/</text>
+  </g>
+  <g transform="translate(690,250)">
+    <rect width="190" height="90" rx="8" fill="#0f172a" stroke="#475569"/>
+    <text x="95" y="22" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">Gateway-管理层</text>
+    <text x="95" y="42" text-anchor="middle" fill="#64748b" font-size="9">Agent: CEO助手</text>
+    <text x="95" y="58" text-anchor="middle" fill="#64748b" font-size="9">Skills: Paperclip · 报告</text>
+    <text x="95" y="74" text-anchor="middle" fill="#64748b" font-size="9">Workspace: /executive/</text>
+  </g>
+
+  <!-- Arrow -->
+  <line x1="480" y1="360" x2="480" y2="380" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Layer 3: Security & Sandbox (OpenShell-style) -->
+  <rect x="40" y="385" width="430" height="130" rx="10" fill="#dc262610" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="60" y="410" fill="#f87171" font-size="12" font-weight="700">🛡️ 安全沙盒层（OpenShell模式）</text>
+  
+  <g transform="translate(55,420)">
+    <rect width="120" height="44" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="60" y="18" text-anchor="middle" fill="#fca5a5" font-size="10">内核级隔离</text>
+    <text x="60" y="34" text-anchor="middle" fill="#64748b" font-size="8">Landlock + seccomp</text>
+  </g>
+  <g transform="translate(185,420)">
+    <rect width="120" height="44" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="60" y="18" text-anchor="middle" fill="#fca5a5" font-size="10">进程外策略引擎</text>
+    <text x="60" y="34" text-anchor="middle" fill="#64748b" font-size="8">YAML驱动 · deny-by-default</text>
+  </g>
+  <g transform="translate(315,420)">
+    <rect width="130" height="44" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="65" y="18" text-anchor="middle" fill="#fca5a5" font-size="10">网络出站控制</text>
+    <text x="65" y="34" text-anchor="middle" fill="#64748b" font-size="8">域名白名单 · DLP</text>
+  </g>
+  <g transform="translate(55,474)">
+    <rect width="120" height="30" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="60" y="20" text-anchor="middle" fill="#64748b" font-size="9">文件系统白名单</text>
+  </g>
+  <g transform="translate(185,474)">
+    <rect width="120" height="30" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="60" y="20" text-anchor="middle" fill="#64748b" font-size="9">意图验证引擎</text>
+  </g>
+  <g transform="translate(315,474)">
+    <rect width="130" height="30" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="65" y="20" text-anchor="middle" fill="#64748b" font-size="9">提示注入检测</text>
+  </g>
+
+  <!-- Layer 3b: Privacy Router -->
+  <rect x="490" y="385" width="430" height="130" rx="10" fill="#4ade8010" stroke="#4ade80" stroke-width="1.5"/>
+  <text x="510" y="410" fill="#4ade80" font-size="12" font-weight="700">🔀 隐私路由 &amp; 模型治理</text>
+  
+  <g transform="translate(505,420)">
+    <rect width="130" height="44" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="65" y="18" text-anchor="middle" fill="#86efac" font-size="10">Privacy Router</text>
+    <text x="65" y="34" text-anchor="middle" fill="#64748b" font-size="8">敏感数据→本地模型</text>
+  </g>
+  <g transform="translate(645,420)">
+    <rect width="130" height="44" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="65" y="18" text-anchor="middle" fill="#86efac" font-size="10">Model Registry</text>
+    <text x="65" y="34" text-anchor="middle" fill="#64748b" font-size="8">模型白名单 · 版本控制</text>
+  </g>
+  <g transform="translate(785,420)">
+    <rect width="120" height="44" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="60" y="18" text-anchor="middle" fill="#86efac" font-size="10">Cost Controller</text>
+    <text x="60" y="34" text-anchor="middle" fill="#64748b" font-size="8">预算 · 限流 · 分摊</text>
+  </g>
+  <g transform="translate(505,474)">
+    <rect width="190" height="30" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="95" y="20" text-anchor="middle" fill="#64748b" font-size="9">本地: Nemotron / Ollama / GLM</text>
+  </g>
+  <g transform="translate(705,474)">
+    <rect width="200" height="30" rx="4" fill="#0f172a" stroke="#475569"/>
+    <text x="100" y="20" text-anchor="middle" fill="#64748b" font-size="9">云端: Claude / GPT (按策略路由)</text>
+  </g>
+
+  <!-- Arrow -->
+  <line x1="480" y1="515" x2="480" y2="540" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Layer 4: Skill Registry & Governance -->
+  <rect x="40" y="545" width="430" height="70" rx="8" fill="#a78bfa10" stroke="#a78bfa"/>
+  <text x="60" y="570" fill="#c4b5fd" font-size="12" font-weight="600">📦 企业 Skill 注册表</text>
+  <text x="60" y="590" fill="#94a3b8" font-size="10">签名验证 · 安全扫描 · 版本控制 · 私有仓库 · 审批流程</text>
+  
+  <!-- Layer 4b: Audit -->
+  <rect x="490" y="545" width="430" height="70" rx="8" fill="#fbbf2410" stroke="#fbbf24"/>
+  <text x="510" y="570" fill="#fbbf24" font-size="12" font-weight="600">📊 审计与可观测性</text>
+  <text x="510" y="590" fill="#94a3b8" font-size="10">结构化审计日志 · SIEM集成 · 操作追溯 · 合规报告 · 告警</text>
+
+  <!-- Layer 5: Storage -->
+  <rect x="40" y="635" width="880" height="55" rx="8" fill="#1e293b" stroke="#334155"/>
+  <text x="60" y="658" fill="#38bdf8" font-size="12" font-weight="600">💾 企业存储层</text>
+  <text x="60" y="678" fill="#94a3b8" font-size="10">PostgreSQL (Sessions/审计) · S3/MinIO (Workspace) · Redis (Cache) · Vault (Secrets) · 加密存储</text>
+
+  <!-- Bottom: Deployment -->
+  <rect x="40" y="710" width="880" height="55" rx="8" fill="#0f172a" stroke="#334155" stroke-dasharray="4,4"/>
+  <text x="60" y="733" fill="#64748b" font-size="12" font-weight="600">🖥️ 部署底座</text>
+  <text x="60" y="753" fill="#475569" font-size="10">K8s集群 · Docker Compose · NVIDIA DGX · 私有云/混合云 · GPU节点（本地推理） · CI/CD Pipeline</text>
+
+  <!-- Legend -->
+  <g transform="translate(40,780)">
+    <rect width="12" height="12" rx="2" fill="#dc262630" stroke="#dc2626"/>
+    <text x="18" y="11" fill="#94a3b8" font-size="10">安全层</text>
+    <rect x="80" width="12" height="12" rx="2" fill="#4ade8020" stroke="#4ade80"/>
+    <text x="98" y="11" fill="#94a3b8" font-size="10">隐私/模型层</text>
+    <rect x="180" width="12" height="12" rx="2" fill="#f9731620" stroke="#f97316"/>
+    <text x="198" y="11" fill="#94a3b8" font-size="10">控制平面</text>
+    <rect x="280" width="12" height="12" rx="2" fill="#a78bfa20" stroke="#a78bfa"/>
+    <text x="298" y="11" fill="#94a3b8" font-size="10">治理层</text>
+    <rect x="360" width="12" height="12" rx="2" fill="#fbbf2420" stroke="#fbbf24"/>
+    <text x="378" y="11" fill="#94a3b8" font-size="10">可观测</text>
+    <text x="480" y="11" fill="#64748b" font-size="10">新增层（OpenClaw原生不具备的能力）以彩色边框标记</text>
+  </g>
+</svg>
+</div>
+
+<!-- ==================== DIAGRAM 3: NemoClaw Reference Architecture ==================== -->
+<h2>图四：NemoClaw 企业安全架构参考</h2>
+<div class="note">
+NemoClaw是NVIDIA在GTC 2026发布的OpenClaw企业安全栈。其核心洞察：<strong>安全必须从"行为层"(behavioral)下沉到"结构层"(structural)</strong>——不是"告诉Agent不要做坏事"，而是在内核层面让它"做不了坏事"。
+</div>
+<div class="diagram">
+<svg viewBox="0 0 960 700" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, sans-serif">
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0 L10,3 L0,6" fill="#475569"/></marker>
+  </defs>
+
+  <text x="480" y="30" text-anchor="middle" fill="#76b900" font-size="16" font-weight="700">NVIDIA NemoClaw 安全架构</text>
+  <text x="480" y="50" text-anchor="middle" fill="#64748b" font-size="11">五层安全堆栈 · OpenShell 策略内核 · 隐私路由</text>
+
+  <!-- The Agent (top) -->
+  <rect x="340" y="70" width="280" height="50" rx="8" fill="#1e293b" stroke="#f97316" stroke-width="2"/>
+  <text x="480" y="92" text-anchor="middle" fill="#f97316" font-size="13" font-weight="700">🦞 OpenClaw Agent</text>
+  <text x="480" y="108" text-anchor="middle" fill="#64748b" font-size="9">Agent不知道自己在NemoClaw内运行</text>
+
+  <line x1="480" y1="120" x2="480" y2="145" stroke="#475569" stroke-width="2" marker-end="url(#ar2)"/>
+  <text x="490" y="138" fill="#f87171" font-size="9" font-weight="600">所有操作经过拦截</text>
+
+  <!-- OpenShell Core -->
+  <rect x="100" y="150" width="760" height="500" rx="12" fill="#76b90008" stroke="#76b900" stroke-width="2"/>
+  <text x="480" y="175" text-anchor="middle" fill="#76b900" font-size="14" font-weight="700">NVIDIA OpenShell 安全运行时</text>
+  <text x="480" y="195" text-anchor="middle" fill="#64748b" font-size="10">进程外策略执行内核 · YAML驱动 · Agent无法绕过</text>
+
+  <!-- Layer 1: Intent Verification -->
+  <rect x="130" y="210" width="700" height="65" rx="8" fill="#ef444420" stroke="#ef4444"/>
+  <text x="150" y="232" fill="#fca5a5" font-size="12" font-weight="600">Layer 5 ▸ 意图验证引擎 (Intent Verification)</text>
+  <text x="150" y="252" fill="#94a3b8" font-size="10">分析Agent提出的每个操作的"意图"，检测异常行为模式 · 提示注入识别 · 恶意指令过滤</text>
+  <text x="150" y="266" fill="#64748b" font-size="9">类比：安检X光机——看的不是你带了什么，而是你"想做什么"</text>
+
+  <!-- Layer 2: Privacy Router -->
+  <rect x="130" y="285" width="700" height="65" rx="8" fill="#4ade8020" stroke="#4ade80"/>
+  <text x="150" y="307" fill="#86efac" font-size="12" font-weight="600">Layer 4 ▸ 隐私路由 (Privacy Router)</text>
+  <text x="150" y="327" fill="#94a3b8" font-size="10">敏感数据 → 本地 Nemotron/GLM 推理 · 非敏感数据 → 云端 Claude/GPT · 数据分类自动路由</text>
+  <text x="150" y="341" fill="#64748b" font-size="9">类比：邮件分拣——机密信走内部快递，普通信走公共邮政</text>
+
+  <!-- Layer 3: Minimal Privilege -->
+  <rect x="130" y="360" width="700" height="65" rx="8" fill="#a78bfa20" stroke="#a78bfa"/>
+  <text x="150" y="382" fill="#c4b5fd" font-size="12" font-weight="600">Layer 3 ▸ 最小权限 (Minimal Privilege Access)</text>
+  <text x="150" y="402" fill="#94a3b8" font-size="10">文件系统白名单（只能访问指定目录） · 命令白名单（只能执行预批准的Shell命令）</text>
+  <text x="150" y="416" fill="#64748b" font-size="9">类比：新员工的门禁卡——只能进自己楼层，不能进机房</text>
+
+  <!-- Layer 4: Network Egress -->
+  <rect x="130" y="435" width="700" height="65" rx="8" fill="#38bdf820" stroke="#38bdf8"/>
+  <text x="150" y="457" fill="#7dd3fc" font-size="12" font-weight="600">Layer 2 ▸ 网络出站控制 (Network Egress Control)</text>
+  <text x="150" y="477" fill="#94a3b8" font-size="10">域名白名单 · 出站流量监控 · DLP扫描 · 阻止Agent向未授权地址发送数据</text>
+  <text x="150" y="491" fill="#64748b" font-size="9">类比：公司防火墙——只能访问业务相关网站，不能往外传文件</text>
+
+  <!-- Layer 5: Sandboxed Execution -->
+  <rect x="130" y="510" width="700" height="65" rx="8" fill="#fbbf2420" stroke="#fbbf24"/>
+  <text x="150" y="532" fill="#fbbf24" font-size="12" font-weight="600">Layer 1 ▸ 沙盒执行 (Sandboxed Execution)</text>
+  <text x="150" y="552" fill="#94a3b8" font-size="10">Linux Landlock LSM + seccomp-bpf · 容器级隔离 · 进程能力丢弃 · 资源限制（CPU/Memory/PID）</text>
+  <text x="150" y="566" fill="#64748b" font-size="9">类比：化学实验的手套箱——即使实验爆炸，也只在箱子里</text>
+
+  <!-- YAML Policy -->
+  <rect x="130" y="590" width="340" height="50" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="300" y="612" text-anchor="middle" fill="#76b900" font-size="11" font-weight="600">📄 YAML策略文件 (Operator-Supplied)</text>
+  <text x="300" y="630" text-anchor="middle" fill="#64748b" font-size="9">定义完整的能力边界 · 启动时加载 · 运行时不可变</text>
+
+  <!-- Operator -->
+  <rect x="490" y="590" width="340" height="50" rx="6" fill="#0f172a" stroke="#475569"/>
+  <text x="660" y="612" text-anchor="middle" fill="#76b900" font-size="11" font-weight="600">👤 运维人员 (Operator Approval)</text>
+  <text x="660" y="630" text-anchor="middle" fill="#64748b" font-size="9">超出策略的操作 → 人工审批 · 违规操作 → 阻断+告警</text>
+
+  <!-- Bottom: Key insight -->
+  <rect x="100" y="660" width="760" height="30" rx="4" fill="none"/>
+  <text x="480" y="680" text-anchor="middle" fill="#76b900" font-size="11" font-weight="600">核心原则：Agent不知道自己在笼子里 · 策略在Agent进程外执行 · 即使Agent被攻破也无法逃逸</text>
+</svg>
+</div>
+
+<div class="note">
+<strong>企业落地建议（路线图）：</strong><br><br>
+<strong>V1（1-2周）</strong>：OpenClaw + Tailscale + Token认证 → 小团队POC试用<br>
+<strong>V2（1-2月）</strong>：+ NemoClaw/OpenShell沙盒 + 反向代理 + 审计日志 → 部门级试点<br>
+<strong>V3（1-2季）</strong>：+ 企业身份集成(SSO) + 多Gateway多租户 + 隐私路由 + Skill审批流 → 全企业部署<br><br>
+<strong>合作伙伴生态</strong>：NVIDIA与Cisco、CrowdStrike、Google、Microsoft Security合作，将OpenShell集成到企业安全工具链中。
+</div>
+
+</div>
+</body>
+</html>

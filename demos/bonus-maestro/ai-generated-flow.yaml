@@ -1,0 +1,16 @@
+appId: com.example.app
+---
+- launchApp
+- tapOn: 添加商品
+- assertVisible: 商品列表
+- tapOn: 添加的商品
+- tapOn: 添加到购物车
+- assertVisible: 购物车图标
+- tapOn: 购物车
+- assertVisible: 购物车商品列表
+- tapOn: 查看购物车
+- assertVisible: 购物车商品列表
+- tapOn: 确认订单
+- assertVisible: 订单详情
+- tapOn: 支付
+- assertVisible: 支付方式选择

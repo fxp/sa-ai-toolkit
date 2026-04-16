@@ -1,0 +1,43 @@
+# Demo: Maestro 移动端自动化测试
+# 这是一个示例测试流程 — 模拟用户登录
+#
+# 使用方法:
+#   maestro test test_login.yaml
+#
+# 前提:
+#   1. 安装 Maestro: curl -Ls "https://get.maestro.mobile.dev" | bash
+#   2. 启动 Android 模拟器或连接 iOS 设备
+#   3. 修改 appId 为你的应用包名
+
+appId: com.newco.smartpet
+name: "SmartPet 登录流程测试"
+---
+# 启动应用
+- launchApp
+
+# 等待首页加载
+- assertVisible: "SmartPet"
+
+# 点击登录按钮
+- tapOn: "登录"
+
+# 输入手机号
+- tapOn: "手机号"
+- inputText: "13800138000"
+
+# 获取验证码
+- tapOn: "获取验证码"
+
+# 等待验证码发送
+- assertVisible: "验证码已发送"
+
+# 输入验证码
+- tapOn: "验证码"
+- inputText: "123456"
+
+# 点击确认登录
+- tapOn: "确认登录"
+
+# 验证登录成功
+- assertVisible: "欢迎回来"
+- assertVisible: "首页"
