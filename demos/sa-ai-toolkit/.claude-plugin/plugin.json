@@ -1,0 +1,7 @@
+{
+  "name": "sa-ai-toolkit",
+  "version": "2.0.0",
+  "description": "AI解决方案架构师(SA)工具包：输入企业名 → 生成定制化AI演示方案 → 修改 → 交付PPT/文档。三个命令覆盖SA全流程。",
+  "author": { "name": "OpenClaw Course" },
+  "keywords": ["sa", "enterprise-ai", "demo", "training", "consulting"]
+}

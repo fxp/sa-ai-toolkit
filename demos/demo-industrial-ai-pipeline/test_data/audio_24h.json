@@ -1,0 +1,290 @@
+[
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_00.wav",
+    "duration_sec": 6.6,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "gear_mesh",
+        "label": "齿轮啮合异常",
+        "freq_hz": 3200,
+        "confidence": 0.88,
+        "detected_freq_hz": 3231,
+        "snr_db": 16.7
+      }
+    ],
+    "background_noise_db": 69.6,
+    "timestamp": "2026-04-16T08:18:24.769042"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_01.wav",
+    "duration_sec": 6.2,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "bearing_wear",
+        "label": "轴承磨损",
+        "freq_hz": 1200,
+        "confidence": 0.85,
+        "detected_freq_hz": 1231,
+        "snr_db": 20.9
+      }
+    ],
+    "background_noise_db": 84.0,
+    "timestamp": "2026-04-16T08:18:24.769087"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_02.wav",
+    "duration_sec": 10.0,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "motor_imbalance",
+        "label": "电机不平衡",
+        "freq_hz": 50,
+        "confidence": 0.78,
+        "detected_freq_hz": 32,
+        "snr_db": 16.9
+      }
+    ],
+    "background_noise_db": 74.2,
+    "timestamp": "2026-04-16T08:18:24.769101"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_03.wav",
+    "duration_sec": 8.0,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 72.6,
+    "timestamp": "2026-04-16T08:18:24.769105"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_04.wav",
+    "duration_sec": 8.4,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 82.8,
+    "timestamp": "2026-04-16T08:18:24.769109"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_05.wav",
+    "duration_sec": 5.9,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "bearing_wear",
+        "label": "轴承磨损",
+        "freq_hz": 1200,
+        "confidence": 0.85,
+        "detected_freq_hz": 1250,
+        "snr_db": 10.0
+      }
+    ],
+    "background_noise_db": 65.0,
+    "timestamp": "2026-04-16T08:18:24.769115"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_06.wav",
+    "duration_sec": 6.2,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 79.0,
+    "timestamp": "2026-04-16T08:18:24.769118"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_07.wav",
+    "duration_sec": 6.9,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 78.7,
+    "timestamp": "2026-04-16T08:18:24.769122"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_08.wav",
+    "duration_sec": 6.2,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "gear_mesh",
+        "label": "齿轮啮合异常",
+        "freq_hz": 3200,
+        "confidence": 0.88,
+        "detected_freq_hz": 3228,
+        "snr_db": 10.5
+      }
+    ],
+    "background_noise_db": 66.1,
+    "timestamp": "2026-04-16T08:18:24.769127"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_09.wav",
+    "duration_sec": 7.2,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 78.2,
+    "timestamp": "2026-04-16T08:18:24.769130"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_10.wav",
+    "duration_sec": 9.8,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 83.2,
+    "timestamp": "2026-04-16T08:18:24.769133"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_11.wav",
+    "duration_sec": 7.6,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 74.7,
+    "timestamp": "2026-04-16T08:18:24.769137"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_12.wav",
+    "duration_sec": 6.3,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "bearing_wear",
+        "label": "轴承磨损",
+        "freq_hz": 1200,
+        "confidence": 0.85,
+        "detected_freq_hz": 1161,
+        "snr_db": 20.2
+      }
+    ],
+    "background_noise_db": 79.7,
+    "timestamp": "2026-04-16T08:18:24.769141"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_13.wav",
+    "duration_sec": 4.8,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "bearing_wear",
+        "label": "轴承磨损",
+        "freq_hz": 1200,
+        "confidence": 0.85,
+        "detected_freq_hz": 1153,
+        "snr_db": 15.4
+      }
+    ],
+    "background_noise_db": 76.9,
+    "timestamp": "2026-04-16T08:18:24.769146"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_14.wav",
+    "duration_sec": 7.2,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 65.8,
+    "timestamp": "2026-04-16T08:18:24.769149"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_15.wav",
+    "duration_sec": 6.4,
+    "num_anomalies": 1,
+    "anomalies": [
+      {
+        "type": "air_leak",
+        "label": "气泄漏",
+        "freq_hz": 8500,
+        "confidence": 0.92,
+        "detected_freq_hz": 8490,
+        "snr_db": 15.2
+      }
+    ],
+    "background_noise_db": 84.2,
+    "timestamp": "2026-04-16T08:18:24.769154"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_16.wav",
+    "duration_sec": 3.7,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 82.6,
+    "timestamp": "2026-04-16T08:18:24.769157"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_17.wav",
+    "duration_sec": 8.5,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 69.9,
+    "timestamp": "2026-04-16T08:18:24.769161"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_18.wav",
+    "duration_sec": 3.2,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 77.5,
+    "timestamp": "2026-04-16T08:18:24.769164"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_19.wav",
+    "duration_sec": 4.3,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 76.1,
+    "timestamp": "2026-04-16T08:18:24.769167"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_20.wav",
+    "duration_sec": 8.6,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 83.9,
+    "timestamp": "2026-04-16T08:18:24.769170"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_21.wav",
+    "duration_sec": 3.2,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 74.8,
+    "timestamp": "2026-04-16T08:18:24.769173"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_22.wav",
+    "duration_sec": 5.5,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 65.9,
+    "timestamp": "2026-04-16T08:18:24.769176"
+  },
+  {
+    "model": "SAM-Audio",
+    "audio": "audio_hour_23.wav",
+    "duration_sec": 3.6,
+    "num_anomalies": 0,
+    "anomalies": [],
+    "background_noise_db": 72.0,
+    "timestamp": "2026-04-16T08:18:24.769180"
+  }
+]

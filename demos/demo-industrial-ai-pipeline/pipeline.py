@@ -1,0 +1,623 @@
+#!/usr/bin/env python3
+"""
+工业AI全链路管线：感知 → 预测 → 归因
+SAM3(视觉) + SAM-Audio(声纹) + TimesFM(时序预测) + LLM(归因分析)
+
+Usage:
+  python pipeline.py run              # 运行完整管线（模拟数据）
+  python pipeline.py run --llm        # 运行完整管线 + LLM归因（需API Key）
+  python pipeline.py detect           # 仅运行感知层
+  python pipeline.py predict          # 仅运行预测层
+  python pipeline.py diagnose         # 仅运行归因层
+  python pipeline.py serve --port 8770  # 启动API服务器
+  python pipeline.py generate-data    # 生成模拟测试数据
+"""
+
+import argparse, json, os, sys, random, math, time
+from datetime import datetime, timedelta
+from pathlib import Path
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+BIGMODEL_KEY = os.getenv("BIGMODEL_API_KEY", "")
+DATA_DIR = Path(__file__).parent / "test_data"
+
+# ══════════════════════════════════════════════════
+# Layer 1: 感知层 (SAM3 + SAM-Audio 模拟)
+# ══════════════════════════════════════════════════
+
+class PerceptionLayer:
+    """模拟SAM3视觉检测 + SAM-Audio声纹分析"""
+
+    DEFECT_TYPES = [
+        {"type": "scratch", "label": "划痕", "severity": "medium", "area_px": 128},
+        {"type": "bubble", "label": "气泡", "severity": "low", "area_px": 64},
+        {"type": "foreign_object", "label": "异物", "severity": "high", "area_px": 256},
+        {"type": "coating_uneven", "label": "涂布不均", "severity": "medium", "area_px": 512},
+        {"type": "wrinkle", "label": "极片褶皱", "severity": "high", "area_px": 384},
+    ]
+
+    AUDIO_ANOMALIES = [
+        {"type": "bearing_wear", "label": "轴承磨损", "freq_hz": 1200, "confidence": 0.85},
+        {"type": "air_leak", "label": "气泄漏", "freq_hz": 8500, "confidence": 0.92},
+        {"type": "motor_imbalance", "label": "电机不平衡", "freq_hz": 50, "confidence": 0.78},
+        {"type": "gear_mesh", "label": "齿轮啮合异常", "freq_hz": 3200, "confidence": 0.88},
+    ]
+
+    @staticmethod
+    def detect_visual(image_path: str = None, text_prompt: str = "defect") -> dict:
+        """模拟SAM3文本提示检测"""
+        num_defects = random.choices([0, 1, 2, 3, 4], weights=[30, 35, 20, 10, 5])[0]
+        detections = []
+        for _ in range(num_defects):
+            d = random.choice(PerceptionLayer.DEFECT_TYPES).copy()
+            d["bbox"] = [random.randint(50, 1800), random.randint(50, 1000),
+                         d["area_px"], d["area_px"]]
+            d["confidence"] = round(random.uniform(0.75, 0.99), 3)
+            d["prompt"] = text_prompt
+            detections.append(d)
+
+        return {
+            "model": "SAM3",
+            "image": image_path or "simulated_frame.jpg",
+            "resolution": [1920, 1080],
+            "text_prompt": text_prompt,
+            "num_detections": len(detections),
+            "detections": detections,
+            "inference_ms": round(random.uniform(25, 45), 1),
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    @staticmethod
+    def detect_audio(audio_path: str = None) -> dict:
+        """模拟SAM-Audio声纹分析"""
+        has_anomaly = random.random() < 0.4
+        anomalies = []
+        if has_anomaly:
+            a = random.choice(PerceptionLayer.AUDIO_ANOMALIES).copy()
+            a["detected_freq_hz"] = a["freq_hz"] + random.randint(-50, 50)
+            a["snr_db"] = round(random.uniform(5, 25), 1)
+            anomalies.append(a)
+
+        return {
+            "model": "SAM-Audio",
+            "audio": audio_path or "factory_recording.wav",
+            "duration_sec": round(random.uniform(3, 10), 1),
+            "num_anomalies": len(anomalies),
+            "anomalies": anomalies,
+            "background_noise_db": round(random.uniform(65, 85), 1),
+            "timestamp": datetime.now().isoformat(),
+        }
+
+
+# ══════════════════════════════════════════════════
+# Layer 2: 预测层 (TimesFM 模拟)
+# ══════════════════════════════════════════════════
+
+class PredictionLayer:
+    """模拟TimesFM时序预测"""
+
+    @staticmethod
+    def generate_time_series(name: str, length: int = 168, trend: str = "degrading") -> list:
+        """生成模拟时序数据"""
+        base = {"degrading": 99.7, "stable": 99.8, "improving": 99.5}[trend]
+        noise_scale = 0.05
+        data = []
+        for i in range(length):
+            if trend == "degrading":
+                val = base - (i / length) * 0.5 + random.gauss(0, noise_scale)
+            elif trend == "improving":
+                val = base + (i / length) * 0.2 + random.gauss(0, noise_scale)
+            else:
+                val = base + random.gauss(0, noise_scale)
+            data.append(round(val, 4))
+        return data
+
+    @staticmethod
+    def forecast(history: list, horizon: int = 72, name: str = "metric") -> dict:
+        """模拟TimesFM预测"""
+        if not history:
+            history = PredictionLayer.generate_time_series(name, 168, "degrading")
+
+        last_val = history[-1]
+        # 简单线性趋势 + 噪声
+        recent_trend = (history[-1] - history[-24]) / 24 if len(history) >= 24 else 0
+
+        point_forecast = []
+        q10, q50, q90 = [], [], []
+        for h in range(horizon):
+            pred = last_val + recent_trend * (h + 1)
+            noise = random.gauss(0, 0.03) * math.sqrt(h + 1)
+            point_forecast.append(round(pred + noise, 4))
+            q10.append(round(pred - 0.15 * math.sqrt(h + 1), 4))
+            q50.append(round(pred, 4))
+            q90.append(round(pred + 0.15 * math.sqrt(h + 1), 4))
+
+        # 找到跨越阈值的时间点
+        threshold = 99.5
+        crossing_hour = None
+        for i, v in enumerate(point_forecast):
+            if v < threshold:
+                crossing_hour = i
+                break
+
+        return {
+            "model": "TimesFM-2.5-200M",
+            "metric_name": name,
+            "history_length": len(history),
+            "horizon": horizon,
+            "point_forecast": point_forecast,
+            "quantiles": {"q10": q10, "q50": q50, "q90": q90},
+            "trend": round(recent_trend * 24, 4),  # 日趋势
+            "threshold": threshold,
+            "crossing_hour": crossing_hour,
+            "alert": crossing_hour is not None,
+            "alert_message": f"{name}预计在{crossing_hour}小时后降至{threshold}以下" if crossing_hour else None,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    @staticmethod
+    def predict_equipment_rul(sensor_data: list = None) -> dict:
+        """预测设备剩余使用寿命(RUL)"""
+        if not sensor_data:
+            sensor_data = PredictionLayer.generate_time_series("vibration", 720, "degrading")
+
+        result = PredictionLayer.forecast(sensor_data, 168, "设备振动")
+        rul_hours = result["crossing_hour"] or random.randint(100, 300)
+
+        return {
+            **result,
+            "metric_name": "设备剩余寿命(RUL)",
+            "rul_hours": rul_hours,
+            "rul_days": round(rul_hours / 24, 1),
+            "maintenance_urgency": "紧急" if rul_hours < 48 else "计划中" if rul_hours < 168 else "正常",
+            "recommended_action": f"建议在{rul_hours}小时内安排维护" if rul_hours < 168 else "正常监控",
+        }
+
+
+# ══════════════════════════════════════════════════
+# Layer 3: 关联层 (Ontology 模拟)
+# ══════════════════════════════════════════════════
+
+class OntologyLayer:
+    """模拟制造业Ontology知识图谱遍历"""
+
+    GRAPH = {
+        "涂布工位#3": {
+            "设备": ["刮刀#7", "涂布辊#3", "干燥炉#3"],
+            "物料": ["正极浆料-批次2024Q3-087", "铝箔-批次AF-2024-156"],
+            "操作员": ["张师傅(工号T0042)"],
+            "上次维护": "72小时前",
+            "建议维护周期": "48小时",
+        },
+        "刮刀#7": {
+            "类型": "逗号刮刀",
+            "安装时间": "72小时前",
+            "建议更换周期": "48小时",
+            "状态": "超期运行",
+            "关联缺陷": ["划痕", "涂布不均"],
+        },
+        "正极浆料-批次2024Q3-087": {
+            "粘度(mPa·s)": 5200,
+            "规格范围": "4800-5500",
+            "状态": "在规格内但偏高",
+            "供应商": "XXX材料科技",
+            "入库时间": "3天前",
+        },
+        "电机#7": {
+            "类型": "伺服电机",
+            "功率": "7.5kW",
+            "运行时间": "12000小时",
+            "上次维护": "30天前",
+            "关联设备": ["涂布辊#3"],
+        },
+    }
+
+    @staticmethod
+    def trace_root_cause(defect_type: str, workstation: str = "涂布工位#3") -> dict:
+        """从缺陷追溯到根因"""
+        ws = OntologyLayer.GRAPH.get(workstation, {})
+        traces = []
+
+        # 设备关联
+        for equip in ws.get("设备", []):
+            equip_info = OntologyLayer.GRAPH.get(equip, {})
+            if defect_type in equip_info.get("关联缺陷", []):
+                traces.append({
+                    "path": f"{workstation} → {equip}",
+                    "finding": equip_info.get("状态", "未知"),
+                    "relevance": "high",
+                    "detail": equip_info,
+                })
+
+        # 物料关联
+        for mat in ws.get("物料", []):
+            mat_info = OntologyLayer.GRAPH.get(mat, {})
+            if mat_info:
+                traces.append({
+                    "path": f"{workstation} → {mat}",
+                    "finding": mat_info.get("状态", "未知"),
+                    "relevance": "medium",
+                    "detail": mat_info,
+                })
+
+        return {
+            "defect_type": defect_type,
+            "workstation": workstation,
+            "traces": traces,
+            "graph_nodes_traversed": len(traces) + 1,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+
+# ══════════════════════════════════════════════════
+# Layer 4: 归因层 (LLM 推理)
+# ══════════════════════════════════════════════════
+
+class DiagnosisLayer:
+    """LLM归因分析"""
+
+    @staticmethod
+    def diagnose(perception: dict, prediction: dict, ontology: dict,
+                 audio: dict = None, use_llm: bool = False) -> dict:
+        """综合多源数据生成归因报告"""
+
+        # 构建上下文
+        context = {
+            "visual_defects": perception.get("detections", []),
+            "audio_anomalies": (audio or {}).get("anomalies", []),
+            "prediction_alert": prediction.get("alert_message"),
+            "rul": prediction.get("rul_hours"),
+            "ontology_traces": ontology.get("traces", []),
+        }
+
+        if use_llm and BIGMODEL_KEY:
+            return DiagnosisLayer._llm_diagnose(context)
+        else:
+            return DiagnosisLayer._rule_diagnose(context)
+
+    @staticmethod
+    def _rule_diagnose(ctx: dict) -> dict:
+        """基于规则的归因（离线模式）"""
+        root_causes = []
+
+        # 分析设备关联
+        for trace in ctx.get("ontology_traces", []):
+            if trace["relevance"] == "high":
+                detail = trace.get("detail", {})
+                root_causes.append({
+                    "cause": f"{trace['path']}：{trace['finding']}",
+                    "confidence": 0.90,
+                    "evidence": [
+                        f"设备状态: {trace['finding']}",
+                        f"关联路径: {trace['path']}",
+                    ],
+                    "action": f"立即检查/更换相关设备",
+                    "priority": "紧急",
+                })
+            elif trace["relevance"] == "medium":
+                root_causes.append({
+                    "cause": f"{trace['path']}：{trace['finding']}",
+                    "confidence": 0.60,
+                    "evidence": [f"物料状态: {trace['finding']}"],
+                    "action": "检查物料批次质检报告",
+                    "priority": "高",
+                })
+
+        # 分析声纹异常
+        for anomaly in ctx.get("audio_anomalies", []):
+            root_causes.append({
+                "cause": f"声纹检测到{anomaly['label']}（{anomaly['detected_freq_hz']}Hz）",
+                "confidence": anomaly.get("confidence", 0.8),
+                "evidence": [f"特征频率: {anomaly['detected_freq_hz']}Hz", f"SNR: {anomaly.get('snr_db')}dB"],
+                "action": f"安排{anomaly['label']}相关设备维护",
+                "priority": "高",
+            })
+
+        # 分析预测告警
+        if ctx.get("prediction_alert"):
+            root_causes.append({
+                "cause": ctx["prediction_alert"],
+                "confidence": 0.75,
+                "evidence": [f"TimesFM预测", f"剩余{ctx.get('rul', '?')}小时"],
+                "action": "基于预测安排预防性维护",
+                "priority": "计划中",
+            })
+
+        # 排序
+        root_causes.sort(key=lambda x: -x["confidence"])
+
+        return {
+            "mode": "rule-based",
+            "num_root_causes": len(root_causes),
+            "root_causes": root_causes,
+            "summary": f"发现{len(root_causes)}个潜在根因，最高置信度{root_causes[0]['confidence']*100:.0f}%" if root_causes else "未发现异常",
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    @staticmethod
+    def _llm_diagnose(ctx: dict) -> dict:
+        """LLM归因推理"""
+        try:
+            import requests
+            prompt = f"""你是工业AI归因分析专家。基于以下多源检测数据，生成结构化的根因分析报告。
+
+## 视觉检测（SAM3）
+缺陷: {json.dumps(ctx['visual_defects'], ensure_ascii=False)}
+
+## 声纹分析（SAM-Audio）
+异常: {json.dumps(ctx['audio_anomalies'], ensure_ascii=False)}
+
+## 时序预测（TimesFM）
+告警: {ctx.get('prediction_alert', '无')}
+设备剩余寿命: {ctx.get('rul', '未知')}小时
+
+## 知识图谱追溯（Ontology）
+关联路径: {json.dumps([t['path']+': '+t['finding'] for t in ctx.get('ontology_traces',[])], ensure_ascii=False)}
+
+请输出JSON格式的根因分析报告：
+{{"root_causes": [{{"cause":"根因描述","confidence":0.0-1.0,"evidence":["证据"],"action":"建议操作","priority":"紧急/高/中"}}], "summary":"一句话总结"}}"""
+
+            resp = requests.post(
+                "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+                headers={"Authorization": f"Bearer {BIGMODEL_KEY}", "Content-Type": "application/json"},
+                json={"model": "glm-4-flash", "messages": [{"role": "user", "content": prompt}], "max_tokens": 1500},
+                timeout=30,
+            )
+            text = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+            import re
+            m = re.search(r"\{[\s\S]*\}", text)
+            if m:
+                result = json.loads(m.group())
+                result["mode"] = "llm"
+                result["timestamp"] = datetime.now().isoformat()
+                return result
+        except Exception as e:
+            pass
+
+        # Fallback
+        result = DiagnosisLayer._rule_diagnose(ctx)
+        result["mode"] = "llm-fallback"
+        return result
+
+
+# ══════════════════════════════════════════════════
+# 完整管线
+# ══════════════════════════════════════════════════
+
+def run_pipeline(use_llm: bool = False, verbose: bool = True) -> dict:
+    """运行完整的 感知→预测→归因 管线"""
+
+    if verbose:
+        print(f"\n{'='*60}")
+        print(f"  工业AI全链路管线：感知 → 预测 → 归因")
+        print(f"  模式: {'LLM归因' if use_llm else '规则归因(离线)'}")
+        print(f"{'='*60}\n")
+
+    # Layer 1: 感知
+    if verbose: print("  [Layer 1] 感知层...")
+    visual = PerceptionLayer.detect_visual(text_prompt="defect on battery cell")
+    audio = PerceptionLayer.detect_audio()
+    if verbose:
+        print(f"    SAM3: 检测到 {visual['num_detections']} 个缺陷 ({visual['inference_ms']}ms)")
+        for d in visual["detections"]:
+            print(f"      - {d['label']} (置信度{d['confidence']}, 严重度{d['severity']})")
+        print(f"    SAM-Audio: {audio['num_anomalies']} 个声纹异常")
+        for a in audio["anomalies"]:
+            print(f"      - {a['label']} ({a['detected_freq_hz']}Hz, 置信度{a['confidence']})")
+
+    # Layer 2: 预测
+    if verbose: print("\n  [Layer 2] 预测层...")
+    yield_history = PredictionLayer.generate_time_series("良率", 168, "degrading")
+    yield_pred = PredictionLayer.forecast(yield_history, 72, "良率(%)")
+    rul = PredictionLayer.predict_equipment_rul()
+    if verbose:
+        print(f"    良率预测: 趋势{yield_pred['trend']:+.4f}/天")
+        if yield_pred["alert"]:
+            print(f"    ⚠️ {yield_pred['alert_message']}")
+        print(f"    设备RUL: {rul['rul_hours']}小时 ({rul['maintenance_urgency']})")
+
+    # Layer 3: 关联
+    if verbose: print("\n  [Layer 3] 关联层...")
+    defect_type = visual["detections"][0]["label"] if visual["detections"] else "划痕"
+    ontology = OntologyLayer.trace_root_cause(defect_type)
+    if verbose:
+        print(f"    图谱遍历: {ontology['graph_nodes_traversed']} 个节点")
+        for t in ontology["traces"]:
+            print(f"      [{t['relevance']}] {t['path']}: {t['finding']}")
+
+    # Layer 4: 归因
+    if verbose: print("\n  [Layer 4] 归因层...")
+    diagnosis = DiagnosisLayer.diagnose(visual, rul, ontology, audio, use_llm)
+    if verbose:
+        print(f"    模式: {diagnosis['mode']}")
+        print(f"    {diagnosis['summary']}")
+        for i, rc in enumerate(diagnosis.get("root_causes", [])[:5]):
+            icon = "🔴" if rc["priority"] == "紧急" else "🟡" if rc["priority"] == "高" else "🟢"
+            print(f"    {icon} [{rc['confidence']*100:.0f}%] {rc['cause']}")
+            print(f"       → {rc['action']}")
+
+    # 综合报告
+    report = {
+        "pipeline": "industrial-ai-v1",
+        "perception": {"visual": visual, "audio": audio},
+        "prediction": {"yield": yield_pred, "rul": rul},
+        "ontology": ontology,
+        "diagnosis": diagnosis,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    if verbose:
+        print(f"\n{'='*60}")
+        print(f"  管线完成 | 缺陷{visual['num_detections']}个 | RUL{rul['rul_hours']}h | 根因{diagnosis['num_root_causes']}个")
+        print(f"{'='*60}\n")
+
+    return report
+
+
+# ══════════════════════════════════════════════════
+# 测试数据生成
+# ══════════════════════════════════════════════════
+
+def generate_test_data():
+    """生成模拟测试数据集"""
+    DATA_DIR.mkdir(exist_ok=True)
+
+    # 1. 良率时序数据（7天，每小时）
+    yield_data = PredictionLayer.generate_time_series("良率", 168, "degrading")
+    (DATA_DIR / "yield_history_7d.json").write_text(
+        json.dumps({"metric": "良率(%)", "interval": "1h", "data": yield_data}, ensure_ascii=False, indent=2))
+
+    # 2. 设备振动时序（30天，每小时）
+    vib_data = PredictionLayer.generate_time_series("振动", 720, "degrading")
+    (DATA_DIR / "vibration_30d.json").write_text(
+        json.dumps({"metric": "振动(mm/s)", "interval": "1h", "data": vib_data}, ensure_ascii=False, indent=2))
+
+    # 3. 电池衰减曲线（3000循环）
+    capacity = [100 - 0.005 * i - random.gauss(0, 0.1) for i in range(3000)]
+    (DATA_DIR / "battery_degradation.json").write_text(
+        json.dumps({"metric": "容量保持率(%)", "interval": "1cycle", "data": [round(c, 3) for c in capacity]}, ensure_ascii=False, indent=2))
+
+    # 4. 批量检测结果（100张图）
+    batch_detections = []
+    for i in range(100):
+        det = PerceptionLayer.detect_visual(f"frame_{i:04d}.jpg", "defect on cell")
+        batch_detections.append(det)
+    (DATA_DIR / "batch_detection_100.json").write_text(
+        json.dumps(batch_detections, ensure_ascii=False, indent=2))
+
+    # 5. 声纹记录（24小时，每小时）
+    audio_records = []
+    for h in range(24):
+        rec = PerceptionLayer.detect_audio(f"audio_hour_{h:02d}.wav")
+        audio_records.append(rec)
+    (DATA_DIR / "audio_24h.json").write_text(
+        json.dumps(audio_records, ensure_ascii=False, indent=2))
+
+    # 6. 完整管线运行记录（10次）
+    pipeline_runs = []
+    for _ in range(10):
+        run = run_pipeline(use_llm=False, verbose=False)
+        pipeline_runs.append(run)
+    (DATA_DIR / "pipeline_runs_10.json").write_text(
+        json.dumps(pipeline_runs, ensure_ascii=False, indent=2))
+
+    print(f"  ✅ 测试数据已生成到 {DATA_DIR}/")
+    for f in sorted(DATA_DIR.glob("*.json")):
+        size = f.stat().st_size
+        print(f"    {f.name} ({size/1024:.1f}KB)")
+
+
+# ══════════════════════════════════════════════════
+# API 服务器
+# ══════════════════════════════════════════════════
+
+class PipelineAPIHandler(BaseHTTPRequestHandler):
+    def _cors(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+    def _json(self, code, data):
+        self.send_response(code)
+        self._cors()
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
+
+    def do_OPTIONS(self):
+        self.send_response(204); self._cors(); self.end_headers()
+
+    def do_GET(self):
+        if self.path == "/api/health":
+            self._json(200, {"status": "ok", "pipeline": "industrial-ai-v1",
+                             "layers": ["SAM3", "SAM-Audio", "TimesFM", "LLM"]})
+        elif self.path == "/api/detect":
+            self._json(200, {"visual": PerceptionLayer.detect_visual(),
+                             "audio": PerceptionLayer.detect_audio()})
+        elif self.path == "/api/predict":
+            self._json(200, {"yield": PredictionLayer.forecast(None, 72, "良率"),
+                             "rul": PredictionLayer.predict_equipment_rul()})
+        else:
+            self._json(404, {"error": "not found"})
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(length)) if length else {}
+        if self.path == "/api/run":
+            result = run_pipeline(use_llm=body.get("use_llm", False), verbose=False)
+            self._json(200, result)
+        elif self.path == "/api/diagnose":
+            vis = body.get("visual", PerceptionLayer.detect_visual())
+            aud = body.get("audio", PerceptionLayer.detect_audio())
+            pred = body.get("prediction", PredictionLayer.predict_equipment_rul())
+            ont = body.get("ontology", OntologyLayer.trace_root_cause("划痕"))
+            diag = DiagnosisLayer.diagnose(vis, pred, ont, aud, body.get("use_llm", False))
+            self._json(200, diag)
+        else:
+            self._json(404, {"error": "not found"})
+
+    def log_message(self, fmt, *args):
+        print(f"  [API] {args[0]}" if args else "", file=sys.stderr)
+
+
+# ══════════════════════════════════════════════════
+# CLI
+# ══════════════════════════════════════════════════
+
+def main():
+    parser = argparse.ArgumentParser(description="工业AI全链路管线")
+    sub = parser.add_subparsers(dest="command")
+
+    p_run = sub.add_parser("run", help="运行完整管线")
+    p_run.add_argument("--llm", action="store_true", help="启用LLM归因")
+    p_run.add_argument("--output", "-o", default="", help="输出JSON文件")
+
+    sub.add_parser("detect", help="仅运行感知层")
+    sub.add_parser("predict", help="仅运行预测层")
+    sub.add_parser("diagnose", help="仅运行归因层")
+    sub.add_parser("generate-data", help="生成测试数据")
+
+    p_serve = sub.add_parser("serve", help="启动API服务器")
+    p_serve.add_argument("--port", type=int, default=8770)
+
+    args = parser.parse_args()
+
+    if args.command == "run":
+        result = run_pipeline(use_llm=args.llm)
+        if args.output:
+            Path(args.output).write_text(json.dumps(result, ensure_ascii=False, indent=2))
+            print(f"  → 报告已保存到 {args.output}")
+
+    elif args.command == "detect":
+        v = PerceptionLayer.detect_visual(text_prompt="defect on battery cell")
+        a = PerceptionLayer.detect_audio()
+        print(json.dumps({"visual": v, "audio": a}, ensure_ascii=False, indent=2))
+
+    elif args.command == "predict":
+        y = PredictionLayer.forecast(None, 72, "良率(%)")
+        r = PredictionLayer.predict_equipment_rul()
+        print(json.dumps({"yield": y, "rul": r}, ensure_ascii=False, indent=2))
+
+    elif args.command == "diagnose":
+        report = run_pipeline(use_llm=bool(BIGMODEL_KEY), verbose=False)
+        print(json.dumps(report["diagnosis"], ensure_ascii=False, indent=2))
+
+    elif args.command == "generate-data":
+        generate_test_data()
+
+    elif args.command == "serve":
+        server = HTTPServer(("127.0.0.1", args.port), PipelineAPIHandler)
+        print(f"\n  工业AI管线 API: http://127.0.0.1:{args.port}")
+        print(f"  GET  /api/health | /api/detect | /api/predict")
+        print(f"  POST /api/run | /api/diagnose\n")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\n  Server stopped.")
+
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

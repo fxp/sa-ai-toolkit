@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>METR Org-Uplift Game Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    .animate-spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    textarea { font-family: inherit; }
+  </style>
+</head>
+<body class="min-h-screen text-gray-200">
+
+  <!-- Header -->
+  <header class="border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">&#129438;</span>
+        <h1 class="text-lg font-bold text-white">Org-Uplift Game</h1>
+        <span class="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">Based on METR 2026.03</span>
+      </div>
+      <div id="round-indicator" class="flex items-center gap-2"></div>
+      <button id="reset-btn" class="text-xs text-gray-500 hover:text-red-400 transition" title="重置游戏">Reset</button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main id="main-content" class="max-w-6xl mx-auto px-4 py-6"></main>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 text-xs text-gray-600 border-t border-gray-800 mt-8">
+    Org-Uplift Game Simulator | Based on <a href="https://metr.org/notes/2026-03-19-org-uplift-game/" target="_blank" class="text-blue-500 hover:underline">METR Research (2026.03.19)</a>
+    | AI Agent capability: 200h time horizon, 2x speed | Powered by GLM-5
+  </footer>
+
+  <script src="engine.js"></script>
+  <script src="scenarios.js"></script>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (confirm('确定要重置游戏吗？所有进度将丢失。')) App.resetGame();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,3564 @@
+[
+  {
+    "model": "SAM3",
+    "image": "frame_0000.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1332,
+          269,
+          256,
+          256
+        ],
+        "confidence": 0.895,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 41.2,
+    "timestamp": "2026-04-16T08:18:24.766301"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0001.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1331,
+          426,
+          256,
+          256
+        ],
+        "confidence": 0.822,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          83,
+          157,
+          512,
+          512
+        ],
+        "confidence": 0.879,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 35.4,
+    "timestamp": "2026-04-16T08:18:24.766336"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0002.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 38.3,
+    "timestamp": "2026-04-16T08:18:24.766345"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0003.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          291,
+          601,
+          512,
+          512
+        ],
+        "confidence": 0.785,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 37.2,
+    "timestamp": "2026-04-16T08:18:24.766353"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0004.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 26.7,
+    "timestamp": "2026-04-16T08:18:24.766358"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0005.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1688,
+          944,
+          64,
+          64
+        ],
+        "confidence": 0.949,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          309,
+          692,
+          512,
+          512
+        ],
+        "confidence": 0.874,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          359,
+          71,
+          512,
+          512
+        ],
+        "confidence": 0.907,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1234,
+          620,
+          512,
+          512
+        ],
+        "confidence": 0.783,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 43.8,
+    "timestamp": "2026-04-16T08:18:24.766370"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0006.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          357,
+          735,
+          512,
+          512
+        ],
+        "confidence": 0.918,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          626,
+          959,
+          128,
+          128
+        ],
+        "confidence": 0.799,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          758,
+          769,
+          512,
+          512
+        ],
+        "confidence": 0.797,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 40.4,
+    "timestamp": "2026-04-16T08:18:24.766380"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0007.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 40.6,
+    "timestamp": "2026-04-16T08:18:24.766384"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0008.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 31.1,
+    "timestamp": "2026-04-16T08:18:24.766388"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0009.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1787,
+          195,
+          128,
+          128
+        ],
+        "confidence": 0.932,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          560,
+          342,
+          256,
+          256
+        ],
+        "confidence": 0.825,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 40.9,
+    "timestamp": "2026-04-16T08:18:24.766396"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0010.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          74,
+          645,
+          384,
+          384
+        ],
+        "confidence": 0.932,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 28.5,
+    "timestamp": "2026-04-16T08:18:24.766402"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0011.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1781,
+          607,
+          128,
+          128
+        ],
+        "confidence": 0.823,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 35.8,
+    "timestamp": "2026-04-16T08:18:24.766408"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0012.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1095,
+          841,
+          384,
+          384
+        ],
+        "confidence": 0.988,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          637,
+          857,
+          64,
+          64
+        ],
+        "confidence": 0.988,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 44.0,
+    "timestamp": "2026-04-16T08:18:24.766437"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0013.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1026,
+          930,
+          64,
+          64
+        ],
+        "confidence": 0.981,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 39.1,
+    "timestamp": "2026-04-16T08:18:24.766549"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0014.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          670,
+          72,
+          256,
+          256
+        ],
+        "confidence": 0.974,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 38.2,
+    "timestamp": "2026-04-16T08:18:24.766558"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0015.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          298,
+          183,
+          256,
+          256
+        ],
+        "confidence": 0.783,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 29.7,
+    "timestamp": "2026-04-16T08:18:24.766565"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0016.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1692,
+          671,
+          256,
+          256
+        ],
+        "confidence": 0.849,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1222,
+          206,
+          128,
+          128
+        ],
+        "confidence": 0.946,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          76,
+          241,
+          64,
+          64
+        ],
+        "confidence": 0.825,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 29.3,
+    "timestamp": "2026-04-16T08:18:24.766575"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0017.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 41.8,
+    "timestamp": "2026-04-16T08:18:24.766580"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0018.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          533,
+          307,
+          128,
+          128
+        ],
+        "confidence": 0.956,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1708,
+          265,
+          128,
+          128
+        ],
+        "confidence": 0.83,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          499,
+          73,
+          512,
+          512
+        ],
+        "confidence": 0.893,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          189,
+          429,
+          384,
+          384
+        ],
+        "confidence": 0.962,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 41.6,
+    "timestamp": "2026-04-16T08:18:24.766592"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0019.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          618,
+          732,
+          64,
+          64
+        ],
+        "confidence": 0.838,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 26.7,
+    "timestamp": "2026-04-16T08:18:24.766598"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0020.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1495,
+          82,
+          256,
+          256
+        ],
+        "confidence": 0.917,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          658,
+          77,
+          256,
+          256
+        ],
+        "confidence": 0.952,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 27.0,
+    "timestamp": "2026-04-16T08:18:24.766606"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0021.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          750,
+          969,
+          384,
+          384
+        ],
+        "confidence": 0.974,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 32.2,
+    "timestamp": "2026-04-16T08:18:24.766612"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0022.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          939,
+          117,
+          384,
+          384
+        ],
+        "confidence": 0.818,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1599,
+          698,
+          128,
+          128
+        ],
+        "confidence": 0.806,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 26.1,
+    "timestamp": "2026-04-16T08:18:24.766619"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0023.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          284,
+          159,
+          128,
+          128
+        ],
+        "confidence": 0.825,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          363,
+          855,
+          64,
+          64
+        ],
+        "confidence": 0.953,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          910,
+          550,
+          384,
+          384
+        ],
+        "confidence": 0.838,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 36.8,
+    "timestamp": "2026-04-16T08:18:24.766629"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0024.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1308,
+          660,
+          128,
+          128
+        ],
+        "confidence": 0.859,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          481,
+          621,
+          512,
+          512
+        ],
+        "confidence": 0.804,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 39.2,
+    "timestamp": "2026-04-16T08:18:24.766636"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0025.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1247,
+          215,
+          384,
+          384
+        ],
+        "confidence": 0.953,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 30.6,
+    "timestamp": "2026-04-16T08:18:24.766642"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0026.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          777,
+          966,
+          384,
+          384
+        ],
+        "confidence": 0.965,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          671,
+          674,
+          64,
+          64
+        ],
+        "confidence": 0.805,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 26.3,
+    "timestamp": "2026-04-16T08:18:24.766650"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0027.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1744,
+          300,
+          384,
+          384
+        ],
+        "confidence": 0.874,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          681,
+          409,
+          128,
+          128
+        ],
+        "confidence": 0.869,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 35.5,
+    "timestamp": "2026-04-16T08:18:24.766658"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0028.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 30.5,
+    "timestamp": "2026-04-16T08:18:24.766663"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0029.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          472,
+          930,
+          512,
+          512
+        ],
+        "confidence": 0.754,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1269,
+          652,
+          64,
+          64
+        ],
+        "confidence": 0.888,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 38.5,
+    "timestamp": "2026-04-16T08:18:24.766670"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0030.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          653,
+          985,
+          512,
+          512
+        ],
+        "confidence": 0.898,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          78,
+          782,
+          256,
+          256
+        ],
+        "confidence": 0.814,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 28.9,
+    "timestamp": "2026-04-16T08:18:24.766677"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0031.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1749,
+          994,
+          64,
+          64
+        ],
+        "confidence": 0.973,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          249,
+          445,
+          128,
+          128
+        ],
+        "confidence": 0.797,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          525,
+          350,
+          256,
+          256
+        ],
+        "confidence": 0.766,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1133,
+          957,
+          256,
+          256
+        ],
+        "confidence": 0.787,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 35.5,
+    "timestamp": "2026-04-16T08:18:24.766688"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0032.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1789,
+          903,
+          512,
+          512
+        ],
+        "confidence": 0.787,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 28.6,
+    "timestamp": "2026-04-16T08:18:24.766694"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0033.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          936,
+          853,
+          128,
+          128
+        ],
+        "confidence": 0.802,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 37.9,
+    "timestamp": "2026-04-16T08:18:24.766700"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0034.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          802,
+          327,
+          128,
+          128
+        ],
+        "confidence": 0.853,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 40.0,
+    "timestamp": "2026-04-16T08:18:24.766707"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0035.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 30.4,
+    "timestamp": "2026-04-16T08:18:24.766711"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0036.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 43.8,
+    "timestamp": "2026-04-16T08:18:24.766715"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0037.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 31.4,
+    "timestamp": "2026-04-16T08:18:24.766719"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0038.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          766,
+          666,
+          64,
+          64
+        ],
+        "confidence": 0.771,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 29.5,
+    "timestamp": "2026-04-16T08:18:24.766725"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0039.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          58,
+          725,
+          512,
+          512
+        ],
+        "confidence": 0.762,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          802,
+          388,
+          64,
+          64
+        ],
+        "confidence": 0.764,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1576,
+          476,
+          64,
+          64
+        ],
+        "confidence": 0.858,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1213,
+          874,
+          128,
+          128
+        ],
+        "confidence": 0.772,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 34.3,
+    "timestamp": "2026-04-16T08:18:24.766737"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0040.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          263,
+          738,
+          384,
+          384
+        ],
+        "confidence": 0.972,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 32.8,
+    "timestamp": "2026-04-16T08:18:24.766743"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0041.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          842,
+          898,
+          128,
+          128
+        ],
+        "confidence": 0.787,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1366,
+          94,
+          64,
+          64
+        ],
+        "confidence": 0.866,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          286,
+          946,
+          384,
+          384
+        ],
+        "confidence": 0.926,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 28.5,
+    "timestamp": "2026-04-16T08:18:24.766752"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0042.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 41.1,
+    "timestamp": "2026-04-16T08:18:24.766757"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0043.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 38.8,
+    "timestamp": "2026-04-16T08:18:24.766825"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0044.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          926,
+          57,
+          128,
+          128
+        ],
+        "confidence": 0.782,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1051,
+          399,
+          256,
+          256
+        ],
+        "confidence": 0.917,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 44.6,
+    "timestamp": "2026-04-16T08:18:24.766864"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0045.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          99,
+          328,
+          256,
+          256
+        ],
+        "confidence": 0.809,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1127,
+          510,
+          64,
+          64
+        ],
+        "confidence": 0.868,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 42.2,
+    "timestamp": "2026-04-16T08:18:24.766877"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0046.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 34.9,
+    "timestamp": "2026-04-16T08:18:24.766882"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0047.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1287,
+          807,
+          384,
+          384
+        ],
+        "confidence": 0.843,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 36.2,
+    "timestamp": "2026-04-16T08:18:24.766890"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0048.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 37.7,
+    "timestamp": "2026-04-16T08:18:24.766895"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0049.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1555,
+          939,
+          256,
+          256
+        ],
+        "confidence": 0.756,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 42.8,
+    "timestamp": "2026-04-16T08:18:24.766901"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0050.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          447,
+          890,
+          512,
+          512
+        ],
+        "confidence": 0.865,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 41.2,
+    "timestamp": "2026-04-16T08:18:24.766909"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0051.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          882,
+          812,
+          64,
+          64
+        ],
+        "confidence": 0.978,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 40.9,
+    "timestamp": "2026-04-16T08:18:24.766916"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0052.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          717,
+          823,
+          512,
+          512
+        ],
+        "confidence": 0.907,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          390,
+          492,
+          128,
+          128
+        ],
+        "confidence": 0.907,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 42.1,
+    "timestamp": "2026-04-16T08:18:24.766925"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0053.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1370,
+          276,
+          256,
+          256
+        ],
+        "confidence": 0.75,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 36.2,
+    "timestamp": "2026-04-16T08:18:24.766934"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0054.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1178,
+          186,
+          512,
+          512
+        ],
+        "confidence": 0.768,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          225,
+          579,
+          64,
+          64
+        ],
+        "confidence": 0.846,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          331,
+          765,
+          384,
+          384
+        ],
+        "confidence": 0.846,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 25.7,
+    "timestamp": "2026-04-16T08:18:24.766946"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0055.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 27.5,
+    "timestamp": "2026-04-16T08:18:24.766951"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0056.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 43.1,
+    "timestamp": "2026-04-16T08:18:24.766956"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0057.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          443,
+          806,
+          64,
+          64
+        ],
+        "confidence": 0.912,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1215,
+          52,
+          512,
+          512
+        ],
+        "confidence": 0.979,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1606,
+          835,
+          64,
+          64
+        ],
+        "confidence": 0.932,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 34.6,
+    "timestamp": "2026-04-16T08:18:24.766968"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0058.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 44.8,
+    "timestamp": "2026-04-16T08:18:24.766973"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0059.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          866,
+          307,
+          384,
+          384
+        ],
+        "confidence": 0.807,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 30.1,
+    "timestamp": "2026-04-16T08:18:24.766979"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0060.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 32.4,
+    "timestamp": "2026-04-16T08:18:24.766984"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0061.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1534,
+          296,
+          256,
+          256
+        ],
+        "confidence": 0.873,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          802,
+          666,
+          256,
+          256
+        ],
+        "confidence": 0.836,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 26.1,
+    "timestamp": "2026-04-16T08:18:24.766993"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0062.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1729,
+          759,
+          128,
+          128
+        ],
+        "confidence": 0.913,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1368,
+          197,
+          256,
+          256
+        ],
+        "confidence": 0.761,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1616,
+          627,
+          512,
+          512
+        ],
+        "confidence": 0.859,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 43.9,
+    "timestamp": "2026-04-16T08:18:24.767003"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0063.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1571,
+          389,
+          256,
+          256
+        ],
+        "confidence": 0.866,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 44.9,
+    "timestamp": "2026-04-16T08:18:24.767009"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0064.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          503,
+          669,
+          128,
+          128
+        ],
+        "confidence": 0.844,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 25.5,
+    "timestamp": "2026-04-16T08:18:24.767016"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0065.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1441,
+          457,
+          64,
+          64
+        ],
+        "confidence": 0.853,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 44.8,
+    "timestamp": "2026-04-16T08:18:24.767027"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0066.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1076,
+          811,
+          512,
+          512
+        ],
+        "confidence": 0.911,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          468,
+          536,
+          384,
+          384
+        ],
+        "confidence": 0.968,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 39.8,
+    "timestamp": "2026-04-16T08:18:24.767037"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0067.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1333,
+          594,
+          384,
+          384
+        ],
+        "confidence": 0.894,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1310,
+          229,
+          384,
+          384
+        ],
+        "confidence": 0.787,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          540,
+          906,
+          128,
+          128
+        ],
+        "confidence": 0.768,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 28.3,
+    "timestamp": "2026-04-16T08:18:24.767125"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0068.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1204,
+          170,
+          512,
+          512
+        ],
+        "confidence": 0.752,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 30.1,
+    "timestamp": "2026-04-16T08:18:24.767148"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0069.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          199,
+          173,
+          384,
+          384
+        ],
+        "confidence": 0.865,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1214,
+          802,
+          384,
+          384
+        ],
+        "confidence": 0.854,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1410,
+          225,
+          384,
+          384
+        ],
+        "confidence": 0.96,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 39.0,
+    "timestamp": "2026-04-16T08:18:24.767164"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0070.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          626,
+          755,
+          128,
+          128
+        ],
+        "confidence": 0.771,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1487,
+          158,
+          128,
+          128
+        ],
+        "confidence": 0.836,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1758,
+          838,
+          256,
+          256
+        ],
+        "confidence": 0.751,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          853,
+          406,
+          64,
+          64
+        ],
+        "confidence": 0.92,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 27.7,
+    "timestamp": "2026-04-16T08:18:24.767177"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0071.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 43.5,
+    "timestamp": "2026-04-16T08:18:24.767182"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0072.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          124,
+          330,
+          128,
+          128
+        ],
+        "confidence": 0.768,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 39.4,
+    "timestamp": "2026-04-16T08:18:24.767188"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0073.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1762,
+          282,
+          64,
+          64
+        ],
+        "confidence": 0.78,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 36.5,
+    "timestamp": "2026-04-16T08:18:24.767194"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0074.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          84,
+          814,
+          64,
+          64
+        ],
+        "confidence": 0.85,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 36.3,
+    "timestamp": "2026-04-16T08:18:24.767200"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0075.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          165,
+          834,
+          512,
+          512
+        ],
+        "confidence": 0.969,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          381,
+          124,
+          128,
+          128
+        ],
+        "confidence": 0.906,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1622,
+          307,
+          384,
+          384
+        ],
+        "confidence": 0.92,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 26.6,
+    "timestamp": "2026-04-16T08:18:24.767209"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0076.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 40.3,
+    "timestamp": "2026-04-16T08:18:24.767271"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0077.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          781,
+          367,
+          128,
+          128
+        ],
+        "confidence": 0.779,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 36.5,
+    "timestamp": "2026-04-16T08:18:24.767290"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0078.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1062,
+          734,
+          128,
+          128
+        ],
+        "confidence": 0.949,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 39.0,
+    "timestamp": "2026-04-16T08:18:24.767298"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0079.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1754,
+          898,
+          512,
+          512
+        ],
+        "confidence": 0.966,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          887,
+          968,
+          64,
+          64
+        ],
+        "confidence": 0.838,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 27.6,
+    "timestamp": "2026-04-16T08:18:24.767309"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0080.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 33.6,
+    "timestamp": "2026-04-16T08:18:24.767314"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0081.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          91,
+          389,
+          256,
+          256
+        ],
+        "confidence": 0.903,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          577,
+          633,
+          384,
+          384
+        ],
+        "confidence": 0.818,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 30.8,
+    "timestamp": "2026-04-16T08:18:24.767324"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0082.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          568,
+          498,
+          512,
+          512
+        ],
+        "confidence": 0.843,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          718,
+          795,
+          256,
+          256
+        ],
+        "confidence": 0.782,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          982,
+          571,
+          256,
+          256
+        ],
+        "confidence": 0.942,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 32.4,
+    "timestamp": "2026-04-16T08:18:24.767334"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0083.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          564,
+          997,
+          128,
+          128
+        ],
+        "confidence": 0.962,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          583,
+          566,
+          64,
+          64
+        ],
+        "confidence": 0.764,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1564,
+          712,
+          128,
+          128
+        ],
+        "confidence": 0.811,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          555,
+          477,
+          64,
+          64
+        ],
+        "confidence": 0.855,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 28.2,
+    "timestamp": "2026-04-16T08:18:24.767345"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0084.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          748,
+          673,
+          512,
+          512
+        ],
+        "confidence": 0.758,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          79,
+          865,
+          128,
+          128
+        ],
+        "confidence": 0.78,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          574,
+          878,
+          384,
+          384
+        ],
+        "confidence": 0.857,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 27.1,
+    "timestamp": "2026-04-16T08:18:24.767355"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0085.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          474,
+          750,
+          128,
+          128
+        ],
+        "confidence": 0.915,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 29.4,
+    "timestamp": "2026-04-16T08:18:24.767362"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0086.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          89,
+          563,
+          512,
+          512
+        ],
+        "confidence": 0.817,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1159,
+          913,
+          64,
+          64
+        ],
+        "confidence": 0.901,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          715,
+          178,
+          128,
+          128
+        ],
+        "confidence": 0.81,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 32.0,
+    "timestamp": "2026-04-16T08:18:24.767373"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0087.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 2,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1008,
+          403,
+          128,
+          128
+        ],
+        "confidence": 0.799,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1377,
+          65,
+          512,
+          512
+        ],
+        "confidence": 0.86,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 27.1,
+    "timestamp": "2026-04-16T08:18:24.767382"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0088.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1046,
+          806,
+          256,
+          256
+        ],
+        "confidence": 0.813,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 30.2,
+    "timestamp": "2026-04-16T08:18:24.767389"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0089.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          605,
+          691,
+          384,
+          384
+        ],
+        "confidence": 0.974,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          700,
+          710,
+          128,
+          128
+        ],
+        "confidence": 0.828,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          413,
+          990,
+          64,
+          64
+        ],
+        "confidence": 0.915,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          88,
+          514,
+          256,
+          256
+        ],
+        "confidence": 0.784,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 38.3,
+    "timestamp": "2026-04-16T08:18:24.767401"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0090.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          824,
+          626,
+          256,
+          256
+        ],
+        "confidence": 0.923,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1345,
+          80,
+          64,
+          64
+        ],
+        "confidence": 0.838,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          965,
+          595,
+          128,
+          128
+        ],
+        "confidence": 0.85,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          94,
+          380,
+          512,
+          512
+        ],
+        "confidence": 0.877,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 43.8,
+    "timestamp": "2026-04-16T08:18:24.767412"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0091.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 44.9,
+    "timestamp": "2026-04-16T08:18:24.767417"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0092.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          1278,
+          928,
+          384,
+          384
+        ],
+        "confidence": 0.966,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1634,
+          656,
+          128,
+          128
+        ],
+        "confidence": 0.872,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1578,
+          815,
+          256,
+          256
+        ],
+        "confidence": 0.835,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 32.7,
+    "timestamp": "2026-04-16T08:18:24.767427"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0093.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 3,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          177,
+          177,
+          256,
+          256
+        ],
+        "confidence": 0.826,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1357,
+          714,
+          64,
+          64
+        ],
+        "confidence": 0.88,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1269,
+          88,
+          64,
+          64
+        ],
+        "confidence": 0.956,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 41.6,
+    "timestamp": "2026-04-16T08:18:24.767438"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0094.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1190,
+          451,
+          64,
+          64
+        ],
+        "confidence": 0.879,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 31.5,
+    "timestamp": "2026-04-16T08:18:24.767445"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0095.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 0,
+    "detections": [],
+    "inference_ms": 37.1,
+    "timestamp": "2026-04-16T08:18:24.767450"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0096.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "coating_uneven",
+        "label": "涂布不均",
+        "severity": "medium",
+        "area_px": 512,
+        "bbox": [
+          1594,
+          333,
+          512,
+          512
+        ],
+        "confidence": 0.96,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          399,
+          471,
+          384,
+          384
+        ],
+        "confidence": 0.831,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          877,
+          483,
+          128,
+          128
+        ],
+        "confidence": 0.8,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          457,
+          889,
+          256,
+          256
+        ],
+        "confidence": 0.804,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 36.1,
+    "timestamp": "2026-04-16T08:18:24.767461"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0097.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "foreign_object",
+        "label": "异物",
+        "severity": "high",
+        "area_px": 256,
+        "bbox": [
+          1431,
+          599,
+          256,
+          256
+        ],
+        "confidence": 0.914,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 25.5,
+    "timestamp": "2026-04-16T08:18:24.767468"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0098.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 4,
+    "detections": [
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          399,
+          910,
+          128,
+          128
+        ],
+        "confidence": 0.829,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "wrinkle",
+        "label": "极片褶皱",
+        "severity": "high",
+        "area_px": 384,
+        "bbox": [
+          394,
+          498,
+          384,
+          384
+        ],
+        "confidence": 0.822,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          151,
+          347,
+          128,
+          128
+        ],
+        "confidence": 0.864,
+        "prompt": "defect on cell"
+      },
+      {
+        "type": "scratch",
+        "label": "划痕",
+        "severity": "medium",
+        "area_px": 128,
+        "bbox": [
+          1688,
+          660,
+          128,
+          128
+        ],
+        "confidence": 0.968,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 26.9,
+    "timestamp": "2026-04-16T08:18:24.767480"
+  },
+  {
+    "model": "SAM3",
+    "image": "frame_0099.jpg",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "text_prompt": "defect on cell",
+    "num_detections": 1,
+    "detections": [
+      {
+        "type": "bubble",
+        "label": "气泡",
+        "severity": "low",
+        "area_px": 64,
+        "bbox": [
+          1454,
+          562,
+          64,
+          64
+        ],
+        "confidence": 0.864,
+        "prompt": "defect on cell"
+      }
+    ],
+    "inference_ms": 39.9,
+    "timestamp": "2026-04-16T08:18:24.767499"
+  }
+]
