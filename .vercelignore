@@ -1,4 +1,4 @@
-# Python
+# Python artifacts
 __pycache__/
 *.pyc
 *.pyo
@@ -8,20 +8,29 @@ __pycache__/
 # Node
 node_modules/
 
-# Large/unnecessary demos
+# Large demos not needed for web
 demos/demo1-paperclip/
-demos/bonus-mirofish/backend/
+demos/bonus-mirofish/
+demos/bonus-maestro/
+demos/bonus-playwright/
+demos/demo2-karpathy-kb/
+demos/demo3-gstack/
+demos/demo4-hypothesis/
+demos/demo5-ppt-skills/
+demos/demo-industrial-ai-pipeline/
+demos/enterprise-skills/
+demos/sa-ai-toolkit/
+demos/sa-ai-toolkit.plugin/
+demos/windows-test-scripts/
+demos/outputs/
 
-# Temp files
+# Temp and system files
 ~$*
 *.bak
 .DS_Store
 .claude/
 .git/
 
-# Docs source
-*.md
-!docs/**
-!demos/demo-metr-org-uplift/**
-!demos/orchestrator/**
-!demos/bonus-autoresearch/website/**
+# Large non-web files
+*.pptx
+*.skill
