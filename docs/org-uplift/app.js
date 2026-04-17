@@ -24,6 +24,8 @@ const App = (() => {
     allTasks: [],
     // Standup notes per round
     standups: {},
+    // Full simulation log (persisted for final report)
+    fullLog: [],
     timerEnd: null,
   };
 
@@ -330,7 +332,9 @@ const App = (() => {
 
     const main = $('#main-content');
     const roundNames = ['Day1 上午', 'Day1 下午', 'Day2 上午', 'Day2 下午'];
-    let simLog = [];
+    // Reset full log at start of new auto-sim
+    state.fullLog = [];
+    let simLog = state.fullLog;
 
     function renderSimUI(currentRound, currentStep, stepDetail, progress) {
       main.innerHTML = `
@@ -398,14 +402,14 @@ const App = (() => {
       // ── Standup phase ──
       renderSimUI(round, `Standup — ${roundNames[rIdx]}`, '填写各玩家的进展汇报...', baseProgress);
       log(`── 回合 ${round} (${roundNames[rIdx]}) 开始 ──`, 'info');
-      await delay(400);
+      await delay(1800);
 
       state.standups[rKey] = state.players.map((p, pi) => {
         const s = script.standups[rIdx]?.[pi] || { done: '', plan: '继续推进项目', blockers: '' };
         log(`${p.name}: 计划「${s.plan.slice(0, 40)}...」`, 'info');
         return s;
       });
-      await delay(300);
+      await delay(1500);
 
       // ── Work phase ──
       state.rounds[rKey] = state.players.map(() =>
@@ -440,23 +444,24 @@ const App = (() => {
             const icon = result.dice.success ? '&#10003;' : '&#10007;';
             const status = result.dice.success ? 'success' : 'warn';
             log(`  ← ${result.dice.success ? '成功' : '失败'} (${result.dice.roll}/${result.dice.threshold}) ${result.estimatedHours}h — ${(result.deliverable || '').slice(0, 40)}`, status);
-            await delay(200);
+            await delay(1500);
           } else {
             log(`${player.name} [H${h + 1}]: ${actionData.playerAction}`, 'info');
+            await delay(600);
           }
         }
       }
 
       log(`回合 ${round} 完成 ✓`, 'success');
       saveState();
-      await delay(300);
+      await delay(1800);
     }
 
     // ── Done → Final Report ──
     log('', 'info');
     log('══ 全部4回合模拟完成 ══', 'success');
     renderSimUI(TOTAL_ROUNDS, '模拟完成!', '正在生成最终报告...', 100);
-    await delay(800);
+    await delay(2000);
 
     state.phase = 'finalReport';
     saveState();
@@ -1014,6 +1019,22 @@ const App = (() => {
             <div class="flex gap-2"><span class="text-yellow-400">5.</span><span class="text-gray-300">"初级员工处于劣势" — 领域专长决定了给Agent下达指令的质量</span></div>
           </div>
         </div>
+
+        <!-- Full Simulation Log (collapsible) -->
+        ${(state.fullLog && state.fullLog.length) ? `
+          <details class="bg-gray-800 rounded-lg mb-4 overflow-hidden group">
+            <summary class="p-4 cursor-pointer hover:bg-gray-750 transition flex items-center justify-between list-none">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400 group-open:rotate-90 transition-transform inline-block">&#9654;</span>
+                <h3 class="text-sm font-bold text-gray-300">完整推演日志 (${state.fullLog.length} 行)</h3>
+              </div>
+              <span class="text-xs text-gray-500">点击展开 / 收起</span>
+            </summary>
+            <div class="bg-gray-900 border-t border-gray-700 max-h-96 overflow-y-auto p-4 font-mono text-xs space-y-0.5">
+              ${state.fullLog.map(l => `<div class="${l.type === 'success' ? 'text-green-400' : l.type === 'info' ? 'text-blue-400' : l.type === 'warn' ? 'text-yellow-400' : 'text-gray-500'}">${l.time} ${l.msg}</div>`).join('')}
+            </div>
+          </details>
+        ` : ''}
 
         <!-- Actions -->
         <div class="flex justify-center gap-4 mt-6">

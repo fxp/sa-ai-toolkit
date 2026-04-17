@@ -3,145 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hypothesis Annotator</title>
+<title>Hypothesis — Live Annotation Generator</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); border-radius: 12px; }
   .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
-  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
-  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
-  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-  .terminal .prompt { color: #10b981; }
-  .terminal .output { color: #94a3b8; }
-  .terminal .highlight { color: #60a5fa; }
-  .terminal .warn { color: #f59e0b; }
-  .terminal .success { color: #22c55e; }
-  .terminal .error { color: #ef4444; }
-  #lang-toggle { cursor: pointer; transition: all 0.2s; }
-  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  #lang-toggle { cursor: pointer; } #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  textarea, select { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); border-radius: 8px; padding: 10px; }
+  textarea:focus, select:focus { outline: none; border-color: #60a5fa; }
+  .btn { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 500; }
+  .btn:disabled { opacity: 0.5; }
+  .btn-sec { background: rgba(100,100,150,0.2); border: 1px solid rgba(100,100,150,0.3); padding: 8px 16px; border-radius: 8px; color: #e2e8f0; }
+  .hl-data { background: rgba(239,68,68,0.18); border-bottom: 2px solid #ef4444; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
+  .hl-contra { background: rgba(234,179,8,0.18); border-bottom: 2px solid #eab308; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
+  .hl-strat { background: rgba(34,197,94,0.18); border-bottom: 2px solid #22c55e; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
+  .hl-crit { background: rgba(59,130,246,0.18); border-bottom: 2px solid #3b82f6; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
+  .annotation { font-size: 12px; padding: 8px 10px; border-radius: 8px; margin-top: 6px; display: block; }
+  .ann-data { background: rgba(239,68,68,0.12); border-left: 3px solid #ef4444; }
+  .ann-contra { background: rgba(234,179,8,0.12); border-left: 3px solid #eab308; }
+  .ann-strat { background: rgba(34,197,94,0.12); border-left: 3px solid #22c55e; }
+  .ann-crit { background: rgba(59,130,246,0.12); border-left: 3px solid #3b82f6; }
+  .pulse { display: inline-block; width: 10px; height: 10px; background: #60a5fa; border-radius: 50%; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.4); } }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #22c55e; color: #fff; padding: 10px 20px; border-radius: 8px; z-index: 100; animation: slide 3s ease; }
+  @keyframes slide { 0%,100% { opacity: 0; } 10%,90% { opacity: 1; } }
+  pre { background: #0b1220; border-radius: 8px; padding: 12px; font-size: 11px; color: #94a3b8; overflow-x: auto; }
 </style>
 </head>
-<body class="text-gray-300 min-h-screen">
+<body class="min-h-screen">
 
 <div class="fixed top-4 right-4 z-50">
   <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
-    <span>&#127760;</span>
-    <span id="lang-label">EN / 中文</span>
+    <span>🌐</span><span id="lang-label">中文</span>
   </button>
 </div>
 
-<header class="pt-16 pb-8 px-6 text-center">
-  <div class="max-w-4xl mx-auto">
-    <div class="text-5xl mb-4">&#128278;</div>
-    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
-      <span class="gradient-text" data-en="Hypothesis Annotator" data-zh="智能标注Agent"></span>
-    </h1>
-    <p class="text-lg text-gray-400" data-en="AI-powered web annotation — fetch, analyze, annotate on Hypothes.is" data-zh="AI驱动的网页标注 — 抓取、分析、标注到Hypothes.is"></p>
-    <p class="text-gray-500 mt-2" data-en="Color-coded tags: critical data, non-consensus, strategy, AI critique" data-zh="彩色标签分类：关键数据、非共识、策略、AI批评"></p>
-  </div>
-</header>
+<div class="max-w-7xl mx-auto px-6 py-8">
+  <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
+  <h1 class="text-3xl font-bold mt-3 gradient-text" data-en="Hypothesis Annotator" data-zh="Hypothesis 标注生成器">Hypothesis Annotator</h1>
+  <p class="text-gray-400 mt-1" data-en="Paste an article → auto-highlight key data, contrarian views, strategy, and AI critique." data-zh="粘贴文章 → 自动高亮关键数据、非共识观点、策略、AI 批评。">Paste an article → auto-highlight key data, contrarian views, strategy, and AI critique.</p>
 
-<!-- How It Works -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
-    <div class="terminal p-6 glow text-sm leading-relaxed">
-      <div class="text-gray-500" data-en="# Step 1: Fetch and parse article" data-zh="# 第1步：抓取并解析文章"></div>
-      <div><span class="prompt">$</span> <span class="text-white">/annotate</span> <span class="text-yellow-400">https://arxiv.org/abs/2403.12345</span></div>
-      <div class="output" data-en="  Fetching article... 4,200 words extracted" data-zh="  抓取文章... 提取 4,200 词"></div>
-      <div class="mt-3 text-gray-500" data-en="# Step 2: AI deep analysis with GLM" data-zh="# 第2步：GLM深度分析"></div>
-      <div class="output" data-en="  Analyzing with GLM-4... identifying key claims..." data-zh="  使用GLM-4分析... 识别关键论点..."></div>
-      <div class="output" data-en="  Classification: 2 critical data, 1 non-consensus, 2 strategy, 1 critique" data-zh="  分类：2个关键数据、1个非共识、2个策略、1个批评"></div>
-      <div class="mt-3 text-gray-500" data-en="# Step 3: Post annotations to Hypothes.is" data-zh="# 第3步：发布标注到Hypothes.is"></div>
-      <div class="success" data-en="  &#10003; 6 annotations posted to hypothes.is" data-zh="  &#10003; 6条标注已发布到hypothes.is"></div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+    <div class="card p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <select id="preset" class="text-sm">
+          <option value="0">AI market 2026</option>
+          <option value="1">Enterprise AI trends</option>
+          <option value="2">LLM economics</option>
+          <option value="3">Multi-agent systems</option>
+          <option value="4">AI safety debate</option>
+        </select>
+        <button id="analyze" class="btn" data-en="Analyze" data-zh="分析">Analyze</button>
+        <button id="post" class="btn-sec" data-en="Post to Hypothes.is" data-zh="发布到 Hypothes.is">Post to Hypothes.is</button>
+        <span id="status" class="text-sm text-gray-400"></span>
+      </div>
+      <textarea id="input" rows="20" class="w-full text-sm"></textarea>
+    </div>
+    <div class="card p-5">
+      <h2 class="font-semibold text-purple-300 mb-2" data-en="Annotated" data-zh="已标注">Annotated</h2>
+      <div class="flex gap-3 text-xs text-gray-400 mb-3 flex-wrap">
+        <span>🔴 <span data-en="Key Data" data-zh="关键数据">Key Data</span></span>
+        <span>🟡 <span data-en="Contrarian" data-zh="非共识观点">Contrarian</span></span>
+        <span>🟢 <span data-en="Strategy" data-zh="产品策略">Strategy</span></span>
+        <span>💬 <span data-en="AI Critique" data-zh="AI 批评">AI Critique</span></span>
+      </div>
+      <div id="annotated" class="text-sm leading-relaxed text-gray-300"></div>
+      <h3 class="font-semibold text-blue-300 mt-5 mb-2" data-en="JSON Output" data-zh="JSON 输出">JSON Output</h3>
+      <pre id="json">{ }</pre>
     </div>
   </div>
-</section>
+</div>
 
-<!-- Key Features -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
-    <div class="grid md:grid-cols-2 gap-4">
-      <div class="card rounded-xl p-6 transition">
-        <div class="text-3xl mb-3">&#128308;</div>
-        <h3 class="text-white font-bold mb-2" data-en="Critical Data Detection" data-zh="关键数据检测"></h3>
-        <p class="text-sm text-gray-400" data-en="Automatically identifies key statistics, benchmarks, and quantitative claims" data-zh="自动识别关键统计数据、基准测试和定量论断"></p>
-      </div>
-      <div class="card rounded-xl p-6 transition">
-        <div class="text-3xl mb-3">&#128993;</div>
-        <h3 class="text-white font-bold mb-2" data-en="Non-Consensus Finder" data-zh="非共识发现"></h3>
-        <p class="text-sm text-gray-400" data-en="Flags claims that contradict mainstream research or established norms" data-zh="标记与主流研究或既定规范相矛盾的论断"></p>
-      </div>
-      <div class="card rounded-xl p-6 transition">
-        <div class="text-3xl mb-3">&#128994;</div>
-        <h3 class="text-white font-bold mb-2" data-en="Strategy Extraction" data-zh="策略提取"></h3>
-        <p class="text-sm text-gray-400" data-en="Highlights actionable methodologies and reproducible approaches" data-zh="高亮可操作的方法论和可复现的技术路径"></p>
-      </div>
-      <div class="card rounded-xl p-6 transition">
-        <div class="text-3xl mb-3">&#128172;</div>
-        <h3 class="text-white font-bold mb-2" data-en="AI Critique" data-zh="AI批评"></h3>
-        <p class="text-sm text-gray-400" data-en="Generates constructive criticism on methodology, assumptions, and gaps" data-zh="对方法论、假设和研究空白生成建设性批评"></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Sample Output -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Sample Annotation Output" data-zh="示例标注输出"></h2>
-    <div class="terminal p-6 glow text-sm leading-relaxed">
-      <div class="text-white font-bold mb-3" data-en="Annotations for: 'Scaling Laws for Neural LMs'" data-zh="标注目标：'神经语言模型的缩放法则'"></div>
-      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="error mt-2" data-en="  &#128308; [Critical Data] Loss scales as N^{-0.076}" data-zh="  &#128308; [关键数据] 损失按 N^{-0.076} 缩放"></div>
-      <div class="output" data-en="     Tag: critical-data | Paragraph 3, Line 12" data-zh="     标签：关键数据 | 第3段, 第12行"></div>
-      <div class="error mt-2" data-en="  &#128308; [Critical Data] Compute-optimal: 10x data per 10x params" data-zh="  &#128308; [关键数据] 计算最优：参数每增10倍，数据增10倍"></div>
-      <div class="output" data-en="     Tag: critical-data | Table 2" data-zh="     标签：关键数据 | 表2"></div>
-      <div class="warn mt-2" data-en="  &#128993; [Non-Consensus] Contradicts Chinchilla on data ratio" data-zh="  &#128993; [非共识] 与Chinchilla在数据比例上矛盾"></div>
-      <div class="output" data-en="     Tag: non-consensus | Section 4.2" data-zh="     标签：非共识 | 第4.2节"></div>
-      <div class="success mt-2" data-en="  &#128994; [Strategy] Use power-law to predict loss at scale" data-zh="  &#128994; [策略] 用幂律预测大规模训练损失"></div>
-      <div class="output" data-en="     Tag: strategy | Section 5.1" data-zh="     标签：策略 | 第5.1节"></div>
-      <div class="success mt-2" data-en="  &#128994; [Strategy] Train smaller models first to extrapolate" data-zh="  &#128994; [策略] 先训小模型再外推"></div>
-      <div class="output" data-en="     Tag: strategy | Section 5.3" data-zh="     标签：策略 | 第5.3节"></div>
-      <div class="highlight mt-2" data-en="  &#128172; [AI Critique] Assumes IID data; real data has distribution shift" data-zh="  &#128172; [AI批评] 假设IID数据，现实数据存在分布偏移"></div>
-      <div class="output" data-en="     Tag: ai-critique | Section 3" data-zh="     标签：AI批评 | 第3节"></div>
-    </div>
-  </div>
-</section>
-
-<!-- Tech Stack -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="flex flex-wrap justify-center gap-3">
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Hypothes.is API</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">GLM-4 (BigModel)</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Web Scraping</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
-    </div>
-  </div>
-</section>
-
-<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
-  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
-</footer>
+<div id="toast" class="toast hidden"></div>
 
 <script>
+const PRESETS = [
+`The AI market will reach $1.3T by 2030, with 62% of enterprises planning production deployments in 2026. However, contrary to hype, only 23% of current pilots move to production. Vendors should focus on verticalized workflows rather than horizontal platforms. The strategy must shift from model-as-product to outcome-as-product. AI agents today still hallucinate in critical paths — a real unsolved problem.`,
+`Enterprise AI adoption hit 78% in 2026, up from 41% in 2024. Gartner reports average spend per enterprise is $4.8M annually. However, many deployments stall at POC. Companies must invest in data readiness before agent rollouts. The winning strategy is top-down executive sponsorship combined with bottom-up tooling choices. AI productivity claims remain largely unverified in the field.`,
+`Training a frontier model now costs $200M+, up 3.5x from 2024. But inference costs have dropped 80% in 18 months. Contrary to expectations, model commoditization is accelerating, not slowing. Vendors should pursue specialized fine-tunes over general-purpose scale. The economics favor distillation and mixture-of-experts. AI vendors overstate margins — most still burn cash.`,
+`Multi-agent frameworks now handle 45% of enterprise agent workloads. However, orchestration bugs cause 1 in 4 production incidents. Teams must design for graceful degradation and human handoff. The strategy is fewer, smarter agents over swarms. Current multi-agent systems often underperform single well-prompted models.`,
+`AI safety incidents reached 340 documented cases in 2025, up 2.1x YoY. However, framework regulations remain inconsistent across jurisdictions. Companies should adopt internal red-team requirements before shipping. The key strategy: treat safety as a product feature, not compliance overhead. The industry's self-regulation claims lack teeth.`
+];
+
+const $ = id => document.getElementById(id);
+let annotations = [];
+
+function loadPreset() { $('input').value = PRESETS[+$('preset').value]; }
+$('preset').addEventListener('change', loadPreset);
+loadPreset();
+
+function classify(sentences) {
+  const anns = [];
+  let critAssigned = false;
+  sentences.forEach(s => {
+    const lower = s.toLowerCase();
+    if (/\b\d+([.,]\d+)?\s*(%|x|m|b|t|k|million|billion|trillion|\$)/i.test(s) || /\$\d/.test(s)) {
+      anns.push({ text: s, type: 'data', label: '🔴 Key Data', note: 'Numeric claim — verify source and recency.' });
+    } else if (/\b(but|however|contrary|contrarian|despite|nevertheless|yet|although)\b/.test(lower)) {
+      anns.push({ text: s, type: 'contra', label: '🟡 Contrarian', note: 'Non-consensus framing — worth examining assumptions.' });
+    } else if (/\b(should|must|strategy|focus|pursue|shift|invest|adopt|winning|rollout)\b/.test(lower)) {
+      anns.push({ text: s, type: 'strat', label: '🟢 Strategy', note: 'Prescriptive claim — test against your own context.' });
+    } else if (!critAssigned && s.length > 40) {
+      anns.push({ text: s, type: 'crit', label: '💬 AI Critique', note: 'Broad claim — ask what evidence would disprove it.' });
+      critAssigned = true;
+    }
+  });
+  return anns.slice(0, 6);
+}
+
+function render(text, anns) {
+  let rendered = text;
+  // sort by length desc to avoid nested replacement collisions
+  [...anns].sort((a,b) => b.text.length - a.text.length).forEach(a => {
+    const cls = { data: 'hl-data', contra: 'hl-contra', strat: 'hl-strat', crit: 'hl-crit' }[a.type];
+    const safe = a.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    rendered = rendered.replace(new RegExp(safe), `<span class="${cls}" title="${a.label}">${a.text}</span>`);
+  });
+  // append annotations
+  const list = anns.map(a => {
+    const cls = { data: 'ann-data', contra: 'ann-contra', strat: 'ann-strat', crit: 'ann-crit' }[a.type];
+    return `<div class="annotation ${cls}"><b>${a.label}</b> — ${a.note}<br><span class="text-gray-400">"${a.text.slice(0,80)}${a.text.length>80?'…':''}"</span></div>`;
+  }).join('');
+  $('annotated').innerHTML = `<div class="mb-4">${rendered}</div>${list}`;
+  $('json').textContent = JSON.stringify(anns.map(a => ({ type: a.type, text: a.text, note: a.note })), null, 2);
+}
+
+$('analyze').addEventListener('click', async () => {
+  const btn = $('analyze'); btn.disabled = true;
+  $('status').innerHTML = '<span class="pulse"></span> <span data-en="Analyzing..." data-zh="分析中...">Analyzing...</span>';
+  await new Promise(r => setTimeout(r, 2000));
+  const text = $('input').value;
+  const sentences = text.split(/(?<=[.!?。！？])\s+/).filter(s => s.trim().length > 10);
+  annotations = classify(sentences);
+  render(text, annotations);
+  $('status').textContent = `✓ ${annotations.length} annotations`;
+  btn.disabled = false;
+  setTimeout(() => $('status').textContent = '', 3000);
+});
+
+$('post').addEventListener('click', () => {
+  const toast = $('toast');
+  toast.textContent = '✓ Posted ' + annotations.length + ' annotations to Hypothes.is (simulated)';
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3000);
+});
+
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
   let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
-  function applyLang(l) {
+  function apply(l) {
     lang = l; localStorage.setItem(STORAGE_KEY, l);
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-      const text = el.getAttribute('data-' + l);
-      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+      const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
     });
-    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+    document.querySelectorAll('[data-en-placeholder][data-zh-placeholder]').forEach(el => {
+      el.placeholder = el.getAttribute(`data-${l}-placeholder`);
+    });
+    const lab = document.getElementById('lang-label');
+    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
   }
-  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
-  applyLang(lang);
+  document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
+  apply(lang);
 })();
 </script>
 </body>

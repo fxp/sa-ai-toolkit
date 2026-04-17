@@ -3,142 +3,558 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playwright E2E Testing</title>
+<title>Playwright — Browser Test Simulator</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
-  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
-  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
-  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-  .terminal .prompt { color: #10b981; }
-  .terminal .output { color: #94a3b8; }
-  .terminal .highlight { color: #60a5fa; }
-  .terminal .warn { color: #f59e0b; }
-  .terminal .success { color: #22c55e; }
-  .terminal .error { color: #ef4444; }
-  #lang-toggle { cursor: pointer; transition: all 0.2s; }
-  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  body {
+    background: #0f172a; color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    margin: 0;
+  }
+  .card {
+    background: rgba(30,30,50,0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(100,100,150,0.2);
+    border-radius: 12px;
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+
+  .code-block {
+    background: #0b1020; border: 1px solid rgba(100,100,150,0.3);
+    border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.7;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    overflow: auto; height: 460px;
+  }
+  .code-line { display: block; padding: 2px 8px; border-radius: 3px; transition: background 0.2s; white-space: pre; }
+  .code-line.active { background: rgba(96,165,250,0.25); box-shadow: -3px 0 0 #60a5fa inset; }
+  .code-line.done { opacity: 0.5; }
+  .tok-kw { color: #c084fc; }
+  .tok-str { color: #86efac; }
+  .tok-fn { color: #60a5fa; }
+  .tok-comment { color: #64748b; font-style: italic; }
+  .tok-num { color: #f472b6; }
+
+  .browser-window {
+    background: white; border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    overflow: hidden; border: 1px solid #333;
+    transition: width 0.6s ease;
+    margin: 0 auto;
+  }
+  .browser-chrome {
+    background: #e5e7eb; padding: 8px 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .browser-tabs {
+    background: #d1d5db; padding: 4px 8px; font-size: 12px; color: #374151;
+    border-radius: 6px 6px 0 0; margin-left: 6px;
+  }
+  .url-bar {
+    flex: 1; background: white; border-radius: 6px; padding: 5px 12px;
+    color: #111827; font-size: 12px; margin: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .browser-content {
+    background: white; color: #111827; padding: 20px;
+    height: 420px; overflow-y: auto;
+    transition: opacity 0.4s;
+  }
+  .browser-content a { color: #1a0dab; text-decoration: underline; cursor: pointer; }
+  .browser-content input {
+    color: #111827; border: 1px solid #d1d5db; padding: 6px 10px;
+    border-radius: 4px; font-size: 14px;
+  }
+
+  .flash { animation: flashWhite 0.6s ease; }
+  @keyframes flashWhite {
+    0%, 100% { filter: brightness(1); }
+    30% { filter: brightness(2.5); }
+  }
+  .highlight-click { outline: 3px solid #3b82f6; animation: pulse 0.5s; }
+  @keyframes pulse { 50% { outline-color: #fbbf24; } }
+
+  .lang-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 50;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(30,30,50,0.8); border: 1px solid rgba(100,100,150,0.3);
+    color: #e2e8f0; font-size: 13px; cursor: pointer;
+  }
+
+  .log-line { font-size: 12px; padding: 3px 0; font-family: 'JetBrains Mono', monospace; }
+  .log-ok { color: #4ade80; }
+  .log-run { color: #60a5fa; }
+  .log-info { color: #94a3b8; }
+
+  .metric-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+    font-size: 12px; margin-right: 8px;
+  }
+
+  .thumb {
+    width: 70px; height: 50px; background: #f3f4f6; border: 1px solid #9ca3af;
+    border-radius: 4px; display: inline-block; margin-right: 6px;
+  }
+
+  .toolbar-btn {
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    border: 1px solid rgba(100,100,150,0.3); cursor: pointer;
+    background: rgba(30,30,50,0.6); color: #e2e8f0;
+  }
+  .toolbar-btn.primary { background: linear-gradient(135deg, #3b82f6, #6366f1); border: none; }
+  .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  select.preset {
+    padding: 8px 12px; border-radius: 8px;
+    background: rgba(30,30,50,0.6); color: #e2e8f0;
+    border: 1px solid rgba(100,100,150,0.3); font-size: 13px;
+  }
 </style>
 </head>
-<body class="text-gray-300 min-h-screen">
+<body>
 
-<div class="fixed top-4 right-4 z-50">
-  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
-    <span>&#127760;</span>
-    <span id="lang-label">EN / 中文</span>
-  </button>
+<button id="lang-toggle" class="lang-toggle"><span id="lang-label">中文</span></button>
+
+<div class="max-w-7xl mx-auto px-6 py-8">
+  <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
+
+  <div class="mt-4 mb-6">
+    <h1 class="text-3xl font-bold" data-en="Playwright — Browser Test Simulator" data-zh="Playwright —— 浏览器测试模拟器">Playwright — Browser Test Simulator</h1>
+    <p class="text-slate-400 mt-2" data-en="Pick a scenario. Watch the Python script drive a simulated browser." data-zh="选择场景，观看 Python 脚本驱动模拟浏览器。">Pick a scenario. Watch the Python script drive a simulated browser.</p>
+  </div>
+
+  <div class="flex items-center gap-3 mb-4 flex-wrap">
+    <select id="preset" class="preset">
+      <option value="bing" data-en="Scenario: Bing Search" data-zh="场景：Bing 搜索">Scenario: Bing Search</option>
+      <option value="github" data-en="Scenario: GitHub Star" data-zh="场景：GitHub Star">Scenario: GitHub Star</option>
+      <option value="form" data-en="Scenario: Form Submit" data-zh="场景：表单提交">Scenario: Form Submit</option>
+      <option value="responsive" data-en="Scenario: Responsive Check" data-zh="场景：响应式检测">Scenario: Responsive Check</option>
+    </select>
+    <button id="run-btn" class="toolbar-btn primary" data-en="▶ Run Test" data-zh="▶ 运行测试">▶ Run Test</button>
+    <button id="reset-btn" class="toolbar-btn" data-en="Reset" data-zh="重置">Reset</button>
+    <span id="status-chip" class="text-xs text-slate-400 ml-auto"></span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-5">
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 mono">test.py</div>
+      <div id="code" class="code-block"></div>
+    </div>
+    <div class="card p-5">
+      <div class="browser-window" id="browser" style="width: 100%;">
+        <div class="browser-chrome">
+          <div class="dot" style="background:#ef4444"></div>
+          <div class="dot" style="background:#f59e0b"></div>
+          <div class="dot" style="background:#22c55e"></div>
+          <div class="browser-tabs" id="tab-title">New Tab</div>
+          <div class="url-bar" id="url-bar">about:blank</div>
+        </div>
+        <div class="browser-content" id="content">
+          <div class="text-slate-400 text-center pt-20" data-en="Browser ready. Click Run Test." data-zh="浏览器就绪，点击运行测试。">Browser ready. Click Run Test.</div>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center flex-wrap">
+        <span class="metric-chip"><span data-en="DOM Ready:" data-zh="DOM 就绪：">DOM Ready:</span> <b id="m-dom">-</b>ms</span>
+        <span class="metric-chip"><span data-en="Full Load:" data-zh="全部加载：">Full Load:</span> <b id="m-load">-</b>ms</span>
+        <span class="metric-chip"><span data-en="Actions:" data-zh="操作数：">Actions:</span> <b id="m-actions">0</b></span>
+      </div>
+      <div class="mt-3">
+        <div class="text-xs uppercase tracking-wider text-slate-500 mb-1" data-en="Screenshots" data-zh="截图">Screenshots</div>
+        <div id="thumbs" class="flex flex-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-4 mt-6">
+    <div class="text-xs uppercase tracking-wider text-slate-500 mb-2" data-en="Console Output" data-zh="控制台输出">Console Output</div>
+    <div id="log" style="height: 140px; overflow-y: auto; background: #0b1020; border-radius: 6px; padding: 10px;"></div>
+  </div>
 </div>
 
-<header class="pt-16 pb-8 px-6 text-center">
-  <div class="max-w-4xl mx-auto">
-    <div class="text-5xl mb-4">&#127760;</div>
-    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
-      <span class="gradient-text" data-en="Playwright E2E Testing" data-zh="浏览器自动化测试"></span>
-    </h1>
-    <p class="text-lg text-gray-400" data-en="Python browser automation with responsive testing and performance metrics" data-zh="Python浏览器自动化，支持响应式测试和性能指标"></p>
-    <p class="text-gray-500 mt-2" data-en="Chromium, Firefox, WebKit — all from Python" data-zh="Chromium、Firefox、WebKit — 全部用Python控制"></p>
-  </div>
-</header>
-
-<!-- How It Works -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
-    <div class="terminal p-6 glow text-sm leading-relaxed">
-      <div class="text-gray-500" data-en="# Run the E2E test suite" data-zh="# 运行端到端测试套件"></div>
-      <div><span class="prompt">$</span> <span class="text-white">python -m pytest</span> <span class="text-yellow-400">tests/e2e/ -v</span></div>
-      <div class="mt-3 output" data-en="  Launching Chromium (headless)..." data-zh="  启动 Chromium (无头模式)..."></div>
-      <div class="mt-2 success" data-en="  &#10003; test_homepage_load        page loaded in 342ms" data-zh="  &#10003; test_homepage_load        页面加载 342ms"></div>
-      <div class="success" data-en="  &#10003; test_search_flow          typed query, got 24 results" data-zh="  &#10003; test_search_flow          输入查询，获得24条结果"></div>
-      <div class="success" data-en="  &#10003; test_responsive_mobile    375x812 screenshot captured" data-zh="  &#10003; test_responsive_mobile    375x812 截图已捕获"></div>
-      <div class="success" data-en="  &#10003; test_responsive_tablet    768x1024 screenshot captured" data-zh="  &#10003; test_responsive_tablet    768x1024 截图已捕获"></div>
-      <div class="success" data-en="  &#10003; test_responsive_desktop   1920x1080 screenshot captured" data-zh="  &#10003; test_responsive_desktop   1920x1080 截图已捕获"></div>
-      <div class="success" data-en="  &#10003; test_form_submission      form submitted, redirect OK" data-zh="  &#10003; test_form_submission      表单提交成功，重定向正常"></div>
-      <div class="success" data-en="  &#10003; test_performance_metrics  LCP: 1.2s, FID: 45ms, CLS: 0.02" data-zh="  &#10003; test_performance_metrics  LCP: 1.2s, FID: 45ms, CLS: 0.02"></div>
-      <div class="mt-3 success font-bold" data-en="  7 passed in 8.4s" data-zh="  7项全部通过，耗时 8.4s"></div>
-    </div>
-  </div>
-</section>
-
-<!-- Key Features -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="card rounded-xl p-6 text-center transition">
-        <div class="text-3xl mb-3">&#128187;</div>
-        <h3 class="text-white font-bold mb-2" data-en="Multi-Browser" data-zh="多浏览器"></h3>
-        <p class="text-sm text-gray-400" data-en="Run tests across Chromium, Firefox, and WebKit simultaneously" data-zh="同时在Chromium、Firefox和WebKit上运行测试"></p>
-      </div>
-      <div class="card rounded-xl p-6 text-center transition">
-        <div class="text-3xl mb-3">&#128241;</div>
-        <h3 class="text-white font-bold mb-2" data-en="Responsive Testing" data-zh="响应式测试"></h3>
-        <p class="text-sm text-gray-400" data-en="Auto-test mobile, tablet, and desktop viewports with screenshots" data-zh="自动测试手机、平板、桌面视口并截图"></p>
-      </div>
-      <div class="card rounded-xl p-6 text-center transition">
-        <div class="text-3xl mb-3">&#9889;</div>
-        <h3 class="text-white font-bold mb-2" data-en="Performance Metrics" data-zh="性能指标"></h3>
-        <p class="text-sm text-gray-400" data-en="Capture Core Web Vitals: LCP, FID, CLS, TTFB" data-zh="捕获核心Web指标：LCP、FID、CLS、TTFB"></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Sample Output -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Performance Report" data-zh="性能报告"></h2>
-    <div class="terminal p-6 glow text-sm leading-relaxed">
-      <div class="text-white font-bold mb-3" data-en="Core Web Vitals — Production Site" data-zh="核心Web指标 — 生产站点"></div>
-      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="output" data-en="  Metric          Value     Threshold    Status" data-zh="  指标            数值      阈值         状态"></div>
-      <div class="output">  &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="success">  LCP              1.2s      &lt; 2.5s       &#10003; GOOD</div>
-      <div class="success">  FID              45ms      &lt; 100ms      &#10003; GOOD</div>
-      <div class="success">  CLS              0.02      &lt; 0.1        &#10003; GOOD</div>
-      <div class="success">  TTFB             180ms     &lt; 800ms      &#10003; GOOD</div>
-      <div class="warn">  FCP              1.8s      &lt; 1.8s       &#9888; NEEDS WORK</div>
-      <div class="success">  Speed Index      2.1s      &lt; 3.4s       &#10003; GOOD</div>
-      <div class="output mt-2">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="highlight" data-en="  Overall Score: 92/100 (Good)" data-zh="  综合得分：92/100（良好）"></div>
-    </div>
-  </div>
-</section>
-
-<!-- Tech Stack -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="flex flex-wrap justify-center gap-3">
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Playwright</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Python</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">pytest</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Chromium</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Web Vitals</span>
-    </div>
-  </div>
-</section>
-
-<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
-  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
-</footer>
-
 <script>
+const SCENARIOS = {
+  bing: {
+    title: 'Bing',
+    script: [
+      '# Bing search test',
+      'from playwright.sync_api import sync_playwright',
+      '',
+      'with sync_playwright() as p:',
+      '    browser = p.chromium.launch()',
+      '    page = browser.new_page()',
+      '    page.goto("https://www.bing.com")',
+      '    page.locator("#sb_form_q").fill("Playwright")',
+      '    page.click("#sb_form_go")',
+      '    page.wait_for_load_state()',
+      '    page.screenshot(path="results.png")',
+      '    browser.close()'
+    ],
+    commands: [
+      { type: 'goto', url: 'https://www.bing.com', render: 'bing_home' },
+      { type: 'fill', sel: 'search', val: 'Playwright' },
+      { type: 'click', sel: 'go', render: 'bing_results' },
+      { type: 'wait' },
+      { type: 'screenshot', label: 'results.png' }
+    ]
+  },
+  github: {
+    title: 'GitHub · microsoft/playwright',
+    script: [
+      '# GitHub star test',
+      'from playwright.sync_api import sync_playwright',
+      '',
+      'with sync_playwright() as p:',
+      '    browser = p.chromium.launch()',
+      '    page = browser.new_page()',
+      '    page.goto("https://github.com/microsoft/playwright")',
+      '    page.click("button[aria-label=Star]")',
+      '    page.screenshot(path="starred.png")',
+      '    browser.close()'
+    ],
+    commands: [
+      { type: 'goto', url: 'https://github.com/microsoft/playwright', render: 'gh_repo' },
+      { type: 'click', sel: 'star', render: 'gh_starred' },
+      { type: 'screenshot', label: 'starred.png' }
+    ]
+  },
+  form: {
+    title: 'Contact — Example',
+    script: [
+      '# Form submit test',
+      'from playwright.sync_api import sync_playwright',
+      '',
+      'with sync_playwright() as p:',
+      '    browser = p.chromium.launch()',
+      '    page = browser.new_page()',
+      '    page.goto("https://demo.example.com/contact")',
+      '    page.locator("#name").fill("Alice Zhang")',
+      '    page.locator("#email").fill("alice@newco.com")',
+      '    page.locator("#msg").fill("Hello Playwright!")',
+      '    page.click("#submit")',
+      '    page.screenshot(path="submitted.png")',
+      '    browser.close()'
+    ],
+    commands: [
+      { type: 'goto', url: 'https://demo.example.com/contact', render: 'form_page' },
+      { type: 'fill', sel: 'name', val: 'Alice Zhang' },
+      { type: 'fill', sel: 'email', val: 'alice@newco.com' },
+      { type: 'fill', sel: 'msg', val: 'Hello Playwright!' },
+      { type: 'click', sel: 'submit', render: 'form_success' },
+      { type: 'screenshot', label: 'submitted.png' }
+    ]
+  },
+  responsive: {
+    title: 'NewCo — Homepage',
+    script: [
+      '# Responsive breakpoint check',
+      'from playwright.sync_api import sync_playwright',
+      '',
+      'with sync_playwright() as p:',
+      '    browser = p.chromium.launch()',
+      '    page = browser.new_page()',
+      '    page.goto("https://www.newco.com")',
+      '    page.screenshot(path="desktop.png")',
+      '    page.set_viewport_size({"width": 768, "height": 1024})',
+      '    page.screenshot(path="tablet.png")',
+      '    page.set_viewport_size({"width": 375, "height": 667})',
+      '    page.screenshot(path="mobile.png")',
+      '    browser.close()'
+    ],
+    commands: [
+      { type: 'goto', url: 'https://www.newco.com', render: 'newco_home' },
+      { type: 'screenshot', label: 'desktop.png' },
+      { type: 'viewport', w: 768 },
+      { type: 'screenshot', label: 'tablet.png' },
+      { type: 'viewport', w: 375 },
+      { type: 'screenshot', label: 'mobile.png' }
+    ]
+  }
+};
+
+const PAGES = {
+  bing_home: () => `
+    <div class="text-center pt-16">
+      <div class="text-5xl font-bold text-blue-600 mb-8">Bing</div>
+      <div class="flex justify-center gap-2">
+        <input id="sim-search" class="px-4 py-2 w-80" placeholder="Search the web" />
+        <button id="sim-go" class="bg-blue-600 text-white px-4 py-2 rounded">Search</button>
+      </div>
+    </div>`,
+  bing_results: () => `
+    <div class="text-sm">
+      <div class="flex items-center gap-4 pb-3 border-b mb-4">
+        <span class="text-blue-600 font-bold text-2xl">Bing</span>
+        <input class="border px-3 py-1 flex-1" value="Playwright" />
+      </div>
+      <div class="text-slate-500 text-xs mb-3">About 1,240,000 results (0.42 seconds)</div>
+      <div class="space-y-4">
+        <div><a class="text-xl">Playwright: Fast and reliable end-to-end testing</a>
+          <div class="text-green-700 text-xs">playwright.dev</div>
+          <div class="text-slate-600">Playwright enables reliable end-to-end testing for modern web apps.</div></div>
+        <div><a class="text-xl">microsoft/playwright - GitHub</a>
+          <div class="text-green-700 text-xs">github.com › microsoft › playwright</div>
+          <div class="text-slate-600">Node.js library to automate Chromium, Firefox and WebKit.</div></div>
+        <div><a class="text-xl">Getting started | Playwright Python</a>
+          <div class="text-green-700 text-xs">playwright.dev › python › docs</div>
+          <div class="text-slate-600">pip install pytest-playwright && playwright install</div></div>
+      </div>
+    </div>`,
+  gh_repo: () => `
+    <div>
+      <div class="flex items-center gap-2 pb-3 border-b">
+        <span class="font-bold">microsoft</span><span>/</span><span class="font-bold text-blue-600">playwright</span>
+        <button id="sim-star" class="ml-auto border px-3 py-1 text-sm rounded">⭐ Star</button>
+        <span class="text-sm ml-2">62.4k</span>
+      </div>
+      <div class="mt-4 text-sm text-slate-600">Playwright is a framework for Web Testing and Automation.</div>
+      <div class="mt-3 flex gap-2 text-xs">
+        <span class="bg-slate-200 px-2 py-1 rounded">TypeScript</span>
+        <span class="bg-slate-200 px-2 py-1 rounded">chromium</span>
+        <span class="bg-slate-200 px-2 py-1 rounded">testing</span>
+      </div>
+      <div class="mt-4 p-3 bg-slate-50 border text-xs mono">README.md — npm init playwright@latest</div>
+    </div>`,
+  gh_starred: () => `
+    <div>
+      <div class="flex items-center gap-2 pb-3 border-b">
+        <span class="font-bold">microsoft</span><span>/</span><span class="font-bold text-blue-600">playwright</span>
+        <button class="ml-auto bg-amber-100 border border-amber-400 px-3 py-1 text-sm rounded">⭐ Starred ✓</button>
+        <span class="text-sm ml-2">62.4k</span>
+      </div>
+      <div class="mt-4 text-green-600 text-sm">✓ Starred microsoft/playwright</div>
+    </div>`,
+  form_page: () => `
+    <div class="max-w-md mx-auto">
+      <h2 class="text-xl font-bold mb-4">Contact Us</h2>
+      <label class="text-sm block mt-3">Name</label>
+      <input id="sim-name" class="w-full" />
+      <label class="text-sm block mt-3">Email</label>
+      <input id="sim-email" class="w-full" />
+      <label class="text-sm block mt-3">Message</label>
+      <input id="sim-msg" class="w-full" />
+      <button id="sim-submit" class="mt-4 bg-blue-600 text-white w-full py-2 rounded">Submit</button>
+    </div>`,
+  form_success: () => `
+    <div class="max-w-md mx-auto text-center pt-20">
+      <div class="text-5xl mb-3">✓</div>
+      <div class="text-xl font-bold text-green-600">Thanks! Form submitted.</div>
+      <div class="text-slate-500 mt-2 text-sm">We'll reach out within 24 hours.</div>
+    </div>`,
+  newco_home: () => `
+    <div>
+      <div class="flex gap-6 items-center pb-3 border-b text-sm">
+        <span class="font-bold text-lg text-blue-600">NewCo</span>
+        <a>Products</a><a>Solutions</a><a>Pricing</a><a>Blog</a>
+        <button class="ml-auto bg-blue-600 text-white px-4 py-1 rounded">Sign up</button>
+      </div>
+      <div class="mt-8 text-center">
+        <h1 class="text-4xl font-bold">AI that ships.</h1>
+        <p class="text-slate-500 mt-2">Enterprise AI adoption, delivered in weeks, not quarters.</p>
+        <button class="mt-4 bg-blue-600 text-white px-5 py-2 rounded">Get started →</button>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-8 text-xs">
+        <div class="p-3 bg-slate-50 border">⚡ Fast</div>
+        <div class="p-3 bg-slate-50 border">🔒 Secure</div>
+        <div class="p-3 bg-slate-50 border">📈 Scalable</div>
+      </div>
+    </div>`
+};
+
+function escapeH(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function highlight(line) {
+  if (line.trim().startsWith('#')) return `<span class="tok-comment">${escapeH(line)}</span>`;
+  let h = escapeH(line);
+  h = h.replace(/("[^"]*")/g, '<span class="tok-str">$1</span>');
+  h = h.replace(/\b(from|import|with|as|for|in|return|def|class|if)\b/g, '<span class="tok-kw">$1</span>');
+  h = h.replace(/\b(goto|fill|click|screenshot|locator|wait_for_load_state|launch|new_page|close|set_viewport_size|sync_playwright|chromium)\b/g, '<span class="tok-fn">$1</span>');
+  h = h.replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>');
+  return h;
+}
+
+function renderCode(scen) {
+  document.getElementById('code').innerHTML = scen.script.map((l, i) =>
+    `<span class="code-line" data-line="${i}">${highlight(l) || '&nbsp;'}</span>`
+  ).join('');
+}
+
+let running = false, actionCount = 0;
+function log(msg, cls='log-info') {
+  const el = document.getElementById('log');
+  const ts = new Date().toTimeString().slice(0,8);
+  const d = document.createElement('div');
+  d.className = 'log-line ' + cls;
+  d.textContent = `[${ts}] ${msg}`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function setPage(key) {
+  const c = document.getElementById('content');
+  c.style.opacity = '0';
+  return wait(300).then(() => {
+    c.innerHTML = PAGES[key]();
+    c.style.opacity = '1';
+  });
+}
+function highlightLine(idx) {
+  document.querySelectorAll('.code-line').forEach(l => {
+    const i = +l.dataset.line;
+    l.classList.toggle('active', i === idx);
+    if (idx >= 0 && i < idx) l.classList.add('done');
+    if (idx < 0) l.classList.remove('done');
+  });
+}
+function animateNumber(id, from, to, dur) {
+  const el = document.getElementById(id);
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - start) / dur);
+    el.textContent = Math.round(from + (to - from) * t);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+async function runTest() {
+  if (running) return;
+  running = true; actionCount = 0;
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('thumbs').innerHTML = '';
+  document.getElementById('m-actions').textContent = '0';
+  document.getElementById('status-chip').textContent = '● Running';
+  document.getElementById('status-chip').style.color = '#60a5fa';
+
+  const scen = SCENARIOS[document.getElementById('preset').value];
+  renderCode(scen);
+
+  const cmdLines = [];
+  const usedLines = new Set();
+  scen.commands.forEach(c => {
+    const kw = c.type === 'goto' ? 'goto' : c.type === 'fill' ? '.fill' :
+               c.type === 'click' ? '.click' : c.type === 'screenshot' ? 'screenshot' :
+               c.type === 'viewport' ? 'set_viewport_size' : 'wait_for_load_state';
+    const idx = scen.script.findIndex((s, i) => s.includes(kw) && !usedLines.has(i));
+    if (idx >= 0) usedLines.add(idx);
+    cmdLines.push(idx);
+  });
+
+  for (let i = 0; i < scen.commands.length; i++) {
+    const cmd = scen.commands[i];
+    highlightLine(cmdLines[i]);
+    await wait(300);
+
+    if (cmd.type === 'goto') {
+      log(`→ page.goto("${cmd.url}")`, 'log-run');
+      document.getElementById('url-bar').textContent = cmd.url;
+      document.getElementById('tab-title').textContent = scen.title;
+      await setPage(cmd.render);
+      const domReady = 100 + Math.floor(Math.random()*200);
+      const fullLoad = domReady + 200 + Math.floor(Math.random()*400);
+      animateNumber('m-dom', 0, domReady, 600);
+      animateNumber('m-load', 0, fullLoad, 800);
+      actionCount++;
+      log(`  ✓ loaded (${fullLoad}ms)`, 'log-ok');
+    } else if (cmd.type === 'fill') {
+      log(`→ page.locator("#${cmd.sel}").fill("${cmd.val}")`, 'log-run');
+      const inp = document.getElementById('sim-' + cmd.sel);
+      if (inp) {
+        inp.focus(); inp.value = '';
+        for (const ch of cmd.val) { inp.value += ch; await wait(45); }
+        actionCount++;
+        log(`  ✓ filled`, 'log-ok');
+      }
+    } else if (cmd.type === 'click') {
+      log(`→ page.click("#${cmd.sel}")`, 'log-run');
+      const btn = document.getElementById('sim-' + cmd.sel);
+      if (btn) {
+        btn.classList.add('highlight-click');
+        await wait(500);
+        btn.classList.remove('highlight-click');
+      }
+      if (cmd.render) await setPage(cmd.render);
+      actionCount++;
+      log(`  ✓ clicked`, 'log-ok');
+    } else if (cmd.type === 'screenshot') {
+      log(`→ page.screenshot(path="${cmd.label}")`, 'log-run');
+      const browser = document.getElementById('browser');
+      browser.classList.add('flash');
+      await wait(600);
+      browser.classList.remove('flash');
+      const t = document.createElement('div');
+      t.className = 'thumb';
+      t.title = cmd.label;
+      const c1 = Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
+      const c2 = Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
+      t.style.background = `linear-gradient(135deg, #${c1}, #${c2})`;
+      document.getElementById('thumbs').appendChild(t);
+      actionCount++;
+      log(`  ✓ saved ${cmd.label}`, 'log-ok');
+    } else if (cmd.type === 'viewport') {
+      log(`→ page.set_viewport_size({"width": ${cmd.w}})`, 'log-run');
+      document.getElementById('browser').style.width = cmd.w + 'px';
+      await wait(700);
+      actionCount++;
+      log(`  ✓ viewport ${cmd.w}px`, 'log-ok');
+    } else if (cmd.type === 'wait') {
+      log(`→ page.wait_for_load_state()`, 'log-run');
+      await wait(500);
+      log(`  ✓ loaded`, 'log-ok');
+    }
+    document.getElementById('m-actions').textContent = actionCount;
+    await wait(200);
+  }
+
+  highlightLine(-1);
+  log(`━━━ Test complete · ${actionCount} actions ━━━`, 'log-ok');
+  document.getElementById('status-chip').textContent = `● ${actionCount} actions`;
+  document.getElementById('status-chip').style.color = '#4ade80';
+  document.getElementById('run-btn').disabled = false;
+  running = false;
+}
+
+function resetAll() {
+  document.getElementById('browser').style.width = '100%';
+  document.getElementById('url-bar').textContent = 'about:blank';
+  document.getElementById('tab-title').textContent = 'New Tab';
+  document.getElementById('content').innerHTML = '<div class="text-slate-400 text-center pt-20">Browser ready.</div>';
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('thumbs').innerHTML = '';
+  document.getElementById('m-dom').textContent = '-';
+  document.getElementById('m-load').textContent = '-';
+  document.getElementById('m-actions').textContent = '0';
+  document.querySelectorAll('.code-line').forEach(l => l.classList.remove('active','done'));
+}
+
+document.getElementById('preset').addEventListener('change', () => {
+  renderCode(SCENARIOS[document.getElementById('preset').value]);
+  resetAll();
+});
+document.getElementById('run-btn').addEventListener('click', runTest);
+document.getElementById('reset-btn').addEventListener('click', resetAll);
+
+renderCode(SCENARIOS.bing);
+
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
   let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
-  function applyLang(l) {
+  function apply(l) {
     lang = l; localStorage.setItem(STORAGE_KEY, l);
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-      const text = el.getAttribute('data-' + l);
-      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+      const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
     });
-    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+    document.querySelectorAll('[data-en-placeholder][data-zh-placeholder]').forEach(el => {
+      el.placeholder = el.getAttribute(`data-${l}-placeholder`);
+    });
+    const lab = document.getElementById('lang-label');
+    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
   }
-  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
-  applyLang(lang);
+  document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
+  apply(lang);
 })();
 </script>
 </body>

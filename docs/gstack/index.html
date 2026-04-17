@@ -3,154 +3,211 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GStack AI Engineering Toolkit</title>
+<title>gstack — Terminal Command Simulator</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); border-radius: 12px; }
   .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
-  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
-  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
-  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-  .terminal .prompt { color: #10b981; }
-  .terminal .output { color: #94a3b8; }
-  .terminal .highlight { color: #60a5fa; }
-  .terminal .warn { color: #f59e0b; }
-  .terminal .success { color: #22c55e; }
-  #lang-toggle { cursor: pointer; transition: all 0.2s; }
-  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  #lang-toggle { cursor: pointer; } #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  .terminal { background: #09090f; border: 1px solid #1e293b; border-radius: 10px; font-family: 'JetBrains Mono','Fira Code','Menlo',monospace; font-size: 13px; line-height: 1.6; padding: 18px; min-height: 480px; max-height: 640px; overflow-y: auto; white-space: pre-wrap; }
+  .prompt-g { color: #22c55e; } .prompt-c { color: #60a5fa; }
+  .warn { color: #f59e0b; } .err { color: #ef4444; } .ok { color: #22c55e; }
+  .dim { color: #64748b; } .hl { color: #e0e7ff; }
+  select, textarea, button, input { font-family: inherit; }
+  select { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); padding: 6px 12px; border-radius: 8px; }
+  textarea { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); border-radius: 8px; padding: 10px; width: 100%; }
+  .btn { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 500; }
+  .btn:disabled { opacity: 0.5; }
+  .btn-sec { background: rgba(100,100,150,0.2); border: 1px solid rgba(100,100,150,0.3); padding: 8px 16px; border-radius: 8px; color: #e2e8f0; }
 </style>
 </head>
-<body class="text-gray-300 min-h-screen">
+<body class="min-h-screen">
 
 <div class="fixed top-4 right-4 z-50">
   <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
-    <span>&#127760;</span>
-    <span id="lang-label">EN / 中文</span>
+    <span>🌐</span><span id="lang-label">中文</span>
   </button>
 </div>
 
-<header class="pt-16 pb-8 px-6 text-center">
-  <div class="max-w-4xl mx-auto">
-    <div class="text-5xl mb-4">&#128736;&#65039;</div>
-    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
-      <span class="gradient-text" data-en="GStack AI Engineering Toolkit" data-zh="GStack AI工程工具集"></span>
-    </h1>
-    <p class="text-lg text-gray-400" data-en="23 skills chained into a complete engineering workflow" data-zh="23个技能串联成完整的工程工作流"></p>
-    <p class="text-gray-500 mt-2" data-en="/office-hours → /autoplan → /qa → /ship" data-zh="/office-hours → /autoplan → /qa → /ship"></p>
-  </div>
-</header>
+<div class="max-w-5xl mx-auto px-6 py-8">
+  <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
+  <h1 class="text-3xl font-bold mt-3 gradient-text" data-en="gstack Terminal" data-zh="gstack 终端">gstack Terminal</h1>
+  <p class="text-gray-400 mt-1" data-en="Try gstack slash commands without installing anything." data-zh="无需安装，直接体验 gstack 斜杠命令。">Try gstack slash commands without installing anything.</p>
 
-<!-- How It Works -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="How It Works" data-zh="工作流程"></h2>
-    <div class="terminal p-6 glow text-sm leading-relaxed">
-      <div class="text-gray-500" data-en="# Phase 1: Discovery — ask the right questions" data-zh="# 阶段1：探索 — 问对问题"></div>
-      <div><span class="prompt">$</span> <span class="text-white">/office-hours</span></div>
-      <div class="output" data-en="  Q1: What is the desperate problem you solve?" data-zh="  Q1：你解决的最紧迫的问题是什么？"></div>
-      <div class="output" data-en="  Q2: Who is the narrowest wedge customer?" data-zh="  Q2：最窄切入点的客户是谁？"></div>
-      <div class="highlight" data-en="  &#10003; 6 forcing questions answered" data-zh="  &#10003; 6 个核心问题已回答"></div>
-      <div class="mt-4 text-gray-500" data-en="# Phase 2: Plan — auto-review pipeline" data-zh="# 阶段2：规划 — 自动审查管线"></div>
-      <div><span class="prompt">$</span> <span class="text-white">/autoplan</span></div>
-      <div class="output" data-en="  Running CEO review... &#10003;" data-zh="  运行CEO审查... &#10003;"></div>
-      <div class="output" data-en="  Running Design review... &#10003;" data-zh="  运行设计审查... &#10003;"></div>
-      <div class="output" data-en="  Running Eng review... &#10003;" data-zh="  运行工程审查... &#10003;"></div>
-      <div class="highlight" data-en="  &#10003; Plan score: 9.2/10" data-zh="  &#10003; 方案评分：9.2/10"></div>
-      <div class="mt-4 text-gray-500" data-en="# Phase 3: QA — find and fix bugs atomically" data-zh="# 阶段3：QA — 发现并原子修复Bug"></div>
-      <div><span class="prompt">$</span> <span class="text-white">/qa</span></div>
-      <div class="output" data-en="  Testing 24 pages... found 3 issues" data-zh="  测试 24 个页面... 发现 3 个问题"></div>
-      <div class="success" data-en="  Fix #1: nav link 404 → commit abc1234" data-zh="  修复 #1：导航链接404 → 提交 abc1234"></div>
-      <div class="success" data-en="  Fix #2: mobile overflow → commit def5678" data-zh="  修复 #2：移动端溢出 → 提交 def5678"></div>
-      <div class="success" data-en="  Fix #3: contrast ratio → commit ghi9012" data-zh="  修复 #3：对比度不足 → 提交 ghi9012"></div>
-      <div class="mt-4 text-gray-500" data-en="# Phase 4: Ship — push to production" data-zh="# 阶段4：上线 — 推送到生产环境"></div>
-      <div><span class="prompt">$</span> <span class="text-white">/ship</span></div>
-      <div class="output" data-en="  Tests passing... Diff reviewed... VERSION bumped" data-zh="  测试通过... Diff已审查... VERSION已更新"></div>
-      <div class="success" data-en="  &#10003; PR #42 created → merged → deployed" data-zh="  &#10003; PR #42 已创建 → 已合并 → 已部署"></div>
-    </div>
+  <div class="card p-4 mt-5 flex items-center gap-3 flex-wrap">
+    <label class="text-sm text-gray-400" data-en="Command:" data-zh="命令：">Command:</label>
+    <select id="cmd">
+      <option value="/office-hours">/office-hours</option>
+      <option value="/autoplan">/autoplan</option>
+      <option value="/qa">/qa</option>
+      <option value="/ship">/ship</option>
+    </select>
+    <button id="run" class="btn" data-en="Run" data-zh="运行">Run</button>
+    <button id="clear" class="btn-sec" data-en="Clear" data-zh="清空">Clear</button>
   </div>
-</section>
 
-<!-- Key Features -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Key Features" data-zh="核心特性"></h2>
-    <div class="grid md:grid-cols-4 gap-4">
-      <div class="card rounded-xl p-5 text-center transition">
-        <div class="text-3xl mb-3">&#127891;</div>
-        <h3 class="text-white font-bold mb-2 text-sm">/office-hours</h3>
-        <p class="text-xs text-gray-400" data-en="YC-style forcing questions for product clarity" data-zh="YC风格的核心问题，厘清产品方向"></p>
-      </div>
-      <div class="card rounded-xl p-5 text-center transition">
-        <div class="text-3xl mb-3">&#128203;</div>
-        <h3 class="text-white font-bold mb-2 text-sm">/autoplan</h3>
-        <p class="text-xs text-gray-400" data-en="CEO + Design + Eng multi-lens review pipeline" data-zh="CEO+设计+工程多视角审查管线"></p>
-      </div>
-      <div class="card rounded-xl p-5 text-center transition">
-        <div class="text-3xl mb-3">&#128027;</div>
-        <h3 class="text-white font-bold mb-2 text-sm">/qa</h3>
-        <p class="text-xs text-gray-400" data-en="Headless browser testing with atomic bug fixes" data-zh="无头浏览器测试+原子化Bug修复"></p>
-      </div>
-      <div class="card rounded-xl p-5 text-center transition">
-        <div class="text-3xl mb-3">&#128640;</div>
-        <h3 class="text-white font-bold mb-2 text-sm">/ship</h3>
-        <p class="text-xs text-gray-400" data-en="Test, review, bump, commit, PR, deploy" data-zh="测试、审查、版本号、提交、PR、部署"></p>
-      </div>
-    </div>
+  <div id="term" class="terminal mt-4"></div>
+
+  <div id="input-area" class="mt-3 hidden">
+    <textarea id="user-input" rows="3" data-en-placeholder="Type your answer and press Ctrl+Enter..." data-zh-placeholder="输入回答，按 Ctrl+Enter 提交..."></textarea>
+    <button id="submit-input" class="btn mt-2" data-en="Submit" data-zh="提交">Submit</button>
   </div>
-</section>
-
-<!-- Sample Output -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="23 Skills at a Glance" data-zh="23个技能一览"></h2>
-    <div class="terminal p-6 glow text-sm leading-relaxed">
-      <div class="text-white font-bold mb-3" data-en="Skill Chain Overview" data-zh="技能链概览"></div>
-      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="highlight" data-en="  Discovery:   /office-hours  /learn  /investigate" data-zh="  探索层：   /office-hours  /learn  /investigate"></div>
-      <div class="highlight" data-en="  Planning:    /autoplan  /plan-ceo  /plan-eng  /plan-design" data-zh="  规划层：   /autoplan  /plan-ceo  /plan-eng  /plan-design"></div>
-      <div class="highlight" data-en="  Building:    /design-html  /design-shotgun  /browse  /gstack" data-zh="  构建层：   /design-html  /design-shotgun  /browse  /gstack"></div>
-      <div class="highlight" data-en="  Testing:     /qa  /qa-only  /benchmark  /health" data-zh="  测试层：   /qa  /qa-only  /benchmark  /health"></div>
-      <div class="highlight" data-en="  Shipping:    /ship  /review  /land-and-deploy  /canary" data-zh="  交付层：   /ship  /review  /land-and-deploy  /canary"></div>
-      <div class="highlight" data-en="  Operations:  /retro  /checkpoint  /careful  /freeze" data-zh="  运维层：   /retro  /checkpoint  /careful  /freeze"></div>
-      <div class="output mt-2">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="success" data-en="  Total: 23 skills | All chainable | Claude Code native" data-zh="  共计：23个技能 | 全部可串联 | Claude Code 原生"></div>
-    </div>
-  </div>
-</section>
-
-<!-- Tech Stack -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="flex flex-wrap justify-center gap-3">
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Playwright</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Skills SDK</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">GitHub API</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Vercel</span>
-    </div>
-  </div>
-</section>
-
-<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
-  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
-</footer>
+</div>
 
 <script>
+const term = document.getElementById('term');
+const inputArea = document.getElementById('input-area');
+const userInput = document.getElementById('user-input');
+let running = false; let inputResolver = null;
+function append(html) { term.innerHTML += html; term.scrollTop = term.scrollHeight; }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+async function typewrite(text, cls='') {
+  const span = document.createElement('span'); if (cls) span.className = cls;
+  term.appendChild(span);
+  for (const ch of text) { span.textContent += ch; term.scrollTop = term.scrollHeight; await sleep(ch === '\n' ? 5 : 12); }
+}
+function line(text='', cls='') { append(`<span class="${cls}">${text}</span>\n`); }
+async function askUser(prompt) {
+  await typewrite(prompt + '\n', 'hl');
+  inputArea.classList.remove('hidden'); userInput.value = ''; userInput.focus();
+  return new Promise(resolve => { inputResolver = resolve; });
+}
+document.getElementById('submit-input').addEventListener('click', () => {
+  if (inputResolver) {
+    const v = userInput.value.trim() || '(no input)';
+    inputArea.classList.add('hidden');
+    append(`<span class="dim">› ${v}</span>\n`);
+    inputResolver(v); inputResolver = null;
+  }
+});
+userInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) document.getElementById('submit-input').click();
+});
+async function spinner(label, ms) {
+  const frames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+  const span = document.createElement('span'); span.className = 'ok';
+  term.appendChild(span);
+  const start = Date.now(); let i = 0;
+  while (Date.now() - start < ms) { span.textContent = `${frames[i++ % frames.length]} ${label}`; await sleep(80); }
+  span.textContent = `✓ ${label}`; append('\n');
+}
+
+async function cmdOfficeHours() {
+  await typewrite('YC Office Hours — 6 forcing questions\n', 'prompt-c');
+  await typewrite('──────────────────────────────────────\n\n', 'dim');
+  const idea = await askUser('$ Describe your startup idea in one sentence:');
+  const questions = [
+    '1. Who, specifically, are your first 10 users? (Names, not personas.)',
+    '2. What does the status quo cost them today — in dollars or hours?',
+    '3. What is the narrowest wedge you can ship in 4 weeks?',
+    '4. Why you, why now? What unfair advantage do you have?',
+    '5. What observation from the real world sparked this idea?',
+    '6. In 3 years, what does the future look like if you succeed?'
+  ];
+  for (const q of questions) { await sleep(800); await askUser('? ' + q); }
+  await sleep(600);
+  await typewrite('\n── Reframe Summary ───────────────────\n', 'prompt-c');
+  await typewrite(`Idea: ${idea}\n`, 'hl');
+  await typewrite('→ Your wedge is clear. Biggest gap: desperate specificity on the first 10 users.\n', 'warn');
+  await typewrite('→ Next action: get 3 concrete user names on a whiteboard by Friday.\n', 'ok');
+  await typewrite('\n✓ Saved to ./office-hours/' + new Date().toISOString().slice(0,10) + '.md\n', 'ok');
+}
+
+async function cmdAutoplan() {
+  await typewrite('/autoplan — three-phase plan review\n', 'prompt-c');
+  await typewrite('──────────────────────────────────────\n\n', 'dim');
+  await typewrite('Phase 1: CEO review (scope & 10-star product)\n', 'hl');
+  await spinner('Exploring scope expansions…', 3000);
+  line('  • Rethink premise: should we expand to multi-tenant?', 'dim');
+  line('  • Decision: HOLD SCOPE — ship v1, expand in v2.', 'ok');
+  await sleep(400);
+  await typewrite('\nPhase 2: Design review (UX & taste)\n', 'hl');
+  await spinner('Scoring visual hierarchy…', 3000);
+  line('  • Density: 7/10  — tighten card padding', 'dim');
+  line('  • Motion: 6/10  — add 200ms transitions', 'dim');
+  line('  • Decision: polish before ship.', 'ok');
+  await sleep(400);
+  await typewrite('\nPhase 3: Eng review (architecture)\n', 'hl');
+  await spinner('Tracing data flow & edge cases…', 3000);
+  line('  • Edge case: empty state not handled — add fallback', 'warn');
+  line('  • Test coverage: 68% → target 80%', 'dim');
+  line('  • Decision: LGTM with 2 followups.', 'ok');
+  await typewrite('\n✓ Plan locked. 3 taste decisions surfaced at approval gate.\n', 'ok');
+}
+
+async function cmdQA() {
+  await typewrite('/qa — systematic test + fix loop\n', 'prompt-c');
+  await typewrite('──────────────────────────────────────\n\n', 'dim');
+  await typewrite('Running 47 tests…\n', 'hl');
+  for (let i = 1; i <= 47; i++) {
+    const isFail = [12, 23, 38].includes(i);
+    const tag = isFail ? '<span class="err">✗</span>' : '<span class="ok">✓</span>';
+    append(`${tag} <span class="dim">test_${String(i).padStart(3,'0')}</span>\n`);
+    await sleep(50);
+  }
+  await typewrite('\n3 failures detected:\n', 'err');
+  line('  ✗ test_012  empty_state_renders_fallback', 'err');
+  line('  ✗ test_023  lang_toggle_persists_to_localStorage', 'err');
+  line('  ✗ test_038  kb_lint_flags_unsourced_claims', 'err');
+  await sleep(600);
+  await typewrite('\nApplying atomic fixes…\n', 'hl');
+  await spinner('fix 1/3: add empty state fallback', 1200); line('  committed: a3f2e1', 'dim');
+  await spinner('fix 2/3: persist lang to localStorage', 1200); line('  committed: b8c0d5', 'dim');
+  await spinner('fix 3/3: flag unsourced claims in lint', 1200); line('  committed: d7e9a4', 'dim');
+  await typewrite('\nRe-running…\n', 'hl');
+  await spinner('47 tests', 1500);
+  await typewrite('✓ All 47 tests passing. 3 commits on branch qa-fixes.\n', 'ok');
+}
+
+async function cmdShip() {
+  await typewrite('/ship — land & deploy\n', 'prompt-c');
+  await typewrite('──────────────────────────────────────\n\n', 'dim');
+  await spinner('git sync main', 1500);
+  line('  3 commits ahead, 0 behind.', 'dim');
+  await spinner('running tests (47)', 2000);
+  line('  all green.', 'ok');
+  await spinner('bump VERSION 1.4.2 → 1.4.3', 800);
+  await spinner('update CHANGELOG', 600);
+  await spinner('git push origin feature/interactive-demos', 1200);
+  await spinner('gh pr create', 1500);
+  await typewrite('\n✓ PR #247 opened: "Add interactive demo pages"\n', 'ok');
+  await typewrite('  https://github.com/your-org/repo/pull/247\n', 'prompt-c');
+  await typewrite('\nNext: run /land-and-deploy to merge & verify prod.\n', 'dim');
+}
+
+const COMMANDS = { '/office-hours': cmdOfficeHours, '/autoplan': cmdAutoplan, '/qa': cmdQA, '/ship': cmdShip };
+
+document.getElementById('run').addEventListener('click', async () => {
+  if (running) return;
+  running = true;
+  const cmd = document.getElementById('cmd').value;
+  append(`<span class="prompt-g">$</span> <span class="hl">gstack ${cmd}</span>\n`);
+  try { await COMMANDS[cmd](); } catch(e) { append(`<span class="err">error: ${e.message}</span>\n`); }
+  append('\n');
+  running = false;
+});
+document.getElementById('clear').addEventListener('click', () => { term.innerHTML = ''; });
+
+append('<span class="prompt-c">gstack v1.4.2</span>  <span class="dim">— pick a command above and hit Run.</span>\n\n');
+
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
   let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
-  function applyLang(l) {
+  function apply(l) {
     lang = l; localStorage.setItem(STORAGE_KEY, l);
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-      const text = el.getAttribute('data-' + l);
-      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+      const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
     });
-    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+    document.querySelectorAll('[data-en-placeholder][data-zh-placeholder]').forEach(el => {
+      el.placeholder = el.getAttribute(`data-${l}-placeholder`);
+    });
+    const lab = document.getElementById('lang-label');
+    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
   }
-  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
-  applyLang(lang);
+  document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
+  apply(lang);
 })();
 </script>
 </body>

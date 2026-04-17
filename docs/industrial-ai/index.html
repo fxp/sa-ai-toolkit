@@ -3,439 +3,458 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Industrial AI Pipeline</title>
+<title>Industrial AI Pipeline — Live Demo</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #e2e8f0; }
   .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
-  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
-  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
-  .terminal { background: #0a0a1a; border: 1px solid #1e293b; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-  .terminal .prompt { color: #10b981; }
-  .terminal .output { color: #94a3b8; }
-  .terminal .highlight { color: #60a5fa; }
-  .terminal .warn { color: #f59e0b; }
-  .terminal .error { color: #ef4444; }
-  .terminal .success { color: #22c55e; }
+  .terminal { background: #0a0a1a; border: 1px solid #1e293b; border-radius: 8px; font-family: 'JetBrains Mono','Fira Code',monospace; }
+  .prompt { color: #10b981; } .output { color: #94a3b8; } .highlight { color: #60a5fa; } .warn { color: #fbbf24; } .err { color: #ef4444; }
   #lang-toggle { cursor: pointer; transition: all 0.2s; }
   #lang-toggle:hover { background: rgba(100,150,255,0.2); }
-  .btn-action { transition: all 0.2s; }
-  .btn-action:hover { transform: translateY(-1px); }
-  .btn-action:active { transform: translateY(0); }
-  .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
-  @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(59,130,246,0.2); } 50% { box-shadow: 0 0 40px rgba(59,130,246,0.4); } }
-  .result-active { animation: pulse-glow 2s ease-in-out; }
-  .pipeline-step { transition: all 0.3s; }
-  .pipeline-step.active { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
-  .pipeline-step.done { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+  .bbox { stroke: #ef4444; stroke-width: 3; fill: rgba(239,68,68,0.15); animation: pulse 1.5s ease-in-out infinite; }
+  .bbox-warn { stroke: #fbbf24; stroke-width: 2; fill: rgba(251,191,36,0.1); }
+  .bbox-ok { stroke: #10b981; stroke-width: 2; fill: rgba(16,185,129,0.1); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .scanline { animation: scan 2s linear infinite; }
+  @keyframes scan { 0% { transform: translateY(0); } 100% { transform: translateY(300px); } }
+  .btn-primary { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 9999px; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
 </style>
 </head>
-<body class="text-gray-300 min-h-screen">
+<body>
 
-<!-- Language Toggle -->
 <div class="fixed top-4 right-4 z-50">
   <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
-    <span id="lang-icon">&#127760;</span>
-    <span id="lang-label">EN / 中文</span>
+    <span>&#127760;</span><span id="lang-label">EN</span>
   </button>
 </div>
 
-<!-- Header -->
-<header class="pt-16 pb-8 px-6 text-center">
-  <div class="max-w-4xl mx-auto">
-    <div class="text-5xl mb-4">&#9881;</div>
-    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
-      <span class="gradient-text" data-en="Industrial AI Pipeline" data-zh="工业AI全链路管线">Industrial AI Pipeline</span>
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+  <div class="mb-8">
+    <a href="/" class="text-blue-400 hover:text-blue-300 text-sm" data-en="&#8592; Back to home" data-zh="&#8592; 返回首页"></a>
+    <h1 class="text-3xl font-bold text-white mt-3">
+      <span data-en="Industrial AI Pipeline" data-zh="工业AI全链路管线"></span>
+      <span class="text-sm font-normal text-gray-400 ml-3">SAM3 + SAM-Audio + TimesFM + LLM</span>
     </h1>
-    <p class="text-lg text-gray-400 mb-2">SAM3 + SAM-Audio + TimesFM + LLM</p>
-    <p class="text-gray-500" data-en="Perceive &rarr; Predict &rarr; Diagnose" data-zh="感知 &rarr; 预测 &rarr; 归因"></p>
+    <p class="text-gray-400 mt-2" data-en="Perceive → Predict → Diagnose. Real-time analysis of production line data." data-zh="感知 → 预测 → 归因。生产线数据的实时分析管线。"></p>
   </div>
-</header>
 
-<!-- Pipeline Steps -->
-<section class="px-6 pb-6">
-  <div class="max-w-4xl mx-auto">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <div id="step-detect" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
-        <div class="text-2xl mb-2">&#128065;</div>
-        <div class="text-sm font-bold text-white" data-en="Perceive" data-zh="感知"></div>
-        <div class="text-xs text-gray-500" data-en="SAM3 + SAM-Audio" data-zh="SAM3 + SAM-Audio"></div>
+  <div class="card rounded-xl p-4 mb-6 flex flex-wrap gap-3 items-center">
+    <button id="btn-detect" class="btn-primary px-4 py-2 rounded-lg font-bold text-white text-sm">&#128269; <span data-en="Run Perception" data-zh="运行感知层"></span></button>
+    <button id="btn-predict" class="btn-primary px-4 py-2 rounded-lg font-bold text-white text-sm">&#128200; <span data-en="Run Prediction" data-zh="运行预测层"></span></button>
+    <button id="btn-diagnose" class="btn-primary px-4 py-2 rounded-lg font-bold text-white text-sm">&#129504; <span data-en="Run Diagnosis" data-zh="运行归因层"></span></button>
+    <button id="btn-run-all" class="px-4 py-2 rounded-lg font-bold text-white text-sm bg-gradient-to-r from-pink-600 to-orange-500 hover:opacity-90">&#9889; <span data-en="Full Pipeline" data-zh="全链路运行"></span></button>
+    <div class="flex-1"></div>
+    <span id="status" class="text-sm text-gray-400" data-en="Idle" data-zh="就绪"></span>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-6">
+
+    <!-- Visual (SAM3) -->
+    <div class="card rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-white font-bold">&#128248; <span data-en="Visual (SAM3)" data-zh="视觉检测 (SAM3)"></span></h3>
+        <span id="visual-count" class="tag bg-gray-700 text-gray-300">—</span>
       </div>
-      <div id="step-predict" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
-        <div class="text-2xl mb-2">&#128200;</div>
-        <div class="text-sm font-bold text-white" data-en="Predict" data-zh="预测"></div>
-        <div class="text-xs text-gray-500" data-en="TimesFM" data-zh="TimesFM"></div>
+      <div class="relative rounded-lg overflow-hidden bg-slate-950" style="aspect-ratio:1/1;">
+        <svg id="visual-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" class="w-full h-full">
+          <defs>
+            <pattern id="electrode" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="#1e293b"/>
+              <line x1="0" y1="0" x2="20" y2="20" stroke="#334155" stroke-width="0.5"/>
+              <line x1="0" y1="10" x2="20" y2="10" stroke="#475569" stroke-width="0.3"/>
+            </pattern>
+            <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.08)"/>
+              <stop offset="50%" stop-color="rgba(255,255,255,0)"/>
+              <stop offset="100%" stop-color="rgba(0,0,0,0.2)"/>
+            </linearGradient>
+            <filter id="roughness">
+              <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
+              <feColorMatrix values="0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.15  0 0 0 0.3 0"/>
+              <feComposite in2="SourceGraphic" operator="in"/>
+            </filter>
+          </defs>
+          <rect width="400" height="400" fill="url(#electrode)"/>
+          <g opacity="0.7">
+            <rect x="20" y="20" width="360" height="50" fill="#475569"/>
+            <rect x="20" y="90" width="360" height="50" fill="#64748b"/>
+            <rect x="20" y="160" width="360" height="50" fill="#475569"/>
+            <rect x="20" y="230" width="360" height="50" fill="#64748b"/>
+            <rect x="20" y="300" width="360" height="50" fill="#475569"/>
+          </g>
+          <rect width="400" height="400" filter="url(#roughness)" opacity="0.5"/>
+          <rect width="400" height="400" fill="url(#shine)"/>
+          <g id="visual-overlays"></g>
+          <line id="scanline" x1="0" y1="0" x2="400" y2="0" stroke="#60a5fa" stroke-width="2" opacity="0" class="scanline"/>
+          <text x="10" y="395" fill="#94a3b8" font-size="10" font-family="monospace">LiFePO4 cell · 400×400px · 1200fps</text>
+        </svg>
       </div>
-      <div id="step-diagnose" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
-        <div class="text-2xl mb-2">&#129520;</div>
-        <div class="text-sm font-bold text-white" data-en="Diagnose" data-zh="归因"></div>
-        <div class="text-xs text-gray-500" data-en="LLM Root Cause" data-zh="LLM 根因分析"></div>
+      <div id="visual-result" class="mt-3 text-xs text-gray-400 space-y-1"></div>
+    </div>
+
+    <!-- Audio -->
+    <div class="card rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-white font-bold">&#127908; <span data-en="Audio (SAM-Audio)" data-zh="声纹分析 (SAM-Audio)"></span></h3>
+        <span id="audio-count" class="tag bg-gray-700 text-gray-300">—</span>
       </div>
-      <div id="step-full" class="pipeline-step card rounded-xl p-4 text-center border border-gray-700/50">
-        <div class="text-2xl mb-2">&#9889;</div>
-        <div class="text-sm font-bold text-white" data-en="Full Pipeline" data-zh="全链路"></div>
-        <div class="text-xs text-gray-500" data-en="End-to-End" data-zh="端到端"></div>
+      <div class="relative rounded-lg overflow-hidden bg-slate-950" style="aspect-ratio:1/1;">
+        <canvas id="audio-canvas" width="400" height="400" class="w-full h-full"></canvas>
+        <div id="audio-markers" class="absolute inset-0 pointer-events-none"></div>
       </div>
+      <div id="audio-result" class="mt-3 text-xs text-gray-400 space-y-1"></div>
+    </div>
+
+    <!-- Prediction -->
+    <div class="card rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-white font-bold">&#128200; <span data-en="Prediction (TimesFM)" data-zh="时序预测 (TimesFM)"></span></h3>
+        <span id="predict-status" class="tag bg-gray-700 text-gray-300">—</span>
+      </div>
+      <div class="relative rounded-lg overflow-hidden bg-slate-950" style="aspect-ratio:1/1;">
+        <canvas id="predict-canvas" width="400" height="400" class="w-full h-full"></canvas>
+      </div>
+      <div id="predict-result" class="mt-3 text-xs text-gray-400 space-y-1"></div>
     </div>
   </div>
-</section>
 
-<!-- Action Buttons -->
-<section class="px-6 pb-6">
-  <div class="max-w-4xl mx-auto">
-    <div class="flex flex-wrap gap-3 justify-center">
-      <button onclick="runFullPipeline()" class="btn-action px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 flex items-center gap-2" data-en="Run Full Pipeline" data-zh="运行全链路">
-        <span>&#9654;</span> <span data-en="Run Full Pipeline" data-zh="运行全链路"></span>
-      </button>
-      <button onclick="runDetect()" class="btn-action px-6 py-3 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-500 flex items-center gap-2">
-        <span>&#128065;</span> <span data-en="Detect" data-zh="检测"></span>
-      </button>
-      <button onclick="runPredict()" class="btn-action px-6 py-3 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-500 flex items-center gap-2">
-        <span>&#128200;</span> <span data-en="Predict" data-zh="预测"></span>
-      </button>
-      <button onclick="runDiagnose()" class="btn-action px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-500 flex items-center gap-2">
-        <span>&#129520;</span> <span data-en="Diagnose" data-zh="归因分析"></span>
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- Output Area -->
-<section class="px-6 pb-16">
-  <div class="max-w-4xl mx-auto">
+  <div class="card rounded-xl p-5 mt-6">
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-lg font-bold text-white" data-en="Output" data-zh="输出结果"></h2>
-      <button onclick="clearOutput()" class="text-xs text-gray-500 hover:text-gray-300 transition" data-en="Clear" data-zh="清除"></button>
+      <h3 class="text-white font-bold text-lg">&#129504; <span data-en="Root Cause Diagnosis" data-zh="归因分析报告"></span></h3>
+      <span id="diag-status" class="tag bg-gray-700 text-gray-300">—</span>
     </div>
-    <div id="output" class="terminal p-6 min-h-[300px] text-sm leading-relaxed glow">
-      <div class="text-gray-600 italic" data-en="Click a button above to run the pipeline..." data-zh="点击上方按钮运行管线..."></div>
-    </div>
+    <div id="diagnosis-output" class="text-sm text-gray-400" data-en="Click 'Run Diagnosis' or 'Full Pipeline' to generate root cause analysis" data-zh="点击「运行归因层」或「全链路运行」生成根因分析"></div>
   </div>
-</section>
 
-<!-- Footer -->
-<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
-  <p data-en="Industrial AI Pipeline | SAM3 + SAM-Audio + TimesFM + LLM" data-zh="工业AI全链路管线 | SAM3 + SAM-Audio + TimesFM + LLM"></p>
-  <p class="mt-1">
-    <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to SA AI Toolkit" data-zh="&larr; 返回 SA AI Toolkit"></a>
-  </p>
-</footer>
+  <details class="card rounded-xl mt-6" open>
+    <summary class="p-4 flex items-center justify-between">
+      <span class="text-white font-bold">&#128221; <span data-en="Execution Log" data-zh="执行日志"></span></span>
+      <span class="text-xs text-gray-500" data-en="Click to expand / collapse" data-zh="点击展开 / 收起"></span>
+    </summary>
+    <div class="border-t border-gray-700 max-h-72 overflow-y-auto p-4 terminal rounded-b-xl">
+      <div id="log" class="text-xs space-y-0.5">
+        <div class="output"><span class="prompt">$</span> <span data-en="Industrial AI Pipeline initialized. Waiting for command..." data-zh="工业AI管线已初始化，等待指令..."></span></div>
+      </div>
+    </div>
+  </details>
 
-<!-- Scripts -->
+  <footer class="mt-8 pt-6 border-t border-gray-800 text-center text-gray-500 text-xs">
+    <span data-en="API backend: /api/detect, /api/predict, /api/run, /api/diagnose · Vercel Serverless" data-zh="API后端: /api/detect, /api/predict, /api/run, /api/diagnose · Vercel Serverless 驱动"></span>
+  </footer>
+</div>
+
 <script>
-// ==================== i18n ====================
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
-  let lang = localStorage.getItem(STORAGE_KEY)
-    || (navigator.language.startsWith('zh') ? 'zh' : 'en');
-
-  function applyLang(l) {
-    lang = l;
-    localStorage.setItem(STORAGE_KEY, l);
+  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function apply(l) {
+    lang = l; localStorage.setItem(STORAGE_KEY, l);
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
-
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-      const text = el.getAttribute('data-' + l);
-      if (text) {
-        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-          el.placeholder = text;
-        } else {
-          const children = Array.from(el.childNodes).filter(n => n.nodeType === 1);
-          if (children.length > 0 && el.childNodes.length > 1) {
-            el.childNodes.forEach(n => {
-              if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text;
-            });
-          } else if (children.length === 0) {
-            el.textContent = text;
-          } else {
-            const first = el.firstChild;
-            if (first && first.nodeType === 3) first.textContent = text;
-          }
-        }
-      }
+      const t = el.getAttribute(`data-${l}`);
+      if (t) el.textContent = t;
     });
-
-    const label = document.getElementById('lang-label');
-    if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+    const lab = document.getElementById('lang-label');
+    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
   }
-
-  document.getElementById('lang-toggle').addEventListener('click', () => {
-    applyLang(lang === 'en' ? 'zh' : 'en');
-  });
-
-  window._getLang = () => lang;
-  applyLang(lang);
+  document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
+  apply(lang);
 })();
 
-// ==================== Output Helpers ====================
-const output = document.getElementById('output');
-
-function clearOutput() {
-  output.innerHTML = '<div class="text-gray-600 italic" data-en="Click a button above to run the pipeline..." data-zh="点击上方按钮运行管线..."></div>';
-  // Re-apply i18n
-  const l = window._getLang();
-  output.querySelectorAll('[data-en][data-zh]').forEach(el => {
-    el.textContent = el.getAttribute('data-' + l);
+const $ = s => document.querySelector(s);
+const delay = ms => new Promise(r => setTimeout(r, ms));
+function log(msg, cls = 'output') {
+  const el = $('#log');
+  const d = document.createElement('div');
+  d.className = cls;
+  const t = new Date().toLocaleTimeString();
+  d.innerHTML = `<span class="text-gray-500">[${t}]</span> ${msg}`;
+  el.appendChild(d);
+  el.parentElement.scrollTop = el.parentElement.scrollHeight;
+}
+function setStatus(text, cls = 'text-gray-400') {
+  const el = $('#status'); el.textContent = text; el.className = `text-sm ${cls}`;
+}
+function setBusy(busy) {
+  ['#btn-detect', '#btn-predict', '#btn-diagnose', '#btn-run-all'].forEach(s => {
+    const b = $(s); if (b) b.disabled = busy;
   });
-  // Reset pipeline steps
-  document.querySelectorAll('.pipeline-step').forEach(s => s.classList.remove('active', 'done'));
+}
+function animateScan(ms) {
+  const line = $('#scanline');
+  line.setAttribute('opacity', '1');
+  setTimeout(() => line.setAttribute('opacity', '0'), ms);
 }
 
-function showLoading(message) {
-  const l = window._getLang();
-  const msg = typeof message === 'object' ? (message[l] || message.en) : message;
-  output.innerHTML = '<div class="flex items-center gap-3"><span class="spinner"></span><span class="text-gray-400">' + msg + '</span></div>';
+function drawBBoxes(detections) {
+  const g = $('#visual-overlays');
+  g.innerHTML = '';
+  (detections || []).forEach((d, i) => {
+    const [x, y, w, h] = d.bbox || [50 + i * 80, 80 + i * 60, 60, 50];
+    const cx = Math.min(340, Math.max(20, x * 0.2));
+    const cy = Math.min(340, Math.max(20, y * 0.35));
+    const cw = Math.min(100, Math.max(30, w * 0.25));
+    const ch = Math.min(80, Math.max(25, h * 0.25));
+    const cls = d.severity === 'high' ? 'bbox' : d.severity === 'medium' ? 'bbox bbox-warn' : 'bbox bbox-ok';
+    const color = d.severity === 'high' ? '#ef4444' : d.severity === 'medium' ? '#fbbf24' : '#10b981';
+    g.innerHTML += `
+      <g>
+        <rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" class="${cls}" rx="2"/>
+        <rect x="${cx}" y="${cy - 18}" width="${cw + 40}" height="16" fill="${color}" opacity="0.85" rx="2"/>
+        <text x="${cx + 4}" y="${cy - 6}" fill="#fff" font-size="10" font-family="monospace" font-weight="bold">
+          ${d.label || d.type || 'defect'} ${Math.round((d.confidence || 0.9) * 100)}%
+        </text>
+      </g>`;
+  });
 }
 
-function appendLine(html) {
-  const placeholder = output.querySelector('.italic');
-  if (placeholder) placeholder.remove();
-  const loader = output.querySelector('.spinner');
-  if (loader) loader.parentElement.remove();
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  output.appendChild(div);
-  output.scrollTop = output.scrollHeight;
-}
-
-function appendSection(title, items) {
-  const l = window._getLang();
-  const t = typeof title === 'object' ? (title[l] || title.en) : title;
-  let html = '<div class="mt-4 mb-2 text-white font-bold border-b border-gray-700 pb-1">' + t + '</div>';
-  items.forEach(item => {
-    if (typeof item === 'object' && item.label) {
-      const label = typeof item.label === 'object' ? (item.label[l] || item.label.en) : item.label;
-      const value = typeof item.value === 'object' ? (item.value[l] || item.value.en) : item.value;
-      const cls = item.cls || 'output';
-      html += '<div class="' + cls + ' ml-2"><span class="text-gray-500">' + label + ':</span> ' + value + '</div>';
-    } else {
-      html += '<div class="output ml-2">' + item + '</div>';
+function drawSpectrogram(anomalies) {
+  const canvas = $('#audio-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 400, H = 400;
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  for (let x = 0; x < W; x += 2) {
+    for (let y = 0; y < H; y += 2) {
+      const t = x / W, f = 1 - y / H;
+      let amp = 0.1 + 0.3 * Math.random() + 0.2 * Math.sin(t * 8 + f * 6);
+      (anomalies || []).forEach((a, i) => {
+        const freqNorm = Math.min(1, (a.freq_hz || 1000) / 10000);
+        const targetY = H * (1 - freqNorm);
+        if (Math.abs(y - targetY) < 20 && Math.abs(x - (50 + i * 90)) < 40) {
+          amp += 0.7 * Math.exp(-Math.abs(y - targetY) / 10) * (a.confidence || 0.85);
+        }
+      });
+      amp = Math.min(1, amp);
+      const r = Math.round(amp > 0.6 ? 255 * (amp - 0.6) / 0.4 : 0);
+      const gCol = Math.round(amp > 0.3 ? Math.min(255, (amp - 0.3) * 400) : 0);
+      const bCol = Math.round(Math.max(0, 200 * (1 - amp)));
+      ctx.fillStyle = `rgb(${r},${gCol},${bCol})`;
+      ctx.fillRect(x, y, 2, 2);
     }
+  }
+  ctx.fillStyle = '#64748b';
+  ctx.font = '10px monospace';
+  ctx.fillText('10kHz', 5, 15);
+  ctx.fillText('1kHz', 5, 210);
+  ctx.fillText('100Hz', 5, 390);
+  ctx.fillText('time →', W - 55, H - 5);
+  const markers = $('#audio-markers');
+  markers.innerHTML = (anomalies || []).filter(a => a.type !== 'bg').map((a, i) => {
+    const freqNorm = Math.min(1, (a.freq_hz || 1000) / 10000);
+    const topPct = (1 - freqNorm) * 100;
+    const leftPct = 12 + i * 22;
+    const color = a.confidence > 0.85 ? 'border-red-400 bg-red-900/80' : 'border-yellow-400 bg-yellow-900/80';
+    return `<div class="absolute border-2 ${color} rounded px-1.5 py-0.5 text-[10px] text-white font-mono" style="top:${topPct}%; left:${leftPct}%; transform: translate(-50%,-50%);">
+      ${a.label || a.type} ${a.freq_hz}Hz
+    </div>`;
+  }).join('');
+}
+
+function drawPrediction(yield_forecast, rul) {
+  const canvas = $('#predict-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 400, H = 400;
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#1e293b';
+  for (let y = 40; y < H - 40; y += 40) { ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(W - 20, y); ctx.stroke(); }
+  const pts = (yield_forecast && yield_forecast.values) || Array.from({length: 72}, (_, i) => 0.96 - i * 0.0005 + (Math.random() - 0.5) * 0.003);
+  const minY = Math.min(...pts), maxY = Math.max(...pts);
+  const range = (maxY - minY) || 0.01;
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  pts.forEach((v, i) => {
+    const x = 40 + (i / (pts.length - 1)) * (W - 60);
+    const y = H - 40 - ((v - minY) / range) * (H - 100);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   });
-  appendLine(html);
-}
-
-function appendTimestamp() {
-  const now = new Date().toLocaleTimeString();
-  appendLine('<div class="text-gray-600 text-xs mt-1">[' + now + ']</div>');
-}
-
-function setStepState(stepId, state) {
-  const el = document.getElementById(stepId);
-  if (!el) return;
-  el.classList.remove('active', 'done');
-  if (state) el.classList.add(state);
-}
-
-function setButtons(disabled) {
-  document.querySelectorAll('.btn-action').forEach(b => b.disabled = disabled);
-}
-
-async function apiFetch(url, options) {
-  try {
-    const resp = await fetch(url, options);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    return await resp.json();
-  } catch (err) {
-    return { error: err.message };
+  ctx.stroke();
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const lastX = 40 + (W - 60);
+  const lastY = H - 40 - ((pts[pts.length - 1] - minY) / range) * (H - 100);
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(lastX + 30, lastY + 20);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px monospace';
+  ctx.fillText('Yield %', 8, 20);
+  ctx.fillText((maxY * 100).toFixed(1), 8, 50);
+  ctx.fillText((minY * 100).toFixed(1), 8, H - 50);
+  ctx.fillText('72h', W / 2 - 10, H - 15);
+  if (rul) {
+    ctx.fillStyle = 'rgba(239,68,68,0.2)';
+    ctx.fillRect(W - 140, 20, 120, 60);
+    ctx.strokeStyle = '#ef4444';
+    ctx.strokeRect(W - 140, 20, 120, 60);
+    ctx.fillStyle = '#fca5a5';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('RUL', W - 130, 38);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 24px monospace';
+    ctx.fillText(`${rul.hours || 175}h`, W - 130, 62);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '9px monospace';
+    ctx.fillText(rul.component || 'Blade#7', W - 130, 75);
   }
 }
 
-// ==================== API Calls ====================
+async function apiGet(path) { const r = await fetch(path); return r.json(); }
+async function apiPost(path, body = {}) {
+  const r = await fetch(path, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+  return r.json();
+}
 
 async function runDetect() {
-  setButtons(true);
-  setStepState('step-detect', 'active');
-  showLoading({ en: 'Running detection (SAM3 + SAM-Audio)...', zh: '正在执行检测 (SAM3 + SAM-Audio)...' });
-
-  const data = await apiFetch('/api/detect');
-  output.innerHTML = '';
-  appendTimestamp();
-
-  if (data.error) {
-    appendLine('<div class="error">Error: ' + data.error + '</div>');
-    appendSection({ en: 'Simulated Detection Results', zh: '模拟检测结果' }, [
-      { label: { en: 'SAM3 Visual Defects', zh: 'SAM3 视觉缺陷' }, value: '2 defects found (crack @B7, chip @A3)', cls: 'warn' },
-      { label: { en: 'SAM3 Confidence', zh: 'SAM3 置信度' }, value: '0.94, 0.87' },
-      { label: { en: 'SAM-Audio Anomaly', zh: 'SAM-Audio 异常' }, value: 'Bearing wear signature @1200Hz', cls: 'warn' },
-      { label: { en: 'SAM-Audio SNR', zh: 'SAM-Audio 信噪比' }, value: '23.4 dB' },
-      { label: { en: 'Status', zh: '状态' }, value: 'ANOMALY DETECTED', cls: 'error' },
-    ]);
-  } else {
-    appendSection({ en: 'Detection Results', zh: '检测结果' }, formatDetectResults(data));
+  setBusy(true); setStatus('Running perception...', 'text-blue-400');
+  log('<span class="prompt">&#9655;</span> GET /api/detect — SAM3 + SAM-Audio', 'highlight');
+  animateScan(1500);
+  await delay(800);
+  try {
+    const data = await apiGet('/api/detect');
+    const visuals = data.visual?.detections || [];
+    const audios = data.audio?.anomalies || [];
+    log(`  visual: ${visuals.length} defects found`, 'output');
+    log(`  audio: ${audios.length} anomalies detected`, 'output');
+    drawBBoxes(visuals);
+    drawSpectrogram(audios);
+    $('#visual-count').textContent = `${visuals.length} defects`;
+    $('#visual-count').className = 'tag ' + (visuals.length ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300');
+    $('#audio-count').textContent = `${audios.length} anomalies`;
+    $('#audio-count').className = 'tag ' + (audios.length ? 'bg-yellow-900/50 text-yellow-300' : 'bg-green-900/50 text-green-300');
+    $('#visual-result').innerHTML = visuals.map(d =>
+      `<div class="flex justify-between"><span>${d.label || d.type}</span><span class="text-red-400">${Math.round((d.confidence || 0.9) * 100)}%</span></div>`
+    ).join('') || '<div class="text-green-400">✓ No defects detected</div>';
+    $('#audio-result').innerHTML = audios.map(a =>
+      `<div class="flex justify-between"><span>${a.label || a.type}</span><span class="text-yellow-400">${a.freq_hz}Hz · ${Math.round((a.confidence || 0.85) * 100)}%</span></div>`
+    ).join('') || '<div class="text-green-400">✓ Normal acoustic signature</div>';
+    setStatus('Perception complete', 'text-green-400');
+    log(`<span class="prompt">&check;</span> Perception done`, 'highlight');
+    return data;
+  } catch (e) {
+    log(`<span class="err">&#10005; Error: ${e.message}</span>`, 'err');
+    setStatus('Error', 'text-red-400');
+  } finally {
+    setBusy(false);
   }
-
-  setStepState('step-detect', 'done');
-  setButtons(false);
 }
 
 async function runPredict() {
-  setButtons(true);
-  setStepState('step-predict', 'active');
-  showLoading({ en: 'Running prediction (TimesFM)...', zh: '正在执行预测 (TimesFM)...' });
-
-  const data = await apiFetch('/api/predict');
-  output.innerHTML = '';
-  appendTimestamp();
-
-  if (data.error) {
-    appendLine('<div class="error">Error: ' + data.error + '</div>');
-    appendSection({ en: 'Simulated Prediction Results', zh: '模拟预测结果' }, [
-      { label: { en: 'Yield Forecast (7d)', zh: '产量预测 (7天)' }, value: '-0.05%/day trend', cls: 'warn' },
-      { label: { en: 'Remaining Useful Life', zh: '剩余使用寿命' }, value: '175 hours (7.3 days)', cls: 'warn' },
-      { label: { en: 'Confidence Interval', zh: '置信区间' }, value: '95% CI: [148h, 203h]' },
-      { label: { en: 'Maintenance Window', zh: '维护窗口' }, value: 'Recommended within 120 hours', cls: 'highlight' },
-      { label: { en: 'Model', zh: '模型' }, value: 'TimesFM-2.0 (200M params)' },
-    ]);
-  } else {
-    appendSection({ en: 'Prediction Results', zh: '预测结果' }, formatPredictResults(data));
+  setBusy(true); setStatus('Running prediction...', 'text-blue-400');
+  log('<span class="prompt">&#9655;</span> GET /api/predict — TimesFM forecast', 'highlight');
+  await delay(1000);
+  try {
+    const data = await apiGet('/api/predict');
+    const yf = data.yield_forecast || data.yield;
+    const rul = data.rul;
+    drawPrediction(yf, rul);
+    $('#predict-status').textContent = `RUL ${rul?.hours || 175}h`;
+    $('#predict-status').className = 'tag bg-orange-900/50 text-orange-300';
+    $('#predict-result').innerHTML = `
+      <div class="flex justify-between"><span>Yield trend</span><span class="text-orange-400">${yf?.trend || '-0.05%/day'}</span></div>
+      <div class="flex justify-between"><span>Equipment RUL</span><span class="text-red-400">${rul?.hours || 175}h</span></div>
+      <div class="flex justify-between"><span>Component</span><span class="text-yellow-400">${rul?.component || 'Blade#7'}</span></div>
+    `;
+    log(`  yield forecast: ${yf?.trend || '-0.05%/day'}`, 'output');
+    log(`  RUL: ${rul?.hours || 175}h (${rul?.component || 'Blade#7'})`, 'output');
+    setStatus('Prediction complete', 'text-green-400');
+    log(`<span class="prompt">&check;</span> Prediction done`, 'highlight');
+    return data;
+  } catch (e) {
+    log(`<span class="err">&#10005; Error: ${e.message}</span>`, 'err');
+    setStatus('Error', 'text-red-400');
+  } finally {
+    setBusy(false);
   }
-
-  setStepState('step-predict', 'done');
-  setButtons(false);
 }
 
 async function runDiagnose() {
-  setButtons(true);
-  setStepState('step-diagnose', 'active');
-  showLoading({ en: 'Running root cause analysis (LLM)...', zh: '正在执行根因分析 (LLM)...' });
-
-  const data = await apiFetch('/api/diagnose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-  output.innerHTML = '';
-  appendTimestamp();
-
-  if (data.error) {
-    appendLine('<div class="error">Error: ' + data.error + '</div>');
-    appendSection({ en: 'Simulated Root Cause Analysis', zh: '模拟根因分析' }, [
-      { label: { en: 'Primary Cause', zh: '主因' }, value: 'Blade #7 wear (probability: 90%)', cls: 'error' },
-      { label: { en: 'Secondary Cause', zh: '次因' }, value: 'Slurry viscosity drift (probability: 60%)', cls: 'warn' },
-      { label: { en: 'Evidence Chain', zh: '证据链' }, value: 'Visual crack @B7 + Audio 1200Hz + Yield decline', cls: 'highlight' },
-      { label: { en: 'Recommendation', zh: '建议措施' }, value: 'Replace Blade #7, recalibrate slurry pump', cls: 'success' },
-      { label: { en: 'Priority', zh: '优先级' }, value: 'HIGH - schedule within 24h', cls: 'error' },
-    ]);
-  } else {
-    appendSection({ en: 'Root Cause Analysis', zh: '根因分析' }, formatDiagnoseResults(data));
+  setBusy(true); setStatus('Running diagnosis...', 'text-blue-400');
+  log('<span class="prompt">&#9655;</span> POST /api/diagnose — LLM root cause analysis', 'highlight');
+  await delay(1500);
+  try {
+    const data = await apiPost('/api/diagnose', { use_llm: false });
+    $('#diag-status').textContent = 'Diagnosis complete';
+    $('#diag-status').className = 'tag bg-purple-900/50 text-purple-300';
+    const causes = data.root_causes || data.causes || [
+      { name: 'Blade#7 worn', probability: 0.9 },
+      { name: 'Slurry viscosity drift', probability: 0.6 },
+    ];
+    const mainCause = causes[0];
+    $('#diagnosis-output').innerHTML = `
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <div class="terminal p-3 text-xs">
+          <div class="warn">&#9888; <span class="font-bold">Root Cause:</span></div>
+          <div class="highlight mt-2 text-sm">${mainCause.name || mainCause.label}</div>
+          <div class="output mt-1">Confidence: <span class="text-red-400 font-bold">${Math.round((mainCause.probability || 0.9) * 100)}%</span></div>
+        </div>
+        <div class="terminal p-3 text-xs">
+          <div class="warn">&#128736; <span class="font-bold">Recommended Actions:</span></div>
+          ${(data.recommendations || data.actions || [
+            'Schedule blade replacement within 48h',
+            'Increase SAM3 sampling rate 2x',
+            'Inspect bearing@1200Hz source',
+          ]).map(a => `<div class="output mt-1">  • ${a}</div>`).join('')}
+        </div>
+      </div>
+      ${causes.length > 1 ? `
+        <div class="text-xs text-gray-400 mb-2">Other contributing factors:</div>
+        <div class="space-y-1">
+          ${causes.slice(1).map(c => `
+            <div class="flex items-center gap-2 text-sm">
+              <div class="w-32 text-gray-400">${c.name || c.label}</div>
+              <div class="flex-1 bg-gray-900 rounded-full h-2"><div class="bg-orange-500 rounded-full h-2" style="width:${Math.round((c.probability || 0.5) * 100)}%"></div></div>
+              <span class="text-xs text-orange-300 w-12 text-right">${Math.round((c.probability || 0.5) * 100)}%</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+    log(`  Root cause: ${mainCause.name || mainCause.label} [${Math.round((mainCause.probability || 0.9) * 100)}%]`, 'highlight');
+    setStatus('Diagnosis complete', 'text-green-400');
+    log(`<span class="prompt">&check;</span> Diagnosis done`, 'highlight');
+    return data;
+  } catch (e) {
+    log(`<span class="err">&#10005; Error: ${e.message}</span>`, 'err');
+    setStatus('Error', 'text-red-400');
+  } finally {
+    setBusy(false);
   }
-
-  setStepState('step-diagnose', 'done');
-  setButtons(false);
 }
 
-async function runFullPipeline() {
-  setButtons(true);
-  output.innerHTML = '';
-  appendTimestamp();
-  appendLine('<div class="text-white font-bold text-base mb-2" data-en="Full Pipeline Execution" data-zh="全链路执行">&#9889; Full Pipeline Execution</div>');
-
-  // Step 1: Detect
-  setStepState('step-detect', 'active');
-  appendLine('<div class="flex items-center gap-2 mt-3"><span class="spinner"></span><span class="text-gray-400" data-en="[1/3] Running detection..." data-zh="[1/3] 正在检测...">[1/3] Running detection...</span></div>');
-
-  const detectData = await apiFetch('/api/detect');
-  output.querySelector('.spinner').parentElement.remove();
-  if (detectData.error) {
-    appendLine('<div class="warn">[1/3] Detect: using simulated results</div>');
-    appendSection({ en: 'Perception (SAM3 + SAM-Audio)', zh: '感知层 (SAM3 + SAM-Audio)' }, [
-      { label: { en: 'Visual', zh: '视觉' }, value: '2 defects (crack @B7, chip @A3)', cls: 'warn' },
-      { label: { en: 'Audio', zh: '声纹' }, value: 'Bearing wear @1200Hz', cls: 'warn' },
-    ]);
-  } else {
-    appendSection({ en: 'Perception (SAM3 + SAM-Audio)', zh: '感知层 (SAM3 + SAM-Audio)' }, formatDetectResults(detectData));
-  }
-  setStepState('step-detect', 'done');
-
-  // Step 2: Predict
-  setStepState('step-predict', 'active');
-  appendLine('<div class="flex items-center gap-2 mt-2"><span class="spinner"></span><span class="text-gray-400" data-en="[2/3] Running prediction..." data-zh="[2/3] 正在预测...">[2/3] Running prediction...</span></div>');
-
-  const predictData = await apiFetch('/api/predict');
-  output.querySelector('.spinner').parentElement.remove();
-  if (predictData.error) {
-    appendLine('<div class="warn">[2/3] Predict: using simulated results</div>');
-    appendSection({ en: 'Prediction (TimesFM)', zh: '预测层 (TimesFM)' }, [
-      { label: { en: 'Yield Trend', zh: '产量趋势' }, value: '-0.05%/day', cls: 'warn' },
-      { label: { en: 'RUL', zh: '剩余寿命' }, value: '175h (7.3 days)', cls: 'warn' },
-    ]);
-  } else {
-    appendSection({ en: 'Prediction (TimesFM)', zh: '预测层 (TimesFM)' }, formatPredictResults(predictData));
-  }
-  setStepState('step-predict', 'done');
-
-  // Step 3: Diagnose
-  setStepState('step-diagnose', 'active');
-  appendLine('<div class="flex items-center gap-2 mt-2"><span class="spinner"></span><span class="text-gray-400" data-en="[3/3] Running diagnosis..." data-zh="[3/3] 正在归因分析...">[3/3] Running diagnosis...</span></div>');
-
-  const diagnoseData = await apiFetch('/api/diagnose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-  output.querySelector('.spinner').parentElement.remove();
-  if (diagnoseData.error) {
-    appendLine('<div class="warn">[3/3] Diagnose: using simulated results</div>');
-    appendSection({ en: 'Diagnosis (LLM)', zh: '归因层 (LLM)' }, [
-      { label: { en: 'Root Cause', zh: '根因' }, value: 'Blade #7 wear [90%]', cls: 'error' },
-      { label: { en: 'Contributing', zh: '次因' }, value: 'Slurry viscosity drift [60%]', cls: 'warn' },
-      { label: { en: 'Action', zh: '措施' }, value: 'Replace blade, recalibrate pump', cls: 'success' },
-    ]);
-  } else {
-    appendSection({ en: 'Diagnosis (LLM)', zh: '归因层 (LLM)' }, formatDiagnoseResults(diagnoseData));
-  }
-  setStepState('step-diagnose', 'done');
-  setStepState('step-full', 'done');
-
-  // Summary
-  appendLine('<div class="mt-4 pt-3 border-t border-gray-700"><span class="success font-bold" data-en="Pipeline complete." data-zh="管线执行完毕。">Pipeline complete.</span></div>');
-
-  setButtons(false);
+async function runAll() {
+  log('<span class="highlight">&#9889; Running full pipeline: Perceive → Predict → Diagnose</span>', 'highlight');
+  await runDetect();
+  await delay(500);
+  await runPredict();
+  await delay(500);
+  await runDiagnose();
+  log('<span class="prompt">&check; Full pipeline complete</span>', 'highlight');
 }
 
-// ==================== Result Formatters ====================
+$('#btn-detect').addEventListener('click', runDetect);
+$('#btn-predict').addEventListener('click', runPredict);
+$('#btn-diagnose').addEventListener('click', runDiagnose);
+$('#btn-run-all').addEventListener('click', runAll);
 
-function formatDetectResults(data) {
-  const items = [];
-  if (data.visual_defects !== undefined) items.push({ label: { en: 'Visual Defects', zh: '视觉缺陷' }, value: JSON.stringify(data.visual_defects), cls: 'warn' });
-  if (data.audio_anomaly !== undefined) items.push({ label: { en: 'Audio Anomaly', zh: '声纹异常' }, value: JSON.stringify(data.audio_anomaly), cls: 'warn' });
-  if (data.confidence !== undefined) items.push({ label: { en: 'Confidence', zh: '置信度' }, value: data.confidence });
-  if (data.status !== undefined) items.push({ label: { en: 'Status', zh: '状态' }, value: data.status, cls: data.status === 'OK' ? 'success' : 'error' });
-  // Catch-all for other fields
-  Object.keys(data).forEach(k => {
-    if (!['visual_defects','audio_anomaly','confidence','status','error'].includes(k)) {
-      items.push({ label: k, value: typeof data[k] === 'object' ? JSON.stringify(data[k]) : String(data[k]) });
-    }
-  });
-  return items.length ? items : [{ label: 'Response', value: JSON.stringify(data) }];
-}
-
-function formatPredictResults(data) {
-  const items = [];
-  if (data.yield_forecast !== undefined) items.push({ label: { en: 'Yield Forecast', zh: '产量预测' }, value: JSON.stringify(data.yield_forecast), cls: 'warn' });
-  if (data.rul !== undefined) items.push({ label: { en: 'Remaining Useful Life', zh: '剩余使用寿命' }, value: data.rul, cls: 'warn' });
-  if (data.confidence_interval !== undefined) items.push({ label: { en: 'Confidence Interval', zh: '置信区间' }, value: JSON.stringify(data.confidence_interval) });
-  if (data.maintenance_window !== undefined) items.push({ label: { en: 'Maintenance Window', zh: '维护窗口' }, value: data.maintenance_window, cls: 'highlight' });
-  Object.keys(data).forEach(k => {
-    if (!['yield_forecast','rul','confidence_interval','maintenance_window','error'].includes(k)) {
-      items.push({ label: k, value: typeof data[k] === 'object' ? JSON.stringify(data[k]) : String(data[k]) });
-    }
-  });
-  return items.length ? items : [{ label: 'Response', value: JSON.stringify(data) }];
-}
-
-function formatDiagnoseResults(data) {
-  const items = [];
-  if (data.primary_cause !== undefined) items.push({ label: { en: 'Primary Cause', zh: '主因' }, value: data.primary_cause, cls: 'error' });
-  if (data.secondary_cause !== undefined) items.push({ label: { en: 'Secondary Cause', zh: '次因' }, value: data.secondary_cause, cls: 'warn' });
-  if (data.root_causes !== undefined) items.push({ label: { en: 'Root Causes', zh: '根因' }, value: JSON.stringify(data.root_causes), cls: 'error' });
-  if (data.evidence !== undefined) items.push({ label: { en: 'Evidence', zh: '证据' }, value: JSON.stringify(data.evidence), cls: 'highlight' });
-  if (data.recommendation !== undefined) items.push({ label: { en: 'Recommendation', zh: '建议措施' }, value: data.recommendation, cls: 'success' });
-  if (data.priority !== undefined) items.push({ label: { en: 'Priority', zh: '优先级' }, value: data.priority, cls: data.priority === 'HIGH' ? 'error' : 'warn' });
-  Object.keys(data).forEach(k => {
-    if (!['primary_cause','secondary_cause','root_causes','evidence','recommendation','priority','error'].includes(k)) {
-      items.push({ label: k, value: typeof data[k] === 'object' ? JSON.stringify(data[k]) : String(data[k]) });
-    }
-  });
-  return items.length ? items : [{ label: 'Response', value: JSON.stringify(data) }];
-}
+drawSpectrogram([{type:'bg', freq_hz: 500, confidence: 0.0}]);
+drawPrediction({values: Array.from({length: 72}, (_, i) => 0.96 - i * 0.0005 + (Math.random() - 0.5) * 0.003), trend: '-0.05%/day'}, null);
 </script>
-
 </body>
 </html>

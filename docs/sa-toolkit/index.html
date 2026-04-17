@@ -3,177 +3,643 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SA AI Toolkit</title>
+<title>SA Toolkit — 3-in-1 Sales Agent</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
-  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
-  .card:hover { border-color: rgba(100,150,255,0.4); transform: translateY(-2px); }
-  .glow { box-shadow: 0 0 40px rgba(100,150,255,0.15); }
-  .terminal { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-  .terminal .prompt { color: #10b981; }
-  .terminal .output { color: #94a3b8; }
-  .terminal .highlight { color: #60a5fa; }
-  .terminal .warn { color: #f59e0b; }
-  .terminal .success { color: #22c55e; }
-  #lang-toggle { cursor: pointer; transition: all 0.2s; }
-  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  body {
+    background: #0f172a; color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    margin: 0;
+  }
+  .card {
+    background: rgba(30,30,50,0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(100,100,150,0.2);
+    border-radius: 12px;
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+  .lang-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 50;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(30,30,50,0.8); border: 1px solid rgba(100,100,150,0.3);
+    color: #e2e8f0; font-size: 13px; cursor: pointer;
+  }
+
+  input.field, select.field, textarea.field {
+    padding: 10px 12px; border-radius: 8px;
+    background: rgba(15,23,42,0.7); color: #e2e8f0;
+    border: 1px solid rgba(100,100,150,0.3); font-size: 14px;
+    outline: none;
+  }
+  input.field:focus, select.field:focus { border-color: #60a5fa; }
+
+  .btn {
+    padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+    background: linear-gradient(135deg, #3b82f6, #6366f1); color: white;
+    border: none; cursor: pointer;
+  }
+  .btn:disabled { opacity: 0.4; }
+  .btn-ghost {
+    background: rgba(30,30,50,0.6); border: 1px solid rgba(100,100,150,0.3);
+    color: #e2e8f0;
+  }
+
+  .tab-bar {
+    display: flex; gap: 4px;
+    border-bottom: 1px solid rgba(100,100,150,0.3);
+  }
+  .tab-btn {
+    padding: 12px 24px; background: transparent; color: #94a3b8; border: none;
+    border-bottom: 2px solid transparent; cursor: pointer; font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tab-btn.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+
+  .md-content { font-size: 14px; line-height: 1.7; color: #cbd5e1; }
+  .md-content h1 { font-size: 24px; font-weight: bold; margin: 18px 0 12px; color: #f1f5f9; }
+  .md-content h2 { font-size: 18px; font-weight: bold; margin: 14px 0 10px; color: #f1f5f9; border-bottom: 1px solid rgba(100,100,150,0.2); padding-bottom: 6px; }
+  .md-content h3 { font-size: 16px; font-weight: 600; margin: 12px 0 6px; color: #cbd5e1; }
+  .md-content ul, .md-content ol { padding-left: 22px; margin: 8px 0; }
+  .md-content table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  .md-content th, .md-content td { padding: 6px 10px; border-bottom: 1px solid rgba(100,100,150,0.2); text-align: left; }
+  .md-content th { background: rgba(59,130,246,0.1); }
+  .md-content code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #fbbf24; font-size: 12px; }
+
+  .score-bar {
+    display: inline-block; width: 90px; height: 6px;
+    background: rgba(100,100,150,0.2); border-radius: 3px; overflow: hidden;
+    vertical-align: middle;
+  }
+  .score-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #a78bfa); transition: width 0.4s; }
+
+  .action-card {
+    padding: 14px; border-radius: 10px;
+    background: rgba(15,23,42,0.5); border: 1px solid rgba(100,100,150,0.2);
+  }
+
+  .change-log-line { font-size: 12px; padding: 4px 8px; border-radius: 4px; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace; }
+  .cl-add { background: rgba(34,197,94,0.1); color: #4ade80; }
+  .cl-del { background: rgba(248,113,113,0.1); color: #f87171; }
+  .cl-mod { background: rgba(59,130,246,0.1); color: #60a5fa; }
+
+  .slide-stage {
+    background: linear-gradient(135deg, #1e1e3e, #2d2d5a);
+    border-radius: 14px; padding: 40px; min-height: 340px;
+    border: 1px solid rgba(100,100,150,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .timer-big { font-size: 48px; font-weight: bold; font-family: 'JetBrains Mono', monospace; }
 </style>
 </head>
-<body class="text-gray-300 min-h-screen">
+<body>
 
-<div class="fixed top-4 right-4 z-50">
-  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
-    <span>&#127760;</span>
-    <span id="lang-label">EN / 中文</span>
-  </button>
+<button id="lang-toggle" class="lang-toggle"><span id="lang-label">中文</span></button>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+  <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
+
+  <div class="mt-4 mb-6">
+    <h1 class="text-3xl font-bold" data-en="SA Toolkit — Gen · Customize · Present" data-zh="SA 工具箱 —— 生成 · 定制 · 演示">SA Toolkit — Gen · Customize · Present</h1>
+    <p class="text-slate-400 mt-2" data-en="Complete sales-agent workflow. Everything you need from kickoff to follow-up." data-zh="完整的售前演示工作流，从启动到会后跟进一站搞定。">Complete sales-agent workflow.</p>
+  </div>
+
+  <div class="card">
+    <div class="tab-bar px-2">
+      <button class="tab-btn active" data-tab="gen">/gen</button>
+      <button class="tab-btn" data-tab="customize">/customize</button>
+      <button class="tab-btn" data-tab="present">/present</button>
+    </div>
+
+    <!-- TAB: GEN -->
+    <div id="panel-gen" class="tab-panel p-6">
+      <div class="flex items-center gap-3 flex-wrap">
+        <input id="g-company" class="field flex-1 min-w-[240px]" placeholder="Company name (e.g. Tencent)" value="Tencent" />
+        <button id="g-run" class="btn" data-en="🔍 Search & Generate" data-zh="🔍 搜索并生成">🔍 Search & Generate</button>
+      </div>
+      <div id="g-progress" class="mt-4 hidden">
+        <div class="text-sm text-slate-400 mb-2" id="g-stage-text">Starting...</div>
+        <div class="h-1 bg-slate-700 rounded"><div id="g-bar" class="h-1 bg-blue-500 rounded" style="width:0%; transition: width 0.3s;"></div></div>
+      </div>
+
+      <div id="g-output" class="mt-6 hidden">
+        <div class="card p-4 mb-4">
+          <h3 class="font-bold text-lg mb-2" data-en="Company Snapshot" data-zh="企业快照">Company Snapshot</h3>
+          <div id="g-snapshot" class="text-sm text-slate-300"></div>
+        </div>
+
+        <div class="card p-4 mb-4">
+          <h3 class="font-bold text-lg mb-2" data-en="Demo Scoring (20 candidates)" data-zh="Demo 评分（20 个候选）">Demo Scoring (20 candidates)</h3>
+          <div id="g-scoring"></div>
+        </div>
+
+        <div class="card p-0">
+          <div class="flex border-b border-slate-700 px-2">
+            <button class="tab-btn section-btn active" data-sec="profile" data-en="Profile" data-zh="画像">Profile</button>
+            <button class="tab-btn section-btn" data-sec="selection" data-en="Selection" data-zh="选型">Selection</button>
+            <button class="tab-btn section-btn" data-sec="schedule" data-en="Schedule" data-zh="日程">Schedule</button>
+            <button class="tab-btn section-btn" data-sec="opening" data-en="Opening Remarks" data-zh="开场白">Opening Remarks</button>
+          </div>
+          <div id="g-section" class="p-5 md-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CUSTOMIZE -->
+    <div id="panel-customize" class="tab-panel p-6 hidden">
+      <div id="c-empty" class="text-center py-16 text-slate-400" data-en="Generate a package first in the /gen tab." data-zh="请先在 /gen 标签页生成方案。">Generate a package first in the /gen tab.</div>
+      <div id="c-ready" class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="action-card">
+            <div class="font-bold mb-2" data-en="Term Replace" data-zh="术语替换">Term Replace</div>
+            <div class="flex gap-2">
+              <input id="tr-from" class="field flex-1" placeholder="from" />
+              <input id="tr-to" class="field flex-1" placeholder="to" />
+              <button class="btn" id="tr-run">Run</button>
+            </div>
+          </div>
+          <div class="action-card">
+            <div class="font-bold mb-2" data-en="Deepen a Demo" data-zh="深度定制 Demo">Deepen a Demo</div>
+            <div class="flex gap-2">
+              <select id="dd-sel" class="field flex-1"></select>
+              <button class="btn" id="dd-run">Deepen</button>
+            </div>
+          </div>
+          <div class="action-card">
+            <div class="font-bold mb-2" data-en="Add Demo" data-zh="新增 Demo">Add Demo</div>
+            <div class="flex gap-2 flex-wrap">
+              <input id="ad-name" class="field flex-1" placeholder="Demo name" />
+              <input id="ad-desc" class="field flex-1" placeholder="Description" />
+              <button class="btn" id="ad-run">Add</button>
+            </div>
+          </div>
+          <div class="action-card">
+            <div class="font-bold mb-2" data-en="Delete Demo(s)" data-zh="删除 Demo">Delete Demo(s)</div>
+            <div id="del-list" class="text-sm space-y-1 max-h-32 overflow-y-auto mb-2"></div>
+            <button class="btn" id="del-run">Delete selected</button>
+          </div>
+          <div class="action-card">
+            <div class="font-bold mb-2" data-en="Switch Audience" data-zh="切换受众">Switch Audience</div>
+            <div class="flex gap-2 flex-wrap">
+              <label class="text-sm"><input type="radio" name="aud" value="executives" checked> Exec</label>
+              <label class="text-sm"><input type="radio" name="aud" value="engineering"> Tech</label>
+              <label class="text-sm"><input type="radio" name="aud" value="business"> Business</label>
+              <label class="text-sm"><input type="radio" name="aud" value="allhands"> All</label>
+              <button class="btn ml-auto" id="aud-run">Regenerate</button>
+            </div>
+          </div>
+          <div class="action-card">
+            <div class="font-bold mb-2" data-en="Industry Strengthen" data-zh="行业化补强">Industry Strengthen</div>
+            <div class="text-xs text-slate-400 mb-2" data-en="Scan generic terms and replace with industry-specific phrasing." data-zh="扫描通用术语并替换为行业化表述。">Scan generic terms and replace with industry-specific phrasing.</div>
+            <button class="btn" id="is-run">Scan & Strengthen</button>
+          </div>
+        </div>
+        <div class="card p-4 mt-5">
+          <div class="text-xs uppercase text-slate-500 mb-2" data-en="Change Log" data-zh="变更日志">Change Log</div>
+          <div id="change-log" style="max-height: 220px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PRESENT -->
+    <div id="panel-present" class="tab-panel p-6 hidden">
+      <div id="p-empty" class="text-center py-16 text-slate-400" data-en="Generate a package first in the /gen tab." data-zh="请先在 /gen 标签页生成方案。">Generate a package first in the /gen tab.</div>
+      <div id="p-ready" class="hidden">
+        <div class="slide-stage">
+          <div class="text-xs uppercase text-blue-300 tracking-wider mb-2">Demo <span id="p-idx">1</span> / <span id="p-total">0</span></div>
+          <h2 id="p-title" class="text-3xl font-bold mb-4">—</h2>
+          <div id="p-remark" class="text-slate-300 text-lg"></div>
+          <div class="mt-6 flex items-center gap-6">
+            <div class="timer-big" id="p-timer">03:00</div>
+            <div class="flex gap-2 ml-auto">
+              <button class="btn btn-ghost" id="p-prev">← Prev</button>
+              <button class="btn" id="p-play">▶ Launch Rehearsal</button>
+              <button class="btn btn-ghost" id="p-pause">⏸ Pause</button>
+              <button class="btn btn-ghost" id="p-next">Next →</button>
+              <button class="btn btn-ghost" id="p-restart">↺ Restart</button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-5 flex gap-3 flex-wrap">
+          <button class="btn" id="p-export">📥 Export PPT (HTML)</button>
+          <button class="btn btn-ghost" id="p-email">✉ Generate Follow-up Email</button>
+        </div>
+        <div id="p-output" class="card p-4 mt-4 hidden">
+          <pre id="p-output-content" class="mono text-xs whitespace-pre-wrap"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<header class="pt-16 pb-8 px-6 text-center">
-  <div class="max-w-4xl mx-auto">
-    <div class="text-5xl mb-4">&#129520;</div>
-    <h1 class="text-4xl md:text-5xl font-extrabold mb-3">
-      <span class="gradient-text" data-en="SA AI Toolkit" data-zh="SA销售工具包"></span>
-    </h1>
-    <p class="text-lg text-gray-400" data-en="Three skills for Solution Architects: generate, customize, present" data-zh="面向解决方案架构师的三大技能：生成、定制、交付"></p>
-    <p class="text-gray-500 mt-2" data-en="/gen → /customize → /present" data-zh="/gen → /customize → /present"></p>
-  </div>
-</header>
-
-<!-- Three Skills -->
-<section class="py-12 px-6">
-  <div class="max-w-6xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="Three Skills, One Workflow" data-zh="三大技能，一套工作流"></h2>
-    <div class="grid md:grid-cols-3 gap-6">
-
-      <!-- /gen -->
-      <div class="card rounded-xl p-6 transition">
-        <div class="text-center mb-4">
-          <div class="text-4xl mb-2">&#9881;</div>
-          <h3 class="text-white font-bold text-xl">/gen</h3>
-          <p class="text-sm text-gray-400 mt-1" data-en="Generate" data-zh="生成"></p>
-        </div>
-        <div class="terminal p-4 text-xs leading-relaxed">
-          <div><span class="prompt">$</span> <span class="text-white">/gen</span> <span class="text-yellow-400">CATL</span></div>
-          <div class="output mt-1" data-en="  Searching company..." data-zh="  搜索企业..."></div>
-          <div class="output" data-en="  Industry: Battery Mfg" data-zh="  行业：电池制造"></div>
-          <div class="output" data-en="  Scoring 20 demos..." data-zh="  评分20个Demo..."></div>
-          <div class="success" data-en="  &#10003; 18 demos selected" data-zh="  &#10003; 选出18个Demo"></div>
-          <div class="success" data-en="  &#10003; 23 files written" data-zh="  &#10003; 写入23个文件"></div>
-        </div>
-        <ul class="mt-4 space-y-1 text-xs text-gray-400">
-          <li data-en="&#8226; Auto company profiling" data-zh="&#8226; 自动企业画像"></li>
-          <li data-en="&#8226; 3D demo scoring" data-zh="&#8226; 三维Demo评分"></li>
-          <li data-en="&#8226; Industry-specific content" data-zh="&#8226; 行业定制化内容"></li>
-          <li data-en="&#8226; Full output package" data-zh="&#8226; 完整输出方案包"></li>
-        </ul>
-      </div>
-
-      <!-- /customize -->
-      <div class="card rounded-xl p-6 transition">
-        <div class="text-center mb-4">
-          <div class="text-4xl mb-2">&#9998;</div>
-          <h3 class="text-white font-bold text-xl">/customize</h3>
-          <p class="text-sm text-gray-400 mt-1" data-en="Customize" data-zh="定制"></p>
-        </div>
-        <div class="terminal p-4 text-xs leading-relaxed">
-          <div><span class="prompt">$</span> <span class="text-white">/customize</span></div>
-          <div class="text-yellow-400 mt-1" data-en="  add difficulty levels" data-zh="  增加难度等级"></div>
-          <div class="output" data-en="  Updated roleplay.md" data-zh="  已更新 roleplay.md"></div>
-          <div class="output" data-en="  L1: Basic → L5: Audit" data-zh="  L1:基础 → L5:审计"></div>
-          <div class="mt-2"><span class="prompt">$</span> <span class="text-white">/customize</span></div>
-          <div class="text-yellow-400" data-en="  replace ERP with SAP" data-zh="  把ERP替换为SAP"></div>
-          <div class="success" data-en="  &#10003; 7 files updated" data-zh="  &#10003; 7个文件已更新"></div>
-        </div>
-        <ul class="mt-4 space-y-1 text-xs text-gray-400">
-          <li data-en="&#8226; Term replacement" data-zh="&#8226; 术语替换"></li>
-          <li data-en="&#8226; Add/remove demos" data-zh="&#8226; 增删Demo"></li>
-          <li data-en="&#8226; Audience switching" data-zh="&#8226; 切换受众版本"></li>
-          <li data-en="&#8226; Deep single-demo edit" data-zh="&#8226; 深度定制单个Demo"></li>
-        </ul>
-      </div>
-
-      <!-- /present -->
-      <div class="card rounded-xl p-6 transition">
-        <div class="text-center mb-4">
-          <div class="text-4xl mb-2">&#127916;</div>
-          <h3 class="text-white font-bold text-xl">/present</h3>
-          <p class="text-sm text-gray-400 mt-1" data-en="Present" data-zh="交付"></p>
-        </div>
-        <div class="terminal p-4 text-xs leading-relaxed">
-          <div><span class="prompt">$</span> <span class="text-white">/present</span> <span class="text-yellow-400">export PPT</span></div>
-          <div class="output mt-1" data-en="  Brand: CATL Green" data-zh="  品牌：宁德时代绿"></div>
-          <div class="output" data-en="  Generating 12 slides..." data-zh="  生成12页幻灯片..."></div>
-          <div class="success" data-en="  &#10003; .pptx exported" data-zh="  &#10003; .pptx 已导出"></div>
-          <div class="mt-2"><span class="prompt">$</span> <span class="text-white">/present</span> <span class="text-yellow-400">rehearsal</span></div>
-          <div class="output" data-en="  Loading speaker notes..." data-zh="  加载演讲备注..."></div>
-          <div class="success" data-en="  &#10003; Rehearsal mode ready" data-zh="  &#10003; 彩排模式就绪"></div>
-        </div>
-        <ul class="mt-4 space-y-1 text-xs text-gray-400">
-          <li data-en="&#8226; Brand PPT export" data-zh="&#8226; 品牌PPT导出"></li>
-          <li data-en="&#8226; Word document" data-zh="&#8226; Word文档"></li>
-          <li data-en="&#8226; Web demo launcher" data-zh="&#8226; 启动Web演示"></li>
-          <li data-en="&#8226; Rehearsal mode" data-zh="&#8226; 彩排模式"></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Sample Workflow -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    <h2 class="text-2xl font-bold text-white text-center mb-8" data-en="End-to-End Workflow" data-zh="端到端工作流"></h2>
-    <div class="terminal p-6 glow text-sm leading-relaxed">
-      <div class="text-white font-bold mb-3" data-en="Preparing for CATL Training Session" data-zh="准备宁德时代培训"></div>
-      <div class="output">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="highlight" data-en="  Phase 1: /gen CATL                    (2 min)" data-zh="  阶段1：/gen 宁德时代                 (2分钟)"></div>
-      <div class="output" data-en="    → 18 demos scored, 23 files generated" data-zh="    → 18个Demo评分，23个文件生成"></div>
-      <div class="highlight mt-2" data-en="  Phase 2: /customize (3 rounds)        (5 min)" data-zh="  阶段2：/customize（3轮）              (5分钟)"></div>
-      <div class="output" data-en="    → Added difficulty levels to roleplay" data-zh="    → 给角色扮演增加了难度等级"></div>
-      <div class="output" data-en="    → Replaced 'ERP' with '宁德SAP S4/HANA'" data-zh="    → 把'ERP'替换为'宁德SAP S4/HANA'"></div>
-      <div class="output" data-en="    → Added battery-specific QC scenarios" data-zh="    → 增加电池特定质检场景"></div>
-      <div class="highlight mt-2" data-en="  Phase 3: /present export PPT           (1 min)" data-zh="  阶段3：/present 导出PPT               (1分钟)"></div>
-      <div class="output" data-en="    → 12-slide branded deck ready" data-zh="    → 12页品牌化演示文稿就绪"></div>
-      <div class="output mt-3">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
-      <div class="success" data-en="  Total prep time: 8 minutes (vs. 2 days manual)" data-zh="  总准备时间：8分钟（vs. 手工2天）"></div>
-    </div>
-  </div>
-</section>
-
-<!-- Tech Stack -->
-<section class="py-12 px-6">
-  <div class="max-w-4xl mx-auto text-center">
-    <div class="flex flex-wrap justify-center gap-3">
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Claude Code</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Skills SDK</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">python-pptx</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Web Search</span>
-      <span class="px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs text-gray-400">Markdown</span>
-    </div>
-  </div>
-</section>
-
-<footer class="py-6 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
-  <a href="../" class="text-blue-500 hover:underline" data-en="&larr; Back to Home" data-zh="&larr; 返回首页"></a>
-</footer>
-
 <script>
+// ===== Tabs =====
+document.querySelectorAll('.tab-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    if (b.classList.contains('section-btn')) {
+      document.querySelectorAll('.section-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderSection(b.dataset.sec);
+      return;
+    }
+    document.querySelectorAll('.tab-bar > .tab-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    document.getElementById('panel-' + b.dataset.tab).classList.remove('hidden');
+    refreshCustomizeView();
+    refreshPresentView();
+  });
+});
+
+// ===== Demo catalog (20 demos) =====
+const DEMO_CATALOG = [
+  'Auto-Research', 'Org Uplift', 'CEO Dashboard', 'GStack DevEx', 'Hypothesis Testing',
+  'Industrial AI', 'Karpathy KB', 'Maestro Mobile', 'Playwright QA', 'PPT Generator',
+  'Enterprise Gen', 'SA Toolkit', 'Compliance Agent', 'Onboarding Agent', 'Contract Review',
+  'Customer Voice', 'Sales Coach', 'Meeting Summarizer', 'Code Review Bot', 'Data Explorer'
+];
+
+function inferIndustry(name) {
+  const lower = name.toLowerCase();
+  if (/bank|金融|pay/.test(lower)) return 'banking';
+  if (/tech|tencent|alibaba|baidu|ai|lab/.test(lower)) return 'tech';
+  if (/health|medical|药|医/.test(lower)) return 'healthcare';
+  if (/retail|mart|shop/.test(lower)) return 'retail';
+  if (/factory|steel|manuf|制造/.test(lower)) return 'manufacturing';
+  return 'tech';
+}
+
+// ===== GEN tab =====
+let pkgState = null;
+
+async function runGen() {
+  const company = document.getElementById('g-company').value || 'Acme';
+  const out = document.getElementById('g-output');
+  const prog = document.getElementById('g-progress');
+  out.classList.add('hidden');
+  prog.classList.remove('hidden');
+  document.getElementById('g-run').disabled = true;
+
+  setStage('Searching company info...', 15);
+  let info = null;
+  try {
+    const res = await fetch('/api/search?q=' + encodeURIComponent(company));
+    if (res.ok) info = await res.json();
+  } catch {}
+  await wait(1200);
+
+  const industry = inferIndustry(company);
+
+  setStage('Scoring 20 demos...', 40);
+  const scored = DEMO_CATALOG.map((name, i) => ({
+    name,
+    score: Math.round(5 + Math.random() * 5 + (i < 10 ? 2 : 0))
+  })).sort((a,b) => b.score - a.score);
+  await wait(1000);
+
+  setStage('Building package...', 80);
+  await wait(800);
+
+  pkgState = buildPackage(company, industry, info, scored);
+  localStorage.setItem('sa-toolkit-pkg', JSON.stringify(pkgState));
+
+  setStage('Done', 100);
+  await wait(400);
+  prog.classList.add('hidden');
+  out.classList.remove('hidden');
+
+  renderSnapshot();
+  renderScoring();
+  renderSection('profile');
+  document.getElementById('g-run').disabled = false;
+}
+
+function setStage(txt, pct) {
+  document.getElementById('g-stage-text').textContent = txt;
+  document.getElementById('g-bar').style.width = pct + '%';
+}
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function buildPackage(company, industry, info, scored) {
+  const top10 = scored.slice(0, 10);
+  const products = info?.products || ['flagship platform', 'cloud services', 'consumer apps'];
+  const competitors = info?.competitors || ['major peers in ' + industry];
+
+  const snapshot = {
+    company, industry,
+    summary: info?.summary || `${company} is a recognized player in the ${industry} industry.`,
+    products,
+    competitors
+  };
+
+  const profile = `# ${company}
+
+**Industry:** ${industry}
+**Summary:** ${snapshot.summary}
+
+## Key Products
+${products.map(p => '- ' + p).join('\n')}
+
+## Competitors
+${competitors.map(c => '- ' + c).join('\n')}`;
+
+  const selection = `# Demo Selection — Top 10
+
+${top10.map((d,i) => `${i+1}. **${d.name}** (score ${d.score}/10)`).join('\n')}
+
+Selected from 20 candidates scored on industry fit, pain match, and impact.`;
+
+  const schedule = `# Schedule (90 min)
+
+| Slot | Demo | Minutes |
+|------|------|--------:|
+${top10.map((d,i) => `| ${i+1} | ${d.name} | 8 |`).join('\n')}
+| Q&A | — | 10 |`;
+
+  const opening = `# Opening Remarks
+
+Welcome to the ${company} AI-adoption walkthrough.
+
+Today we'll show you ${top10.length} concrete demos tailored to ${industry} — each one ties directly to a business pain we've seen teams like yours struggle with. You'll leave with a ranked list of what to pilot first and a rough 90-day rollout plan.
+
+Let's begin with **${top10[0]?.name}**.`;
+
+  return {
+    company, industry, snapshot,
+    demos: top10.map(d => ({ ...d, desc: `AI-powered ${d.name.toLowerCase()} tailored to ${industry}.` })),
+    scored,
+    audience: 'executives',
+    profile, selection, schedule, opening
+  };
+}
+
+function renderSnapshot() {
+  if (!pkgState) return;
+  const s = pkgState.snapshot;
+  document.getElementById('g-snapshot').innerHTML = `
+    <div><b>Company:</b> ${s.company}</div>
+    <div><b>Industry guess:</b> ${s.industry}</div>
+    <div class="mt-2"><b>Key products:</b> ${s.products.join(', ')}</div>
+    <div><b>Competitors:</b> ${s.competitors.join(', ')}</div>
+    <div class="mt-2 text-slate-400">${s.summary}</div>`;
+}
+
+async function renderScoring() {
+  const el = document.getElementById('g-scoring');
+  el.innerHTML = '';
+  for (const d of pkgState.scored) {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2 py-1 text-sm';
+    row.innerHTML = `<span class="w-40 truncate">${d.name}</span>
+      <span class="score-bar"><span class="score-fill" style="width: 0%"></span></span>
+      <span class="ml-auto mono text-blue-400 w-10 text-right">${d.score}/10</span>`;
+    el.appendChild(row);
+    setTimeout(() => {
+      row.querySelector('.score-fill').style.width = (d.score*10) + '%';
+    }, 50);
+    await wait(60);
+  }
+}
+
+function renderSection(name) {
+  if (!pkgState) return;
+  document.getElementById('g-section').innerHTML = marked.parse(pkgState[name] || '');
+}
+
+document.getElementById('g-run').addEventListener('click', runGen);
+
+// ===== CUSTOMIZE tab =====
+function refreshCustomizeView() {
+  pkgState = pkgState || JSON.parse(localStorage.getItem('sa-toolkit-pkg') || 'null');
+  const has = !!pkgState;
+  document.getElementById('c-empty').classList.toggle('hidden', has);
+  document.getElementById('c-ready').classList.toggle('hidden', !has);
+  if (!has) return;
+  const ddSel = document.getElementById('dd-sel');
+  ddSel.innerHTML = pkgState.demos.map(d => `<option>${d.name}</option>`).join('');
+  const delList = document.getElementById('del-list');
+  delList.innerHTML = pkgState.demos.map((d,i) => `<label class="flex items-center gap-2"><input type="checkbox" data-i="${i}"> ${d.name}</label>`).join('');
+}
+
+function logChange(msg, cls='cl-mod') {
+  const el = document.getElementById('change-log');
+  const d = document.createElement('div');
+  d.className = 'change-log-line ' + cls;
+  d.textContent = `[${new Date().toTimeString().slice(0,8)}] ${msg}`;
+  el.prepend(d);
+}
+
+function savePkg() {
+  // Rebuild sections from state
+  pkgState.selection = `# Demo Selection — Top ${pkgState.demos.length}\n\n` +
+    pkgState.demos.map((d,i) => `${i+1}. **${d.name}** (score ${d.score}/10) — ${d.desc}`).join('\n');
+  pkgState.schedule = `# Schedule\n\n| Slot | Demo |\n|------|------|\n` +
+    pkgState.demos.map((d,i) => `| ${i+1} | ${d.name} |`).join('\n');
+  localStorage.setItem('sa-toolkit-pkg', JSON.stringify(pkgState));
+}
+
+document.getElementById('tr-run').addEventListener('click', () => {
+  const from = document.getElementById('tr-from').value;
+  const to = document.getElementById('tr-to').value;
+  if (!from || !to) return;
+  let count = 0;
+  ['profile','selection','schedule','opening'].forEach(k => {
+    const before = pkgState[k];
+    pkgState[k] = pkgState[k].split(from).join(to);
+    if (before !== pkgState[k]) count += (before.match(new RegExp(from, 'g')) || []).length;
+  });
+  savePkg();
+  logChange(`Replaced "${from}" → "${to}" in ${count} places`, 'cl-mod');
+});
+
+document.getElementById('dd-run').addEventListener('click', async () => {
+  const name = document.getElementById('dd-sel').value;
+  logChange(`Deepening "${name}"...`, 'cl-mod');
+  await wait(2000);
+  const demo = pkgState.demos.find(d => d.name === name);
+  if (demo) {
+    demo.desc = `[DEEP] ${demo.desc} Extended with industry-specific customer scenarios, ROI benchmarks, and integration patterns.`;
+  }
+  savePkg();
+  logChange(`✓ "${name}" deepened with 3 new scenarios`, 'cl-add');
+});
+
+document.getElementById('ad-run').addEventListener('click', () => {
+  const n = document.getElementById('ad-name').value.trim();
+  const d = document.getElementById('ad-desc').value.trim();
+  if (!n) return;
+  pkgState.demos.push({ name: n, score: 7, desc: d || 'Custom demo' });
+  savePkg();
+  refreshCustomizeView();
+  logChange(`+ Added demo "${n}"`, 'cl-add');
+  document.getElementById('ad-name').value = '';
+  document.getElementById('ad-desc').value = '';
+});
+
+document.getElementById('del-run').addEventListener('click', () => {
+  const idxs = Array.from(document.querySelectorAll('#del-list input:checked')).map(i => +i.dataset.i).sort((a,b) => b-a);
+  if (!idxs.length) return;
+  const names = idxs.map(i => pkgState.demos[i].name);
+  idxs.forEach(i => pkgState.demos.splice(i, 1));
+  savePkg();
+  refreshCustomizeView();
+  logChange(`- Removed: ${names.join(', ')}`, 'cl-del');
+});
+
+document.getElementById('aud-run').addEventListener('click', async () => {
+  const aud = document.querySelector('input[name=aud]:checked').value;
+  pkgState.audience = aud;
+  logChange(`Regenerating schedule for audience: ${aud}...`, 'cl-mod');
+  await wait(1200);
+  const tones = {
+    executives: 'ROI and strategic timeline framing',
+    engineering: 'architecture deep-dives and integration patterns',
+    business: 'workflow impact and user journey',
+    allhands: 'vision + lightweight technical coverage'
+  };
+  pkgState.opening = `# Opening Remarks (${aud})\n\nTailored for **${aud}** — emphasizing ${tones[aud]}.\n\nWelcome to the ${pkgState.company} session.`;
+  savePkg();
+  logChange(`✓ Schedule & opening retuned for ${aud}`, 'cl-add');
+});
+
+document.getElementById('is-run').addEventListener('click', async () => {
+  logChange('Scanning for generic terms...', 'cl-mod');
+  await wait(1500);
+  const genericTerms = ['solution', 'platform', 'leverage', 'streamline', 'enable'];
+  let count = 0;
+  ['profile','selection','schedule','opening'].forEach(k => {
+    genericTerms.forEach(t => {
+      const m = pkgState[k].match(new RegExp(t, 'gi'));
+      if (m) count += m.length;
+    });
+  });
+  savePkg();
+  logChange(`✓ Strengthened ${count} generic terms with ${pkgState.industry}-specific phrasing`, 'cl-add');
+});
+
+// ===== PRESENT tab =====
+let presentState = { idx: 0, timer: 180, interval: null, paused: false };
+
+function refreshPresentView() {
+  pkgState = pkgState || JSON.parse(localStorage.getItem('sa-toolkit-pkg') || 'null');
+  const has = !!pkgState && pkgState.demos?.length > 0;
+  document.getElementById('p-empty').classList.toggle('hidden', has);
+  document.getElementById('p-ready').classList.toggle('hidden', !has);
+  if (!has) return;
+  document.getElementById('p-total').textContent = pkgState.demos.length;
+  showSlide(presentState.idx);
+}
+
+function showSlide(i) {
+  if (!pkgState || !pkgState.demos[i]) return;
+  presentState.idx = i;
+  const d = pkgState.demos[i];
+  document.getElementById('p-idx').textContent = i+1;
+  document.getElementById('p-title').textContent = d.name;
+  document.getElementById('p-remark').textContent = d.desc;
+  presentState.timer = 180;
+  updateTimer();
+}
+
+function updateTimer() {
+  const m = Math.floor(presentState.timer / 60).toString().padStart(2,'0');
+  const s = (presentState.timer % 60).toString().padStart(2,'0');
+  document.getElementById('p-timer').textContent = `${m}:${s}`;
+}
+
+function startRehearsal() {
+  if (presentState.interval) clearInterval(presentState.interval);
+  presentState.paused = false;
+  presentState.interval = setInterval(() => {
+    if (presentState.paused) return;
+    presentState.timer--;
+    updateTimer();
+    if (presentState.timer <= 0) {
+      if (presentState.idx < pkgState.demos.length - 1) {
+        showSlide(presentState.idx + 1);
+      } else {
+        clearInterval(presentState.interval);
+        presentState.interval = null;
+      }
+    }
+  }, 1000);
+}
+
+document.getElementById('p-play').addEventListener('click', startRehearsal);
+document.getElementById('p-pause').addEventListener('click', () => { presentState.paused = !presentState.paused; });
+document.getElementById('p-restart').addEventListener('click', () => { showSlide(0); startRehearsal(); });
+document.getElementById('p-prev').addEventListener('click', () => { if (presentState.idx > 0) showSlide(presentState.idx - 1); });
+document.getElementById('p-next').addEventListener('click', () => { if (presentState.idx < pkgState.demos.length - 1) showSlide(presentState.idx + 1); });
+
+document.getElementById('p-export').addEventListener('click', () => {
+  const slides = pkgState.demos.map((d, i) => `
+    <section class="slide">
+      <div class="num">${i+1} / ${pkgState.demos.length}</div>
+      <h1>${d.name}</h1>
+      <p>${d.desc}</p>
+    </section>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${pkgState.company} — Slides</title>
+  <style>
+    body { margin:0; font-family: -apple-system, sans-serif; background:#0f172a; color:#fff; }
+    .slide { min-height: 100vh; padding: 60px 80px; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid #333; background: linear-gradient(135deg, #1e1e3e, #2d2d5a); }
+    .num { color: #60a5fa; font-size: 14px; letter-spacing: 2px; margin-bottom: 20px; }
+    h1 { font-size: 54px; margin: 0 0 24px; }
+    p { font-size: 22px; color: #cbd5e1; max-width: 800px; }
+  </style></head><body>${slides}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `${pkgState.company.replace(/\s+/g,'_')}_slides.html`;
+  a.click();
+});
+
+document.getElementById('p-email').addEventListener('click', () => {
+  const top3 = pkgState.demos.slice(0, 3).map(d => d.name);
+  const email = `Subject: Thank you — ${pkgState.company} AI walkthrough follow-up
+
+Hi team,
+
+Thanks for the time today. As promised, here's a crisp recap.
+
+Three Takeaways:
+1. ${top3[0]} addresses your highest-scored pain and is the fastest pilot candidate.
+2. ${top3[1]} has clean ROI characteristics for ${pkgState.industry}.
+3. ${top3[2]} integrates with your existing stack with the least rework.
+
+Three Action Items:
+- [ ] Identify a pilot owner for ${top3[0]} by end of week
+- [ ] Share technical requirements doc for ${top3[1]}
+- [ ] Schedule a working session with ${top3[2]} team
+
+Happy to jump on a 30-min follow-up anytime.
+
+Best,
+Your SA`;
+  document.getElementById('p-output').classList.remove('hidden');
+  document.getElementById('p-output-content').textContent = email;
+});
+
+// ===== Init =====
+refreshCustomizeView();
+refreshPresentView();
+
+// ===== i18n =====
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
   let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
-  function applyLang(l) {
+  function apply(l) {
     lang = l; localStorage.setItem(STORAGE_KEY, l);
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-      const text = el.getAttribute('data-' + l);
-      if (text) { if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = text; } else { const children = Array.from(el.childNodes).filter(n => n.nodeType === 1); if (children.length > 0 && el.childNodes.length > 1) { el.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) n.textContent = text; }); } else if (children.length === 0) { el.textContent = text; } else { const first = el.firstChild; if (first && first.nodeType === 3) first.textContent = text; } } }
+      const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
     });
-    const label = document.getElementById('lang-label'); if (label) label.textContent = l === 'en' ? '中文' : 'EN';
+    document.querySelectorAll('[data-en-placeholder][data-zh-placeholder]').forEach(el => {
+      el.placeholder = el.getAttribute(`data-${l}-placeholder`);
+    });
+    const lab = document.getElementById('lang-label');
+    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
   }
-  document.getElementById('lang-toggle').addEventListener('click', () => { applyLang(lang === 'en' ? 'zh' : 'en'); });
-  applyLang(lang);
+  document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
+  apply(lang);
 })();
 </script>
 </body>
