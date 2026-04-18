@@ -31,7 +31,9 @@
     { "source": "/enterprise-gen", "destination": "/docs/enterprise-gen/index.html", "statusCode": 308 },
     { "source": "/enterprise-gen/", "destination": "/docs/enterprise-gen/index.html", "statusCode": 308 },
     { "source": "/sa-toolkit", "destination": "/docs/sa-toolkit/index.html", "statusCode": 308 },
-    { "source": "/sa-toolkit/", "destination": "/docs/sa-toolkit/index.html", "statusCode": 308 }
+    { "source": "/sa-toolkit/", "destination": "/docs/sa-toolkit/index.html", "statusCode": 308 },
+    { "source": "/xinglian-office-hour", "destination": "/docs/xinglian-office-hour/index.html", "statusCode": 308 },
+    { "source": "/xinglian-office-hour/", "destination": "/docs/xinglian-office-hour/index.html", "statusCode": 308 }
   ],
   "rewrites": [
     { "source": "/", "destination": "/docs/index.html" }
