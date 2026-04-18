@@ -25,6 +25,15 @@ DATA_DIR = Path("/tmp/test_data")
 # 供感知层按真实分布进行抽样，使 demo 数据贴近产线。
 # ══════════════════════════════════════════════════
 
+# Real sample images live under docs/industrial-ai/samples/. Each entry below
+# carries a `sample` dict with the static URL and a `bbox` in NATIVE image
+# coordinates marking a visible defect (frontend remaps to SVG viewport).
+# Image sources:
+#   - NEU-DET samples: github.com/siddhartamukherjee/NEU-DET-Steel-Surface-Defect-Detection
+#   - Casting samples: github.com/naxty/gcp-automated-quality-inspection
+#   - Severstal sample cropped from github.com/shubacca/Severstal-Steel-Defect-Segmentation
+SAMPLE_BASE = "/samples"
+
 DATASETS = {
     # https://www.kaggle.com/c/severstal-steel-defect-detection
     "severstal": {
@@ -39,16 +48,24 @@ DATASETS = {
         "train_images": 12568,
         "test_images": 5506,
         "unlabeled_ratio": 0.63,
+        # Only one clean raw strip is re-hostable (competition data is non-redistributable);
+        # every defect class reuses this same image so the bounding boxes land on real pixels.
+        "shared_sample": {"url": f"{SAMPLE_BASE}/severstal/sample_01.jpg",
+                          "native_size": [1758, 256]},
         "classes": [
             # counts & prior from datasetninja.com/severstal
             {"type": "defect_1", "label": "Class 1 · pitting", "severity": "medium",
-             "area_px": 180, "count": 3082, "prior": 0.154},
+             "area_px": 180, "count": 3082, "prior": 0.154,
+             "bbox": [310, 20, 120, 150]},
             {"type": "defect_2", "label": "Class 2 · inclusion", "severity": "high",
-             "area_px": 140, "count": 321, "prior": 0.016},
+             "area_px": 140, "count": 321, "prior": 0.016,
+             "bbox": [950, 100, 90, 110]},
             {"type": "defect_3", "label": "Class 3 · scale (majority)", "severity": "medium",
-             "area_px": 420, "count": 14648, "prior": 0.734},
+             "area_px": 420, "count": 14648, "prior": 0.734,
+             "bbox": [300, 30, 480, 180]},
             {"type": "defect_4", "label": "Class 4 · large patch", "severity": "high",
-             "area_px": 640, "count": 1907, "prior": 0.095},
+             "area_px": 640, "count": 1907, "prior": 0.095,
+             "bbox": [200, 40, 900, 160]},
         ],
         # fraction of real images that carry >=1 defect (19958 / 18074 ≈ 1.1, but ~6666 labelled)
         "p_any_defect": 0.37,
@@ -64,13 +81,25 @@ DATASETS = {
         "total_images": 1800,
         "total_objects": 1800,
         "classes": [
-            # balanced: 300 images per class
-            {"type": "crazing",        "label": "Crazing (cr)",        "severity": "medium", "area_px": 220, "count": 300, "prior": 1/6},
-            {"type": "inclusion",      "label": "Inclusion (in)",      "severity": "high",   "area_px": 260, "count": 300, "prior": 1/6},
-            {"type": "patches",        "label": "Patches (pa)",        "severity": "medium", "area_px": 420, "count": 300, "prior": 1/6},
-            {"type": "pitted_surface", "label": "Pitted surface (ps)", "severity": "high",   "area_px": 320, "count": 300, "prior": 1/6},
-            {"type": "rolled_in_scale","label": "Rolled-in scale (rs)","severity": "medium", "area_px": 280, "count": 300, "prior": 1/6},
-            {"type": "scratches",      "label": "Scratches (sc)",      "severity": "low",    "area_px": 180, "count": 300, "prior": 1/6},
+            # balanced: 300 images per class — each backed by a real defect close-up.
+            {"type": "crazing",        "label": "Crazing (cr)",        "severity": "medium", "area_px": 220, "count": 300, "prior": 1/6,
+             "sample": {"url": f"{SAMPLE_BASE}/neu/crazing_1.jpg", "native_size": [200, 200]},
+             "bbox": [20, 20, 160, 160]},
+            {"type": "inclusion",      "label": "Inclusion (in)",      "severity": "high",   "area_px": 260, "count": 300, "prior": 1/6,
+             "sample": {"url": f"{SAMPLE_BASE}/neu/inclusion_1.jpg", "native_size": [200, 200]},
+             "bbox": [30, 40, 140, 130]},
+            {"type": "patches",        "label": "Patches (pa)",        "severity": "medium", "area_px": 420, "count": 300, "prior": 1/6,
+             "sample": {"url": f"{SAMPLE_BASE}/neu/patches_1.jpg", "native_size": [200, 200]},
+             "bbox": [10, 10, 180, 180]},
+            {"type": "pitted_surface", "label": "Pitted surface (ps)", "severity": "high",   "area_px": 320, "count": 300, "prior": 1/6,
+             "sample": {"url": f"{SAMPLE_BASE}/neu/pitted_surface_1.jpg", "native_size": [200, 200]},
+             "bbox": [20, 20, 160, 160]},
+            {"type": "rolled_in_scale","label": "Rolled-in scale (rs)","severity": "medium", "area_px": 280, "count": 300, "prior": 1/6,
+             "sample": {"url": f"{SAMPLE_BASE}/neu/rolled-in_scale_1.jpg", "native_size": [200, 200]},
+             "bbox": [15, 20, 170, 160]},
+            {"type": "scratches",      "label": "Scratches (sc)",      "severity": "low",    "area_px": 180, "count": 300, "prior": 1/6,
+             "sample": {"url": f"{SAMPLE_BASE}/neu/scratches_1.jpg", "native_size": [200, 200]},
+             "bbox": [30, 20, 60, 170]},
         ],
         # NEU-DET is defect-only (every image is a defect)
         "p_any_defect": 1.0,
@@ -91,9 +120,13 @@ DATASETS = {
         "classes": [
             # 4211 defective / 7348 total ≈ 57.3%
             {"type": "def_front", "label": "Defective (blow-hole / burr / shrink)",
-             "severity": "high", "area_px": 900, "count": 4211, "prior": 0.573},
+             "severity": "high", "area_px": 900, "count": 4211, "prior": 0.573,
+             "sample": {"url": f"{SAMPLE_BASE}/casting/def_front.jpeg", "native_size": [300, 300]},
+             "bbox": [150, 230, 110, 60]},
             {"type": "ok_front",  "label": "OK",
-             "severity": "low",  "area_px": 0,   "count": 3137, "prior": 0.427},
+             "severity": "low",  "area_px": 0,   "count": 3137, "prior": 0.427,
+             "sample": {"url": f"{SAMPLE_BASE}/casting/ok_front.jpeg", "native_size": [300, 300]},
+             "bbox": None},
         ],
         # p_any_defect represents "frame shows a defective part"
         "p_any_defect": 0.573,
@@ -122,6 +155,27 @@ def _sample_class(ds: dict) -> dict:
     return dict(defect_classes[-1])
 
 
+def _choose_frame(ds: dict, chosen_classes: list) -> dict:
+    """Resolve which real sample image backs this frame."""
+    # Severstal: single redistributable strip shared across all classes.
+    if "shared_sample" in ds:
+        return ds["shared_sample"]
+    # Casting: OK frames use the ok_front sample, defective frames use def_front.
+    if ds["id"] == "casting":
+        key = "def_front" if chosen_classes else "ok_front"
+        for c in ds["classes"]:
+            if c["type"] == key and c.get("sample"):
+                return c["sample"]
+    # NEU: use the sampled class's own image, falling back to a random class.
+    if chosen_classes and chosen_classes[0].get("sample"):
+        return chosen_classes[0]["sample"]
+    for c in ds["classes"]:
+        if c.get("sample"):
+            return c["sample"]
+    # Last-resort: synthesise a placeholder frame at the dataset's nominal size.
+    return {"url": None, "native_size": ds["resolution"]}
+
+
 # ══════════════════════════════════════════════════
 # Layer 1: 感知层 (SAM3 + SAM-Audio 模拟)
 # ══════════════════════════════════════════════════
@@ -147,59 +201,72 @@ class PerceptionLayer:
                       dataset: str = None) -> dict:
         """Simulate SAM3 text-prompt detection on a real Kaggle dataset.
 
-        The dataset argument selects a registered source (severstal / neu / casting).
-        Defect class is drawn from the dataset's real class prior, and the image
-        resolution / sample filename mirror the public metadata.
+        Returns a detection record that points at a real sample image re-hosted
+        under /samples/ and carries bounding boxes in the image's native
+        coordinates, so the frontend can overlay boxes on actual defect pixels.
         """
         ds = _dataset(dataset)
         W, H = ds["resolution"]
         p_any = ds.get("p_any_defect", 0.4)
 
         if random.random() < p_any:
-            # Dataset-specific defect count distribution — Severstal allows multi-class
-            # frames, NEU is single-defect, casting is binary.
             if ds["id"] == "severstal":
                 num_defects = random.choices([1, 2, 3], weights=[70, 22, 8])[0]
-            elif ds["id"] == "neu":
-                num_defects = 1
-            else:  # casting
+            else:  # NEU + casting: single-defect frames
                 num_defects = 1
         else:
             num_defects = 0
 
+        # Pick the class(es) this frame exhibits. Each class entry carries its own
+        # real sample image + native-resolution bbox (or a shared image for Severstal).
+        chosen_classes = [_sample_class(ds) for _ in range(num_defects)]
+
+        # Choose the background frame. Casting has distinct OK vs defective samples;
+        # NEU picks the sample that matches the defect class; Severstal reuses the
+        # one redistributable clean strip.
+        frame = _choose_frame(ds, chosen_classes)
+        native_w, native_h = frame["native_size"]
+
         detections = []
-        for _ in range(num_defects):
-            c = _sample_class(ds)
-            area = c["area_px"] or 128
-            # Keep bbox inside the real image frame
-            bw = min(max(int(area * random.uniform(0.6, 1.4)), 20), max(30, W // 4))
-            bh = min(max(int(area * random.uniform(0.6, 1.4)), 20), max(30, H // 2))
-            x = random.randint(0, max(1, W - bw))
-            y = random.randint(0, max(1, H - bh))
+        for c in chosen_classes:
+            # Prefer the real bbox bundled with the class; otherwise clamp the
+            # area hint into the frame's native coordinate system.
+            bbox = c.get("bbox")
+            if bbox is None:
+                area = c.get("area_px") or 128
+                bw = min(max(int(area * random.uniform(0.6, 1.4)), 20),
+                         max(30, native_w // 3))
+                bh = min(max(int(area * random.uniform(0.6, 1.4)), 20),
+                         max(30, native_h // 2))
+                x = random.randint(0, max(1, native_w - bw))
+                y = random.randint(0, max(1, native_h - bh))
+                bbox = [x, y, bw, bh]
             detections.append({
                 "type": c["type"],
                 "label": c["label"],
                 "severity": c["severity"],
-                "area_px": area,
-                "bbox": [x, y, bw, bh],
-                "confidence": round(random.uniform(0.75, 0.99), 3),
+                "area_px": c.get("area_px"),
+                "bbox": bbox,
+                "confidence": round(random.uniform(0.82, 0.98), 3),
                 "prompt": text_prompt,
             })
 
-        # Sample filename drawn from the dataset's naming convention
+        # Sample filename drawn from the dataset's naming convention (for the log line)
         if image_path is None:
             if ds["id"] == "severstal":
                 image_path = f"severstal/{random.randrange(1, ds['total_images']):04x}.jpg"
             elif ds["id"] == "neu":
-                cls = detections[0]["type"] if detections else random.choice(ds["classes"])["type"]
+                cls = chosen_classes[0]["type"] if chosen_classes else random.choice(ds["classes"])["type"]
                 image_path = f"neu-det/{cls}_{random.randint(1, 300)}.jpg"
             else:
-                folder = "def_front" if detections else "ok_front"
+                folder = "def_front" if chosen_classes else "ok_front"
                 image_path = f"casting/{folder}/cast_{folder}_{random.randint(1, 3758):04d}.jpeg"
 
         return {
             "model": "SAM3",
             "image": image_path,
+            "image_url": frame["url"],
+            "native_size": [native_w, native_h],
             "resolution": [W, H],
             "text_prompt": text_prompt,
             "num_detections": len(detections),

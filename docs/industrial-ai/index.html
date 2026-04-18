@@ -75,37 +75,14 @@
         <span id="visual-count" class="tag bg-gray-700 text-gray-300">—</span>
       </div>
       <div class="relative rounded-lg overflow-hidden bg-slate-950" style="aspect-ratio:1/1;">
-        <svg id="visual-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" class="w-full h-full">
-          <defs>
-            <pattern id="electrode" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="#1e293b"/>
-              <line x1="0" y1="0" x2="20" y2="20" stroke="#334155" stroke-width="0.5"/>
-              <line x1="0" y1="10" x2="20" y2="10" stroke="#475569" stroke-width="0.3"/>
-            </pattern>
-            <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="rgba(255,255,255,0.08)"/>
-              <stop offset="50%" stop-color="rgba(255,255,255,0)"/>
-              <stop offset="100%" stop-color="rgba(0,0,0,0.2)"/>
-            </linearGradient>
-            <filter id="roughness">
-              <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
-              <feColorMatrix values="0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.15  0 0 0 0.3 0"/>
-              <feComposite in2="SourceGraphic" operator="in"/>
-            </filter>
-          </defs>
-          <rect width="400" height="400" fill="url(#electrode)"/>
-          <g opacity="0.7">
-            <rect x="20" y="20" width="360" height="50" fill="#475569"/>
-            <rect x="20" y="90" width="360" height="50" fill="#64748b"/>
-            <rect x="20" y="160" width="360" height="50" fill="#475569"/>
-            <rect x="20" y="230" width="360" height="50" fill="#64748b"/>
-            <rect x="20" y="300" width="360" height="50" fill="#475569"/>
-          </g>
-          <rect width="400" height="400" filter="url(#roughness)" opacity="0.5"/>
-          <rect width="400" height="400" fill="url(#shine)"/>
+        <svg id="visual-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet" class="w-full h-full">
+          <rect width="400" height="400" fill="#0a0f1c"/>
+          <!-- Real Kaggle sample image. Defaults to Severstal's one redistributable strip; rewritten on every detect run. -->
+          <image id="visual-image" href="/samples/severstal/sample_01.jpg"
+                 x="0" y="142" width="400" height="116" preserveAspectRatio="xMidYMid meet"/>
           <g id="visual-overlays"></g>
           <line id="scanline" x1="0" y1="0" x2="400" y2="0" stroke="#60a5fa" stroke-width="2" opacity="0" class="scanline"/>
-          <text x="10" y="395" fill="#94a3b8" font-size="10" font-family="monospace">LiFePO4 cell · 400×400px · 1200fps</text>
+          <text id="visual-caption" x="10" y="392" fill="#94a3b8" font-size="10" font-family="monospace">Severstal coil · 1758×256 · Kaggle</text>
         </svg>
       </div>
       <div id="visual-result" class="mt-3 text-xs text-gray-400 space-y-1"></div>
@@ -205,23 +182,57 @@ function animateScan(ms) {
   setTimeout(() => line.setAttribute('opacity', '0'), ms);
 }
 
-function drawBBoxes(detections) {
+// Compute the rect the <image> element will actually occupy inside the 400×400
+// SVG viewport, honoring preserveAspectRatio="xMidYMid meet" so bounding
+// boxes project onto real image pixels rather than the viewport corners.
+function imageViewportRect(nativeW, nativeH) {
+  const V = 400;
+  const s = Math.min(V / nativeW, V / nativeH);
+  const w = nativeW * s, h = nativeH * s;
+  return { x: (V - w) / 2, y: (V - h) / 2, w, h, s };
+}
+
+// Update the <image> background to a real Kaggle sample; return the viewport
+// rect so drawBBoxes can project native-coordinate boxes onto it.
+function setVisualImage(url, nativeSize, caption) {
+  const img = document.getElementById('visual-image');
+  const [nw, nh] = nativeSize || [400, 400];
+  const r = imageViewportRect(nw, nh);
+  if (img) {
+    if (url) img.setAttribute('href', url);
+    img.setAttribute('x', r.x);
+    img.setAttribute('y', r.y);
+    img.setAttribute('width', r.w);
+    img.setAttribute('height', r.h);
+  }
+  const cap = document.getElementById('visual-caption');
+  if (cap && caption) cap.textContent = caption;
+  return r;
+}
+
+function drawBBoxes(detections, nativeSize) {
   const g = $('#visual-overlays');
   g.innerHTML = '';
+  const [nw, nh] = nativeSize || [400, 400];
+  const r = imageViewportRect(nw, nh);
   (detections || []).forEach((d, i) => {
-    const [x, y, w, h] = d.bbox || [50 + i * 80, 80 + i * 60, 60, 50];
-    const cx = Math.min(340, Math.max(20, x * 0.2));
-    const cy = Math.min(340, Math.max(20, y * 0.35));
-    const cw = Math.min(100, Math.max(30, w * 0.25));
-    const ch = Math.min(80, Math.max(25, h * 0.25));
+    const [bx, by, bw, bh] = d.bbox || [nw * 0.3, nh * 0.3, nw * 0.2, nh * 0.2];
+    // Project native-coord bbox into the SVG viewport.
+    const cx = r.x + bx * r.s;
+    const cy = r.y + by * r.s;
+    const cw = Math.max(6, bw * r.s);
+    const ch = Math.max(6, bh * r.s);
     const cls = d.severity === 'high' ? 'bbox' : d.severity === 'medium' ? 'bbox bbox-warn' : 'bbox bbox-ok';
     const color = d.severity === 'high' ? '#ef4444' : d.severity === 'medium' ? '#fbbf24' : '#10b981';
+    const labelText = `${d.label || d.type || 'defect'} ${Math.round((d.confidence || 0.9) * 100)}%`;
+    const labelW = Math.min(260, Math.max(90, labelText.length * 6));
+    const labelY = Math.max(14, cy - 18);
     g.innerHTML += `
       <g>
         <rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" class="${cls}" rx="2"/>
-        <rect x="${cx}" y="${cy - 18}" width="${cw + 40}" height="16" fill="${color}" opacity="0.85" rx="2"/>
-        <text x="${cx + 4}" y="${cy - 6}" fill="#fff" font-size="10" font-family="monospace" font-weight="bold">
-          ${d.label || d.type || 'defect'} ${Math.round((d.confidence || 0.9) * 100)}%
+        <rect x="${cx}" y="${labelY}" width="${labelW}" height="16" fill="${color}" opacity="0.9" rx="2"/>
+        <text x="${cx + 4}" y="${labelY + 12}" fill="#fff" font-size="10" font-family="monospace" font-weight="bold">
+          ${labelText}
         </text>
       </g>`;
   });
@@ -444,10 +455,14 @@ async function runDetect() {
     const visuals = data.visual?.detections || [];
     const audios = data.audio?.anomalies || [];
     const res = data.visual?.resolution;
+    const nativeSize = data.visual?.native_size || res;
+    const imgUrl = data.visual?.image_url;
+    const dsName = data.visual?.dataset?.name || 'Kaggle sample';
+    setVisualImage(imgUrl, nativeSize, `${dsName} · ${nativeSize?.[0] || '?'}×${nativeSize?.[1] || '?'}`);
     if (res) log(`  source: ${data.visual.image} · ${res[0]}×${res[1]}px`, 'output');
     log(`  visual: ${visuals.length} defects found`, 'output');
     log(`  audio: ${audios.length} anomalies detected`, 'output');
-    drawBBoxes(visuals);
+    drawBBoxes(visuals, nativeSize);
     drawSpectrogram(audios);
     $('#visual-count').textContent = `${visuals.length} defects`;
     $('#visual-count').className = 'tag ' + (visuals.length ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300');
@@ -581,14 +596,29 @@ $('#btn-detect').addEventListener('click', runDetect);
 $('#btn-predict').addEventListener('click', runPredict);
 $('#btn-diagnose').addEventListener('click', runDiagnose);
 $('#btn-run-all').addEventListener('click', runAll);
+// Preview image shown before any detection runs — one clean sample per dataset.
+const DATASET_PREVIEW = {
+  severstal: { url: '/samples/severstal/sample_01.jpg', native: [1758, 256], caption: 'Severstal coil · 1758×256 · Kaggle' },
+  neu:       { url: '/samples/neu/patches_1.jpg',       native: [200, 200],  caption: 'NEU-DET patches · 200×200 · Kaggle' },
+  casting:   { url: '/samples/casting/def_front.jpeg',  native: [300, 300],  caption: 'Casting impeller (defective) · 300×300 · Kaggle' },
+};
+function applyDatasetPreview() {
+  const p = DATASET_PREVIEW[currentDataset()] || DATASET_PREVIEW.severstal;
+  setVisualImage(p.url, p.native, p.caption);
+  const g = document.getElementById('visual-overlays');
+  if (g) g.innerHTML = '';
+}
+
 $('#dataset-select').addEventListener('change', () => {
   const found = (window.__DATASETS__ || []).find(d => d.id === currentDataset());
   if (found) renderDatasetBanner(found);
+  applyDatasetPreview();
   log(`<span class="highlight">&#128193; dataset → ${currentDataset()}</span>`, 'highlight');
 });
 
 drawSpectrogram([{type:'bg', freq_hz: 500, confidence: 0.0}]);
 drawPrediction({values: Array.from({length: 72}, (_, i) => 0.96 - i * 0.0005 + (Math.random() - 0.5) * 0.003), trend: '-0.05%/day'}, null);
+applyDatasetPreview();
 loadDatasetInfo();
 </script>
 </body>
