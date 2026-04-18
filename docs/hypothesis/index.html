@@ -44,17 +44,25 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
     <div class="card p-5">
-      <div class="flex items-center gap-2 mb-3">
+      <div class="flex items-center gap-2 mb-3 flex-wrap">
         <select id="preset" class="text-sm">
-          <option value="0">AI market 2026</option>
-          <option value="1">Enterprise AI trends</option>
-          <option value="2">LLM economics</option>
-          <option value="3">Multi-agent systems</option>
-          <option value="4">AI safety debate</option>
+          <optgroup label="a16z — real articles">
+            <option value="0">a16z · Frontier Systems for Physical World (Nov 2025)</option>
+            <option value="1">a16z · Prediction Markets: They Grow Up (Nov 2025)</option>
+            <option value="2">a16z · Big Ideas 2025 — AI moats (Dec 2024)</option>
+            <option value="3">a16z · The Little Tech Agenda (Marc Andreessen)</option>
+          </optgroup>
+          <optgroup label="Classic — synthetic">
+            <option value="4">AI market 2026 · synthetic</option>
+            <option value="5">LLM economics · synthetic</option>
+            <option value="6">Multi-agent systems · synthetic</option>
+          </optgroup>
         </select>
         <button id="analyze" class="btn" data-en="Analyze" data-zh="分析">Analyze</button>
+        <a id="source-link" href="#" target="_blank" rel="noopener" class="text-xs text-blue-400 hover:text-blue-300 underline hidden">source ↗</a>
         <span id="status" class="text-sm text-gray-400"></span>
       </div>
+      <div id="preset-meta" class="text-xs text-gray-500 mb-2"></div>
       <textarea id="input" rows="20" class="w-full text-sm"></textarea>
     </div>
     <div class="card p-5">
@@ -73,17 +81,79 @@
 </div>
 
 <script>
+// Real-world excerpts from a16z articles (verbatim quotes woven into a natural paragraph)
+// followed by synthetic examples for comparison.
 const PRESETS = [
-`The AI market will reach $1.3T by 2030, with 62% of enterprises planning production deployments in 2026. However, contrary to hype, only 23% of current pilots move to production. Vendors should focus on verticalized workflows rather than horizontal platforms. The strategy must shift from model-as-product to outcome-as-product. AI agents today still hallucinate in critical paths — a real unsolved problem.`,
-`Enterprise AI adoption hit 78% in 2026, up from 41% in 2024. Gartner reports average spend per enterprise is $4.8M annually. However, many deployments stall at POC. Companies must invest in data readiness before agent rollouts. The winning strategy is top-down executive sponsorship combined with bottom-up tooling choices.`,
-`Training a frontier model now costs $200M+, up 3.5x from 2024. But inference costs have dropped 80% in 18 months. Contrary to expectations, model commoditization is accelerating, not slowing. Vendors should pursue specialized fine-tunes over general-purpose scale. The economics favor distillation and mixture-of-experts.`,
-`Multi-agent frameworks now handle 45% of enterprise agent workloads. However, orchestration bugs cause 1 in 4 production incidents. Teams must design for graceful degradation and human handoff. The strategy is fewer, smarter agents over swarms.`,
-`AI safety incidents reached 340 documented cases in 2025, up 2.1x YoY. However, framework regulations remain inconsistent across jurisdictions. Companies should adopt internal red-team requirements before shipping. The key strategy: treat safety as a product feature, not compliance overhead.`
+  // 0 — a16z · Frontier Systems for Physical World (Nov 2025)
+  {
+    title: "Frontier Systems for the Physical World",
+    source: "a16z · November 2025",
+    url: "https://a16z.com/frontier-systems-for-the-physical-world/",
+    text: `Even 95% per-step success yields only 60% on a 10-step task chain, which is why reliability remains robotics' central bottleneck. Recent work shows that π*₀.₆ more than doubles throughput and cuts failure rates by half or more compared to the imitation-only baseline when reinforcement learning is applied to robot tasks. Contrary to the assumption that language models dominate AI progress, these systems represent an incumbent paradigm with diminishing returns. Rather than continuing this path, physical world AI offers an almost unbounded supply of novel problems, data types, feedback signals, and evaluation criteria. However, current Vision-Language-Action models inherit 2D visual features rather than understanding true 3D environments, creating fundamental representation gaps that spatial intelligence must address for genuine physical reasoning. Companies should dispense with both pretrained VLMs and video diffusion backbones entirely, and instead train native embodied foundation models on real interaction data. Investment in simulation infrastructure has outsized leverage on the entire ecosystem and should receive prioritized capital allocation. The critique is sharp: treating robotics as a downstream consumer of NLP-era models misreads where the frontier actually lives.`
+  },
+  // 1 — a16z · Prediction Markets (Nov 2025)
+  {
+    title: "Prediction Markets: They Grow Up So Fast",
+    source: "a16z · November 2025",
+    url: "https://a16z.com/prediction-markets-they-grow-up-so-fast/",
+    text: `The prediction market industry is experiencing unexpected growth patterns that defy conventional wisdom. Sports as a share of total volume was actually at an all-time low even as its absolute volume hit an all-time high — a counterintuitive trend that reveals a maturing market. Entertainment, crypto, politics, and culture categories are growing faster than the dominant sports segment, suggesting prediction markets have transcended their initial identity as election-cycle curiosities. However, significant structural limitations constrain institutional adoption: traders must post the full notional value as collateral, meaning a $100 hedge requires $100 in the clearinghouse. A Citadel or Millennium wouldn't do this — the current mechanics exclude sophisticated participants operating on leverage ratios. The industry must prioritize margin trading implementation to unlock institutional capital. Kalshi's recent NFA licensing and CFTC discussions around margin represent essential infrastructure improvements, not optional enhancements. The benchmark problem prediction markets solve is substantial: traditional markets offer agreed-upon benchmarks for every major asset, yet political and economic events previously lacked credible pricing mechanisms. Success ultimately requires normalization — moving beyond novelty toward invisibility, where the technology becomes so mundane that market participants stop questioning whether to use prediction markets and instead focus on how.`
+  },
+  // 2 — a16z · Big Ideas 2025 (AI moats, Dec 2024)
+  {
+    title: "Big Ideas 2025 — AI moats",
+    source: "a16z · David Haber · Dec 2024",
+    url: "https://a16z.com/big-ideas-in-tech-2025/",
+    text: `AI has become the ultimate driver of differentiation, transforming software into labor across industries. However, there is a critical counterpoint: while 2024 startups chased messy inbox problems, 2025 demands founders distinguish between temporary competitive advantage and lasting moats. Merely solving a wedge problem 10x better isn't sufficient. Companies must build defensibility through network effects, switching costs, and product virality — the timeless factors that still matter. Startups that conflate the two risk being outflanked by more strategic competitors. The strategic imperative is clear: founders should prioritize expansion into adjacent workflows and core systems of record, not just optimize narrow use cases. This contrasts sharply with the prevailing narrative that AI differentiation automatically creates durable competitive advantages. Without deliberate moat-building, even technically superior AI solutions remain vulnerable to better-capitalized incumbents entering the market. The critique lands on a generation of AI-native startups who assume product velocity alone will preserve them — it will not.`
+  },
+  // 3 — a16z · The Little Tech Agenda (Marc Andreessen + Ben Horowitz)
+  {
+    title: "The Little Tech Agenda",
+    source: "a16z · Marc Andreessen & Ben Horowitz",
+    url: "https://a16z.com/the-little-tech-agenda/",
+    text: `Productivity growth today, after 50 years of the proliferation of the profoundly powerful technologies of the computer and the Internet, is lower than before the 1970's. Government hostility toward startups represents the core problem. Regulatory agencies have been green lit to use brute force investigations, prosecutions, intimidation, and threats to hobble new industries such as Blockchain, and are simultaneously targeting artificial intelligence development. Immediate policy reversals are required: regulatory capture in healthcare, education, and housing must be stripped away to drive higher quality at lower prices. Policymakers should expand high-skilled immigration and launch a whole-of-government program to drive the success of US technology companies globally, against a hostile China and a regulation-crazed EU. Contrary to widespread belief that America's best days are behind us, there is no reason the 21st Century cannot become a Second American Century if government genuinely enables startup innovation and competition rather than protecting incumbent interests. The critique is direct: incumbent-protection masquerades as consumer protection, and little tech has paid the price.`
+  },
+  // 4 — synthetic (kept for comparison)
+  {
+    title: "AI market 2026",
+    source: "Synthetic example",
+    url: null,
+    text: `The AI market will reach $1.3T by 2030, with 62% of enterprises planning production deployments in 2026. However, contrary to hype, only 23% of current pilots move to production. Vendors should focus on verticalized workflows rather than horizontal platforms. The strategy must shift from model-as-product to outcome-as-product. AI agents today still hallucinate in critical paths — a real unsolved problem.`
+  },
+  // 5 — synthetic
+  {
+    title: "LLM economics",
+    source: "Synthetic example",
+    url: null,
+    text: `Training a frontier model now costs $200M+, up 3.5x from 2024. But inference costs have dropped 80% in 18 months. Contrary to expectations, model commoditization is accelerating, not slowing. Vendors should pursue specialized fine-tunes over general-purpose scale. The economics favor distillation and mixture-of-experts.`
+  },
+  // 6 — synthetic
+  {
+    title: "Multi-agent systems",
+    source: "Synthetic example",
+    url: null,
+    text: `Multi-agent frameworks now handle 45% of enterprise agent workloads. However, orchestration bugs cause 1 in 4 production incidents. Teams must design for graceful degradation and human handoff. The strategy is fewer, smarter agents over swarms.`
+  }
 ];
 
 const $ = id => document.getElementById(id);
 
-function loadPreset() { $('input').value = PRESETS[+$('preset').value]; }
+function loadPreset() {
+  const p = PRESETS[+$('preset').value];
+  if (!p) return;
+  $('input').value = p.text;
+  $('preset-meta').textContent = `${p.source} · ${p.text.length} chars`;
+  const link = $('source-link');
+  if (p.url) {
+    link.href = p.url;
+    link.classList.remove('hidden');
+  } else {
+    link.classList.add('hidden');
+  }
+  // Clear previous results when switching preset
+  $('annotated').innerHTML = '';
+  $('json').textContent = '{ }';
+  $('status').textContent = '';
+}
 $('preset').addEventListener('change', loadPreset);
 loadPreset();
 
