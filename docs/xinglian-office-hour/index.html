@@ -23,9 +23,11 @@
   .tab { padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid rgba(100,100,150,0.2); font-size: 14px; font-weight: 500; }
   .tab.active { background: linear-gradient(135deg, #ef4444, #f59e0b); color: white; border-color: transparent; }
   .tab:not(.active):hover { background: rgba(100,100,150,0.15); }
-  .btn { background: linear-gradient(135deg, #ef4444, #f59e0b); color: white; padding: 10px 22px; border-radius: 10px; font-weight: 600; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-sec { background: rgba(100,100,150,0.15); border: 1px solid rgba(100,100,150,0.3); padding: 10px 22px; border-radius: 10px; color: #e2e8f0; font-weight: 500; }
+  .btn { background: linear-gradient(135deg, #ef4444, #f59e0b); color: white; padding: 10px 22px; border-radius: 10px; font-weight: 600; transition: all 0.2s; }
+  .btn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-sec { background: rgba(100,100,150,0.15); border: 1px solid rgba(100,100,150,0.3); padding: 10px 22px; border-radius: 10px; color: #e2e8f0; font-weight: 500; transition: all 0.2s; }
+  .btn-sec:hover { background: rgba(100,100,150,0.25); }
   #lang-toggle { cursor: pointer; transition: all 0.2s; }
   #lang-toggle:hover { background: rgba(239,68,68,0.2); }
   .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
@@ -33,9 +35,20 @@
   .score-mid { background: rgba(251,191,36,0.15); color: #fcd34d; border: 1px solid rgba(251,191,36,0.3); }
   .score-high { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
   .tag { font-size: 0.68rem; padding: 3px 9px; border-radius: 9999px; background: rgba(100,100,150,0.2); border: 1px solid rgba(100,100,150,0.3); }
-  .typing { display: inline-block; }
-  .typing::after { content: '▊'; color: #fbbf24; animation: blink 1s step-end infinite; margin-left: 2px; }
-  @keyframes blink { 50% { opacity: 0; } }
+  /* Beat reveal animation — replaces the old typing auto-scroll */
+  .beat { opacity: 0; transform: translateY(8px); transition: opacity 400ms ease, transform 400ms ease; }
+  .beat.shown { opacity: 1; transform: translateY(0); }
+  .thinking { display: inline-flex; gap: 3px; padding: 6px 10px; }
+  .thinking span { width: 5px; height: 5px; background: #fbbf24; border-radius: 9999px; animation: dot 1.2s infinite; }
+  .thinking span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%,60%,100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+  kbd { background: #1e293b; border: 1px solid #334155; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #cbd5e1; }
+  .progress-dots { display: flex; gap: 4px; align-items: center; }
+  .progress-dots .dot { width: 7px; height: 7px; border-radius: 9999px; background: rgba(100,100,150,0.3); transition: all 0.3s; }
+  .progress-dots .dot.done { background: rgba(251,191,36,0.6); }
+  .progress-dots .dot.current { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; transform: scale(1.3); }
+  .github-ribbon { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(245,158,11,0.1)); border: 1px solid rgba(239,68,68,0.3); }
 </style>
 </head>
 <body class="min-h-screen">
@@ -65,6 +78,24 @@
     </div>
   </div>
 
+  <!-- GitHub ribbon (get the skill) -->
+  <div class="github-ribbon rounded-xl p-5 mb-8 flex items-center gap-4 flex-wrap">
+    <div class="text-3xl flex-shrink-0">📦</div>
+    <div class="flex-1 min-w-0">
+      <div class="text-white font-semibold mb-1" data-en="Get the skill on GitHub" data-zh="在 GitHub 获取这个 skill">在 GitHub 获取这个 skill</div>
+      <div class="text-sm text-gray-400" data-en="Single SKILL.md file (44 KB). Drop it into ~/.claude/skills/ and type /xinglian-office-hour in any Claude Code session." data-zh="单个 SKILL.md 文件（44 KB）。放到 ~/.claude/skills/ 下，在任何 Claude Code 会话里输入 /xinglian-office-hour 就能用。">单个 SKILL.md 文件（44 KB）。放到 <code class="text-orange-400">~/.claude/skills/</code> 下，在任何 Claude Code 会话里输入 <code class="text-orange-400">/xinglian-office-hour</code> 就能用。</div>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <a href="https://github.com/fxp/sa-ai-toolkit/tree/main/docs/xinglian-office-hour/skill" target="_blank" class="btn inline-flex items-center gap-2 text-sm">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58 0-.29-.01-1.05-.02-2.06-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.83 1.23 1.83 1.23 1.07 1.83 2.81 1.3 3.5.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.39 1.24-3.23-.12-.3-.54-1.53.12-3.19 0 0 1-.32 3.3 1.23.96-.27 1.98-.4 3-.41 1.02.01 2.04.14 3 .41 2.3-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.89.12 3.19.77.84 1.24 1.92 1.24 3.23 0 4.62-2.81 5.65-5.49 5.94.43.37.81 1.1.81 2.22 0 1.6-.02 2.89-.02 3.28 0 .32.22.7.83.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span data-en="View on GitHub" data-zh="GitHub 源码">GitHub 源码</span>
+      </a>
+      <a href="skill/SKILL.md" target="_blank" class="btn-sec inline-flex items-center gap-2 text-sm">
+        <span>📄</span><span data-en="SKILL.md" data-zh="SKILL.md">SKILL.md</span>
+      </a>
+    </div>
+  </div>
+
   <!-- What makes it unique -->
   <div class="card p-6 mb-8">
     <h2 class="text-xl font-bold text-white mb-3" data-en="What makes this different from a generic office hour" data-zh="它和通用创业导师有什么不同">它和通用创业导师有什么不同</h2>
@@ -86,16 +117,16 @@
 
   <!-- Scenario tabs -->
   <div class="mb-4">
-    <div class="text-sm text-gray-400 mb-3" data-en="Try three real scenarios. These are actual transcripts from Claude Opus 4.7 running the skill:" data-zh="三个真实场景。以下是 Claude Opus 4.7 运行此 skill 的真实对话记录：">三个真实场景。以下是 Claude Opus 4.7 运行此 skill 的真实对话记录：</div>
+    <div class="text-sm text-gray-400 mb-3" data-en="Three real scenarios. Transcripts from Claude Opus 4.7 running the skill." data-zh="三个真实场景。Claude Opus 4.7 运行此 skill 的真实对话记录。">三个真实场景。Claude Opus 4.7 运行此 skill 的真实对话记录。</div>
     <div class="flex flex-wrap gap-2">
       <div class="tab active" data-scenario="5">
-        <span data-en="🔥 Demo 5: Hard fight with big tech" data-zh="🔥 Demo 5：大厂硬刚">🔥 Demo 5：大厂硬刚</span>
+        <span data-en="🔥 Demo: Big-tech showdown" data-zh="🔥 Demo：大厂硬刚">🔥 Demo：大厂硬刚</span>
       </div>
       <div class="tab" data-scenario="2">
-        <span data-en="🏆 Demo 2: Tsinghua Infra (hero case)" data-zh="🏆 Demo 2：清华系 Infra（英雄场景）">🏆 Demo 2：清华系 Infra（英雄场景）</span>
+        <span data-en="🏆 Demo: Tsinghua Infra" data-zh="🏆 Demo：清华系 Infra">🏆 Demo：清华系 Infra</span>
       </div>
       <div class="tab" data-scenario="1">
-        <span data-en="💀 Demo 1: GPT wrapper (death in 2 rounds)" data-zh="💀 Demo 1：套壳 SaaS（两轮死亡）">💀 Demo 1：套壳 SaaS（两轮死亡）</span>
+        <span data-en="💀 Demo: GPT wrapper" data-zh="💀 Demo：套壳 SaaS">💀 Demo：套壳 SaaS</span>
       </div>
     </div>
   </div>
@@ -117,15 +148,32 @@
         <div class="text-xs uppercase tracking-wider text-gray-500 mb-2" data-en="What's unique here" data-zh="这一轮的独特火力">这一轮的独特火力</div>
         <ul id="unique-fires" class="text-sm text-gray-300 space-y-1.5 list-disc pl-5"></ul>
       </div>
-      <div class="flex gap-2">
-        <button id="replay" class="btn flex-1" data-en="▶ Replay" data-zh="▶ 重播">▶ 重播</button>
-        <button id="skip" class="btn-sec flex-1" data-en="⏭ Skip to end" data-zh="⏭ 跳到末尾">⏭ 跳到末尾</button>
+      <div class="card p-4">
+        <div class="text-xs uppercase tracking-wider text-gray-500 mb-2" data-en="Keyboard" data-zh="键盘">键盘</div>
+        <div class="text-xs text-gray-400 space-y-1.5">
+          <div><kbd data-en="Space" data-zh="空格">空格</kbd> / <kbd>→</kbd> <span data-en="Next beat" data-zh="下一拍">下一拍</span></div>
+          <div><kbd>R</kbd> <span data-en="Replay" data-zh="重新开始">重新开始</span></div>
+          <div><kbd>S</kbd> <span data-en="Show all" data-zh="全部显示">全部显示</span></div>
+        </div>
       </div>
     </div>
 
-    <!-- Right: chat replay -->
+    <!-- Right: chat (beat-by-beat reveal) -->
     <div class="md:col-span-8">
+      <div class="flex items-center gap-3 mb-3 flex-wrap">
+        <button id="next-btn" class="btn inline-flex items-center gap-2">
+          <span data-en="Next beat" data-zh="下一拍">下一拍</span>
+          <span class="text-lg leading-none">▸</span>
+        </button>
+        <button id="replay" class="btn-sec text-sm" data-en="↻ Replay" data-zh="↻ 重新开始">↻ 重新开始</button>
+        <button id="skip" class="btn-sec text-sm" data-en="⇉ Show all" data-zh="⇉ 全部显示">⇉ 全部显示</button>
+        <div class="ml-auto flex items-center gap-3">
+          <span id="beat-counter" class="text-xs text-gray-500"></span>
+          <div id="beat-dots" class="progress-dots"></div>
+        </div>
+      </div>
       <div id="chat" class="chat"></div>
+      <div class="text-xs text-gray-500 mt-2 text-center" data-en="Press Space or → to advance. Each beat is a single rhetorical move." data-zh="按 空格 / → 继续下一拍。每一拍是导师的一次独立火力。">按 <kbd>空格</kbd> / <kbd>→</kbd> 继续下一拍。每一拍是导师的一次独立火力。</div>
     </div>
   </div>
 
@@ -271,22 +319,34 @@ function applyLang() {
   document.querySelectorAll("[data-en-placeholder][data-zh-placeholder]").forEach(el => {
     el.placeholder = el.dataset[lang + "Placeholder"];
   });
-  renderCurrent(true); // re-render chat
+  // Note: chat rendering is controlled separately so beat progress is preserved
+  // across language toggles.
 }
 document.getElementById("lang-toggle").onclick = () => {
   lang = lang === "zh" ? "en" : "zh";
   localStorage.setItem("xlh-lang", lang);
+  const prev = beatIdx;
   applyLang();
+  // Preserve the user's progress through the conversation after a language flip.
+  renderCurrent(false);
+  while (beatIdx < prev && beatIdx < beats.length) {
+    // Use inner mechanism — bypass the "thinking" show-between-user-and-mentor.
+    removeThinking();
+    revealNextBeat();
+  }
+  removeThinking();
 };
 
-// ==== Scenario rendering ====
+// ==== Scenario rendering (beat-by-beat, user-controlled) ====
 let currentId = "5";
-let typingTimer = null;
-let abort = false;
+let beats = [];        // flat list: { turn, beatHtml, isFirstOfTurn, who }
+let beatIdx = 0;       // next beat to reveal (0..beats.length)
+let thinkingEl = null; // transient ellipsis indicator
 
 function renderScoreBadge(s) {
   const cls = s.tier === "high" ? "score-high" : s.tier === "mid" ? "score-mid" : "score-low";
-  return `<span class="score-badge ${cls}">${s.start}/40</span> <span class="text-gray-500 mx-1">→</span> <span class="score-badge ${cls === "score-low" ? "score-mid" : "score-high"}">${s.end}/40</span>`;
+  const endCls = s.tier === "low" ? "score-mid" : "score-high";
+  return `<span class="score-badge ${cls}">${s.start}/40</span> <span class="text-gray-500 mx-1">→</span> <span class="score-badge ${endCls}">${s.end}/40</span>`;
 }
 
 function renderSide() {
@@ -303,42 +363,147 @@ function renderSide() {
   });
 }
 
-function appendTurn(turn, idx) {
-  const div = document.createElement("div");
-  div.className = turn.who === "user" ? "bubble-user" : "bubble-mentor";
-  const label = document.createElement("div");
-  label.className = "text-xs uppercase tracking-wider mb-1.5 " + (turn.who === "user" ? "text-blue-400" : "text-orange-400");
-  label.textContent = turn.who === "user"
-    ? (lang === "zh" ? "创业者" : "Founder")
-    : (lang === "zh" ? "星连导师" : "Xinglian Mentor");
-  div.appendChild(label);
-  const body = document.createElement("div");
-  body.innerHTML = turn["md_" + lang];
-  div.appendChild(body);
-  document.getElementById("chat").appendChild(div);
-  div.scrollIntoView({ behavior: "smooth", block: "end" });
+// Split a mentor HTML into beats on divider markers.
+// Each beat is kept as complete HTML (no broken tags).
+function splitMentorBeats(html) {
+  // Split on the divider div — it's a clean break marker embedded in our content.
+  const parts = html.split(/<div class="divider"><\/div>/);
+  // Trim empty/whitespace-only parts (defensive)
+  return parts.map(p => p.trim()).filter(p => p.length > 0);
 }
 
-function renderCurrent(instant = false) {
-  abort = true;
-  clearTimeout(typingTimer);
+// Build the flat beat list for the current scenario.
+function buildBeats() {
+  const sc = SCENARIOS[currentId];
+  const out = [];
+  sc.turns.forEach(turn => {
+    const html = turn["md_" + lang];
+    if (turn.who === "user") {
+      out.push({ who: "user", html, isFirstOfTurn: true });
+    } else {
+      const parts = splitMentorBeats(html);
+      parts.forEach((part, i) => {
+        out.push({ who: "mentor", html: part, isFirstOfTurn: i === 0 });
+      });
+    }
+  });
+  return out;
+}
+
+function removeThinking() {
+  if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+  thinkingEl = null;
+}
+
+function showThinking() {
+  removeThinking();
+  const d = document.createElement("div");
+  d.className = "bubble-mentor beat shown";
+  d.style.marginBottom = "14px";
+  d.innerHTML = `<div class="text-xs uppercase tracking-wider mb-1.5 text-orange-400">${lang === "zh" ? "星连导师" : "Xinglian Mentor"}</div><div class="thinking"><span></span><span></span><span></span></div>`;
+  document.getElementById("chat").appendChild(d);
+  thinkingEl = d;
+  d.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+// Reveal the next beat into the chat panel with a fade-in animation.
+function revealNextBeat() {
+  if (beatIdx >= beats.length) return;
+  removeThinking();
+  const beat = beats[beatIdx];
+  const chat = document.getElementById("chat");
+
+  let container;
+  if (beat.isFirstOfTurn) {
+    // Start a new bubble
+    container = document.createElement("div");
+    container.className = beat.who === "user" ? "bubble-user beat" : "bubble-mentor beat";
+    const label = document.createElement("div");
+    label.className = "text-xs uppercase tracking-wider mb-1.5 " + (beat.who === "user" ? "text-blue-400" : "text-orange-400");
+    label.textContent = beat.who === "user"
+      ? (lang === "zh" ? "创业者" : "Founder")
+      : (lang === "zh" ? "星连导师" : "Xinglian Mentor");
+    container.appendChild(label);
+    const body = document.createElement("div");
+    body.innerHTML = beat.html;
+    container.appendChild(body);
+    chat.appendChild(container);
+  } else {
+    // Continue in the current mentor bubble — append a divider and the next chunk.
+    // Find the last mentor bubble in the chat.
+    const mentorBubbles = chat.querySelectorAll(".bubble-mentor");
+    const last = mentorBubbles[mentorBubbles.length - 1];
+    // Wrap the new chunk in its own animated block inside the bubble.
+    const divider = document.createElement("div");
+    divider.className = "divider beat";
+    last.appendChild(divider);
+    const body = document.createElement("div");
+    body.className = "beat";
+    body.innerHTML = beat.html;
+    last.appendChild(body);
+    container = body;
+    // Also animate the divider
+    requestAnimationFrame(() => {
+      divider.classList.add("shown");
+    });
+  }
+
+  // Trigger the fade-in on the newly added block.
+  requestAnimationFrame(() => {
+    container.classList.add("shown");
+    container.scrollIntoView({ behavior: "smooth", block: "end" });
+  });
+
+  beatIdx++;
+  updateControls();
+
+  // If the just-revealed beat is a user turn and there's a mentor beat coming next,
+  // show a "thinking..." indicator so the next click feels like the mentor is formulating.
+  if (beat.who === "user" && beatIdx < beats.length && beats[beatIdx].who === "mentor") {
+    showThinking();
+  }
+}
+
+function updateControls() {
+  const total = beats.length;
+  const done = beatIdx;
+  document.getElementById("beat-counter").textContent = lang === "zh"
+    ? `节拍 ${Math.min(done, total)} / ${total}`
+    : `Beat ${Math.min(done, total)} / ${total}`;
+
+  const dotsEl = document.getElementById("beat-dots");
+  dotsEl.innerHTML = "";
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement("span");
+    d.className = "dot" + (i < done - 1 ? " done" : i === done - 1 ? " current" : "");
+    dotsEl.appendChild(d);
+  }
+
+  const nextBtn = document.getElementById("next-btn");
+  if (done >= total) {
+    nextBtn.disabled = true;
+    nextBtn.innerHTML = `<span>${lang === "zh" ? "会话结束" : "End of session"}</span>`;
+    removeThinking();
+  } else {
+    nextBtn.disabled = false;
+    nextBtn.innerHTML = `<span>${lang === "zh" ? "下一拍" : "Next beat"}</span><span class="text-lg leading-none">▸</span>`;
+  }
+}
+
+function renderCurrent(showAll = false) {
+  removeThinking();
   renderSide();
   document.getElementById("chat").innerHTML = "";
-  const turns = SCENARIOS[currentId].turns;
-  if (instant) {
-    turns.forEach((t, i) => appendTurn(t, i));
-    return;
+  beats = buildBeats();
+  beatIdx = 0;
+  updateControls();
+  if (showAll) {
+    while (beatIdx < beats.length) revealNextBeat();
+    removeThinking();
+  } else {
+    // Auto-reveal the first user turn so the founder's opener is visible on load.
+    if (beats.length > 0) revealNextBeat();
   }
-  // staggered reveal for dramatic effect
-  abort = false;
-  let i = 0;
-  const next = () => {
-    if (abort || i >= turns.length) return;
-    appendTurn(turns[i], i);
-    i++;
-    typingTimer = setTimeout(next, turns[i - 1].who === "user" ? 500 : 1400);
-  };
-  next();
 }
 
 document.querySelectorAll(".tab").forEach(t => {
@@ -349,10 +514,28 @@ document.querySelectorAll(".tab").forEach(t => {
     renderCurrent(false);
   };
 });
+document.getElementById("next-btn").onclick = revealNextBeat;
 document.getElementById("replay").onclick = () => renderCurrent(false);
 document.getElementById("skip").onclick = () => renderCurrent(true);
 
+// Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+  // Don't swallow when user is typing in an input (none on this page, but defensive).
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.code === "Space" || e.code === "ArrowRight") {
+    e.preventDefault();
+    if (beatIdx < beats.length) revealNextBeat();
+  } else if (e.code === "KeyR") {
+    renderCurrent(false);
+  } else if (e.code === "KeyS") {
+    renderCurrent(true);
+  }
+});
+
+// Initial render: apply language, then kick off the first scenario with the
+// founder's opener already visible (so the page isn't empty on load).
 applyLang();
+renderCurrent(false);
 </script>
 </body>
 </html>
