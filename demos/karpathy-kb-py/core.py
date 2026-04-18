@@ -617,3 +617,249 @@ def lint_kb(concepts: List[Dict[str, Any]]) -> Dict[str, Any]:
         "avg_attributes_per_concept": avg_attrs,
         "avg_evidence_per_concept": avg_evidence,
     }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 6. wiki → outputs — compilation layer
+#    Karpathy's point: the wiki isn't the product, it's a substrate for
+#    queryable compiled artifacts (briefs, comparisons, graphs, timelines).
+# ══════════════════════════════════════════════════════════════════════════
+
+def build_graph(concepts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Convert the wiki into a node-edge graph for force-directed rendering.
+
+    Nodes carry {type, confidence, attr_count, evidence_count, has_contradiction};
+    edges are undirected co-occurrence links deduped across both directions.
+    The frontend can feed this straight into cytoscape.js / d3-force.
+    """
+    nodes = []
+    for c in concepts or []:
+        attrs = c.get("attributes") or {}
+        has_conflict = any(" / " in str(v) for v in attrs.values())
+        nodes.append({
+            "id": c["name"],
+            "label": c["name"],
+            "type": c.get("type") or "claim",
+            "confidence": round(c.get("confidence") or 0.5, 3),
+            "attr_count": len(attrs),
+            "evidence_count": len(c.get("evidence") or []),
+            "has_contradiction": has_conflict,
+        })
+    edges: List[Dict[str, Any]] = []
+    seen_pairs: set = set()
+    name_set = {n["id"] for n in nodes}
+    for c in concepts or []:
+        for link in c.get("cross_links") or []:
+            if link not in name_set or link == c["name"]:
+                continue
+            pair = tuple(sorted([c["name"], link]))
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+            edges.append({"source": pair[0], "target": pair[1]})
+    # Simple clustering hint: count per-type for quick colour legend
+    type_counts: Dict[str, int] = defaultdict(int)
+    for n in nodes:
+        type_counts[n["type"]] += 1
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "type_counts": dict(type_counts),
+        "num_contradictions": sum(1 for n in nodes if n["has_contradiction"]),
+    }
+
+
+def compare_concepts(
+    concepts: List[Dict[str, Any]],
+    names: List[str],
+) -> Dict[str, Any]:
+    """Pivot attributes across a selected subset of concepts.
+
+    Returns a matrix {metric: {concept_name: value}} plus per-row flags for
+    contradictions (value contains ' / ') and missing entries. This is the
+    classic 'comparison table' output that's normally painful to produce
+    from prose but trivial from a structured wiki.
+    """
+    if not names:
+        return {"selected": [], "metrics": [], "rowcount": 0}
+
+    selected = [c for c in (concepts or []) if c.get("name") in names]
+    # Preserve user-specified order where possible
+    order = {n: i for i, n in enumerate(names)}
+    selected.sort(key=lambda c: order.get(c["name"], 999))
+
+    # Union of all attribute keys
+    all_keys: List[str] = []
+    seen_keys: set = set()
+    for c in selected:
+        for k in (c.get("attributes") or {}).keys():
+            if k not in seen_keys:
+                seen_keys.add(k)
+                all_keys.append(k)
+
+    rows: List[Dict[str, Any]] = []
+    for k in all_keys:
+        row: Dict[str, Any] = {"metric": k, "values": {}}
+        values_seen: set = set()
+        has_conflict = False
+        missing = 0
+        for c in selected:
+            v = (c.get("attributes") or {}).get(k)
+            if v is None:
+                row["values"][c["name"]] = None
+                missing += 1
+                continue
+            # A single concept may already carry multiple conflicting values
+            # in one attribute (captured as "x / y" by extract_concepts).
+            parts = [p.strip() for p in str(v).split("/")]
+            if len(parts) > 1:
+                has_conflict = True
+            for p in parts:
+                values_seen.add(p)
+            row["values"][c["name"]] = v
+        # Cross-concept disagreement: if the set of non-null distinct values
+        # has >1 entry, flag it too
+        if len(values_seen) > 1:
+            has_conflict = True
+        row["has_contradiction"] = has_conflict
+        row["missing_count"] = missing
+        row["coverage"] = round((len(selected) - missing) / max(1, len(selected)), 2)
+        rows.append(row)
+
+    return {
+        "selected": [c["name"] for c in selected],
+        "types": {c["name"]: c.get("type", "—") for c in selected},
+        "confidence": {c["name"]: c.get("confidence", 0) for c in selected},
+        "metrics": rows,
+        "rowcount": len(rows),
+    }
+
+
+def compile_brief(
+    concepts: List[Dict[str, Any]],
+    name: str,
+    lang: str = "en",
+) -> str:
+    """Compile a single concept into a Markdown briefing (wiki → outputs).
+
+    Structure: TL;DR → Key attributes → Cross-links → Evidence chain →
+    Open questions. Deterministic, no LLM call — but reads like one.
+    """
+    target = next((c for c in (concepts or []) if c.get("name") == name), None)
+    if not target:
+        return ""
+
+    attrs = target.get("attributes") or {}
+    evidence = target.get("evidence") or []
+    cross = target.get("cross_links") or []
+    ctype = target.get("type") or "concept"
+    conf = int((target.get("confidence") or 0) * 100)
+
+    # Auto-generated open questions
+    questions: List[str] = []
+    for k, v in attrs.items():
+        if " / " in str(v):
+            if lang == "zh":
+                questions.append(
+                    f"**{k}** 出现两个冲突值（{v}）— 需要回到原始来源核实，"
+                    f"或在评论区标注谁是权威数字。"
+                )
+            else:
+                questions.append(
+                    f"**{k}** has conflicting values ({v}) — reconcile against the "
+                    f"raw sources and flag the authoritative one."
+                )
+    if not cross:
+        if lang == "zh":
+            questions.append(f"**{name}** 是孤立概念（无交叉链接）— 补充与其他实体的关系。")
+        else:
+            questions.append(f"**{name}** is orphaned — add at least one cross-link.")
+    if len(evidence) < 2:
+        if lang == "zh":
+            questions.append(
+                f"证据仅 {len(evidence)} 条 — 补充更多原始材料以提高置信度。"
+            )
+        else:
+            questions.append(
+                f"Only {len(evidence)} piece(s) of evidence — add more raw sources to "
+                f"raise confidence."
+            )
+
+    lines: List[str] = []
+    if lang == "zh":
+        lines.append(f"# {name} — 知识库摘要")
+        lines.append("")
+        lines.append(f"**类型**: `{ctype}` · **置信度**: `{conf}%` · "
+                     f"**属性数**: `{len(attrs)}` · **证据数**: `{len(evidence)}`")
+        lines.append("")
+        lines.append("## TL;DR")
+        if evidence:
+            lines.append(f"> {evidence[0]['quote']}")
+        else:
+            lines.append("_未发现源处引用。_")
+        lines.append("")
+        lines.append("## 关键属性")
+        if attrs:
+            for k, v in attrs.items():
+                conflict = " / " in str(v)
+                marker = "  ⚠️ **冲突值**" if conflict else ""
+                lines.append(f"- `{k}`: **{v}**{marker}")
+        else:
+            lines.append("_(无结构化属性)_")
+        lines.append("")
+        lines.append("## 相关概念")
+        if cross:
+            lines.append("- " + "\n- ".join(f"[[{c}]]" for c in cross))
+        else:
+            lines.append("_(无交叉链接)_")
+        lines.append("")
+        lines.append("## 证据链（回溯到 raw/）")
+        for i, e in enumerate(evidence, 1):
+            coord = f"p{e.get('para_idx', '?')}·s{e.get('sentence_idx', '?')}"
+            lines.append(f"{i}. `[{coord}]` {e.get('quote', '')}")
+        lines.append("")
+        lines.append("## 待澄清的开放问题")
+        if questions:
+            for q in questions:
+                lines.append(f"- {q}")
+        else:
+            lines.append("_(无显著问题)_")
+    else:
+        lines.append(f"# {name} — wiki brief")
+        lines.append("")
+        lines.append(f"**type**: `{ctype}` · **confidence**: `{conf}%` · "
+                     f"**attrs**: `{len(attrs)}` · **evidence**: `{len(evidence)}`")
+        lines.append("")
+        lines.append("## TL;DR")
+        if evidence:
+            lines.append(f"> {evidence[0]['quote']}")
+        else:
+            lines.append("_No source evidence found._")
+        lines.append("")
+        lines.append("## Key attributes")
+        if attrs:
+            for k, v in attrs.items():
+                conflict = " / " in str(v)
+                marker = "  ⚠️ **CONFLICT**" if conflict else ""
+                lines.append(f"- `{k}`: **{v}**{marker}")
+        else:
+            lines.append("_(no structured attributes)_")
+        lines.append("")
+        lines.append("## Related concepts")
+        if cross:
+            lines.append("- " + "\n- ".join(f"[[{c}]]" for c in cross))
+        else:
+            lines.append("_(no cross-links)_")
+        lines.append("")
+        lines.append("## Evidence chain (back to raw/)")
+        for i, e in enumerate(evidence, 1):
+            coord = f"p{e.get('para_idx', '?')}·s{e.get('sentence_idx', '?')}"
+            lines.append(f"{i}. `[{coord}]` {e.get('quote', '')}")
+        lines.append("")
+        lines.append("## Open questions")
+        if questions:
+            for q in questions:
+                lines.append(f"- {q}")
+        else:
+            lines.append("_(none)_")
+    return "\n".join(lines)

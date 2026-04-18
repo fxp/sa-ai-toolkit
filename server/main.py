@@ -239,6 +239,20 @@ async def karpathy(action: str = "extract", body: dict = Body(default={})):
     if action == "lint":
         concepts = body.get("concepts") or []
         return c.lint_kb(concepts)
+    # wiki → outputs compilation layer (Karpathy's missing piece)
+    if action == "graph":
+        concepts = body.get("concepts") or []
+        return c.build_graph(concepts)
+    if action == "compare":
+        concepts = body.get("concepts") or []
+        names = body.get("names") or []
+        return c.compare_concepts(concepts, names)
+    if action == "brief":
+        concepts = body.get("concepts") or []
+        name = body.get("name") or ""
+        lang = body.get("lang") or "en"
+        return {"name": name, "lang": lang,
+                "markdown": c.compile_brief(concepts, name, lang=lang)}
     raise HTTPException(400, f"unknown action {action}")
 
 

@@ -36,7 +36,6 @@
 <section class="relative overflow-hidden py-20 px-6">
   <div class="absolute inset-0 opacity-20" style="background: radial-gradient(circle at 30% 40%, #3b82f6 0%, transparent 50%), radial-gradient(circle at 70% 60%, #8b5cf6 0%, transparent 50%);"></div>
   <div class="max-w-4xl mx-auto relative text-center">
-    <div class="text-6xl mb-4 float">&#129438;</div>
     <h1 class="text-5xl font-extrabold mb-4"><span class="gradient-text">SA AI Toolkit</span></h1>
     <p class="text-xl text-gray-400 mb-2" data-en="Enterprise AI Demo Platform for Solution Architects" data-zh="面向解决方案架构师的企业AI演示平台"></p>
     <p class="text-gray-500 mb-8" data-en="Input a company name. Get 20+ customized AI demos. Ready to present." data-zh="输入一家企业名称，获得20+定制化AI演示方案，直接用于现场培训。"></p>
@@ -53,15 +52,15 @@
     <h2 class="text-3xl font-bold text-white text-center mb-12" data-en="3 Commands. Any Company. Any Industry." data-zh="3个命令，任何企业，任何行业。"></h2>
     <div class="terminal p-6 glow mb-8">
       <div class="space-y-3 text-sm">
-        <div><span class="prompt">$</span> <span class="text-white">/gen</span> <span class="text-yellow-400">CATL</span></div>
+        <div><span class="prompt">$</span> <span class="text-white">/gen</span> <span class="text-yellow-400" data-en="&quot;Global battery manufacturer&quot;" data-zh="&quot;全球头部电池制造商&quot;"></span></div>
         <div class="output" data-en="  Searching company info... Industry: Battery Manufacturing" data-zh="  搜索企业信息... 行业：电池制造"></div>
         <div class="output" data-en="  Scoring 20 demos... Selected 18 (all applicable for manufacturing!)" data-zh="  评分20个Demo... 选出18个（制造业全部适用！）"></div>
         <div class="output" data-en="  Generating customized content..." data-zh="  生成定制化内容..."></div>
-        <div class="highlight" data-en="  &#10003; 23 files written to outputs/CATL/" data-zh="  &#10003; 23个文件已写入 outputs/宁德时代/"></div>
+        <div class="highlight" data-en="  &#10003; 23 files written to outputs/&lt;company&gt;/" data-zh="  &#10003; 23 个文件已写入 outputs/&lt;企业名&gt;/"></div>
         <div class="mt-4"><span class="prompt">$</span> <span class="text-white">/customize</span> <span class="text-yellow-400">add 5 difficulty levels to roleplay</span></div>
         <div class="output" data-en="  Updated demos/roleplay.md (L1: Basic → L5: Regulatory audit)" data-zh="  已更新 demos/roleplay.md (L1:基础 → L5:监管审计)"></div>
         <div class="mt-4"><span class="prompt">$</span> <span class="text-white">/present</span> <span class="text-yellow-400">export PPT</span></div>
-        <div class="highlight" data-en="  &#10003; CATL_AI_Training.pptx generated (brand green #00A651)" data-zh="  &#10003; 宁德时代_AI培训.pptx 已生成（品牌绿 #00A651）"></div>
+        <div class="highlight" data-en="  &#10003; AI_Training.pptx generated (with brand colors applied)" data-zh="  &#10003; AI培训.pptx 已生成（自动应用品牌色）"></div>
       </div>
     </div>
     <div class="grid md:grid-cols-3 gap-4">
@@ -188,7 +187,7 @@
               <span class="tag bg-yellow-900/50 text-yellow-300" data-en="23-Stage Pipeline" data-zh="23阶段管线"></span>
             </div>
             <p class="text-gray-400 text-sm mb-3" data-en="Chat an idea, get a conference paper. Autonomous 23-stage research pipeline from topic to publishable paper." data-zh="输入一个想法，产出一篇会议论文。从选题到可发表论文的23阶段自主研究管线。"></p>
-            <a href="https://sa-autoresearch.fly.dev/" target="_blank" class="inline-block mt-1 px-4 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-500 transition" data-en="Live Demo &#8594;" data-zh="在线体验 &#8594;"></a>
+            <a href="https://sa-ai-toolkit.fly.dev/autoresearch-lab/" target="_blank" class="inline-block mt-1 px-4 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-500 transition" data-en="Live Demo &#8594;" data-zh="在线体验 &#8594;"></a>
           </div>
         </div>
       </div>
@@ -274,30 +273,30 @@
     <div class="grid md:grid-cols-2 gap-6">
       <div class="card rounded-xl p-6 transition">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-red-900/50 flex items-center justify-center text-red-400 font-bold text-lg">招</div>
+          <div class="w-10 h-10 rounded-full bg-red-900/50 flex items-center justify-center text-red-400 font-bold text-xl">&#127974;</div>
           <div>
-            <h3 class="text-white font-bold" data-en="China Merchants Bank" data-zh="招商银行"></h3>
-            <p class="text-xs text-gray-400" data-en="Banking/Finance | 120K employees" data-zh="银行/金融 | 12万员工"></p>
+            <h3 class="text-white font-bold" data-en="Fortune 500 Commercial Bank" data-zh="财富 500 强商业银行"></h3>
+            <p class="text-xs text-gray-400" data-en="Banking / Finance · ~120K employees" data-zh="银行 / 金融 · 约 12 万员工"></p>
           </div>
         </div>
         <div class="space-y-1 text-sm text-gray-400">
-          <div data-en="&#10003; 16 demos generated, 3 skipped (no hardware/CV)" data-zh="&#10003; 生成16个Demo，跳过3个（无硬件/CV需求）"></div>
-          <div>&#10003; 招行App, 金葵花, 招赢睿远, 闪电贷</div>
-          <div data-en="&#10003; Top: Roleplay (VIP client complaint)" data-zh="&#10003; Top1: 角色扮演（金葵花客户投诉）"></div>
+          <div data-en="&#10003; 16 demos generated, 3 skipped (no hardware / CV)" data-zh="&#10003; 生成 16 个 Demo，跳过 3 个（无硬件 / CV 需求）"></div>
+          <div data-en="&#10003; Mobile banking app, private wealth, short-term credit lines" data-zh="&#10003; 手机银行 App、私行财富、消费信贷产品线"></div>
+          <div data-en="&#10003; Top: Roleplay — VIP client complaint" data-zh="&#10003; Top1: 角色扮演 — 高净值客户投诉"></div>
         </div>
       </div>
       <div class="card rounded-xl p-6 transition">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-green-900/50 flex items-center justify-center text-green-400 font-bold text-lg">宁</div>
+          <div class="w-10 h-10 rounded-full bg-green-900/50 flex items-center justify-center text-green-400 font-bold text-xl">&#128267;</div>
           <div>
-            <h3 class="text-white font-bold" data-en="CATL (宁德时代)" data-zh="宁德时代"></h3>
-            <p class="text-xs text-gray-400" data-en="Battery Manufacturing | 130K employees" data-zh="电池制造 | 13万员工"></p>
+            <h3 class="text-white font-bold" data-en="Global Battery Manufacturer" data-zh="全球头部电池制造商"></h3>
+            <p class="text-xs text-gray-400" data-en="Battery Manufacturing · ~130K employees" data-zh="电池制造 · 约 13 万员工"></p>
           </div>
         </div>
         <div class="space-y-1 text-sm text-gray-400">
-          <div data-en="&#10003; 18 demos generated, ALL applicable!" data-zh="&#10003; 生成18个Demo，全部适用！"></div>
-          <div>&#10003; 麒麟电池, CTP3.0, 神行超充, 极限制造</div>
-          <div data-en="&#10003; Top: SAM3 (PPB-level cell inspection)" data-zh="&#10003; Top1: SAM3（PPB级电芯质检）"></div>
+          <div data-en="&#10003; 18 demos generated, ALL applicable!" data-zh="&#10003; 生成 18 个 Demo，全部适用！"></div>
+          <div data-en="&#10003; Flagship cell lines, battery pack integration, ultra-fast charging, gigafactory" data-zh="&#10003; 旗舰电芯产线、电池包集成、超快充、超级工厂"></div>
+          <div data-en="&#10003; Top: SAM3 — high-precision cell inspection" data-zh="&#10003; Top1: SAM3 — 高精度电芯质检"></div>
         </div>
       </div>
     </div>
@@ -327,8 +326,9 @@
 <!-- Footer -->
 <footer class="py-8 px-6 text-center text-gray-600 text-sm border-t border-gray-800">
   <p>SA AI Toolkit | Built with Claude Code | MIT License</p>
-  <p class="mt-1" data-en="Inspired by " data-zh="灵感来源：">
-    <a href="https://metr.org/notes/2026-03-19-org-uplift-game/" class="text-blue-500 hover:underline">METR Research</a>
+  <p class="mt-1">
+    <span data-en="Contact: " data-zh="联系：">Contact: </span>
+    <a href="mailto:fxp007@gmail.com" class="text-blue-500 hover:underline">fxp007@gmail.com</a>
   </p>
 </footer>
 
