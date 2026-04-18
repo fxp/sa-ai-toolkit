@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Karpathy LLM-Wiki — Concepts + Contradictions</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <style>
   body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
   .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); border-radius: 12px; }
@@ -37,6 +39,31 @@
   .lint-row { padding: 8px 12px; border-radius: 6px; background: rgba(20,20,30,0.5); margin-bottom: 6px; font-size: 13px; }
   .lint-ok { color: #4ade80; } .lint-warn { color: #facc15; } .lint-err { color: #f87171; }
   .contradiction-card { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.4); border-radius: 8px; padding: 10px; margin-top: 6px; }
+  .view-tab { padding: 4px 12px; border-radius: 6px; color: #94a3b8; background: transparent; border: 1px solid transparent; cursor: pointer; transition: all .15s; font-weight: 500; }
+  .view-tab:hover { color: #e2e8f0; background: rgba(100,100,150,0.15); }
+  .view-tab.active { color: #c4b5fd; background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.4); }
+  .legend-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: rgba(30,30,50,0.5); font-size: 10px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .compare-table th, .compare-table td { border: 1px solid rgba(100,100,150,0.2); padding: 6px 10px; text-align: left; vertical-align: top; }
+  .compare-table th { background: rgba(30,30,50,0.6); color: #c4b5fd; font-weight: 600; }
+  .compare-table th.metric-col { width: 25%; color: #94a3b8; }
+  .compare-table tr.has-conflict td { background: rgba(239,68,68,0.06); }
+  .compare-table tr.has-conflict td:first-child { color: #fca5a5; font-weight: 600; }
+  .compare-table td.cell-empty { color: #475569; font-style: italic; }
+  .compare-table td.cell-conflict { color: #fca5a5; font-weight: 600; }
+  .brief-md h1 { font-size: 1.35rem; font-weight: 700; color: #dbeafe; margin: 0 0 8px 0; }
+  .brief-md h2 { font-size: 1rem; font-weight: 600; color: #a78bfa; margin: 18px 0 8px 0; border-bottom: 1px dashed rgba(167,139,250,0.3); padding-bottom: 4px; }
+  .brief-md ul, .brief-md ol { margin: 6px 0 12px 1.4em; }
+  .brief-md li { margin: 3px 0; }
+  .brief-md blockquote { border-left: 3px solid #60a5fa; padding: 4px 14px; color: #cbd5e1; font-style: italic; background: rgba(59,130,246,0.06); margin: 10px 0; border-radius: 0 6px 6px 0; }
+  .brief-md code { background: rgba(30,30,50,0.7); color: #fcd34d; padding: 1px 6px; border-radius: 3px; font-size: 0.85em; }
+  .brief-md strong { color: #f8fafc; }
+  .brief-md p { margin: 8px 0; }
+  .compare-check { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(30,30,50,0.6); border: 1px solid rgba(100,100,150,0.25); border-radius: 6px; cursor: pointer; font-size: 12px; color: #cbd5e1; transition: all .15s; user-select: none; }
+  .compare-check:hover { border-color: rgba(167,139,250,0.4); }
+  .compare-check.checked { background: rgba(167,139,250,0.18); border-color: rgba(167,139,250,0.6); color: #ede9fe; }
+  .compare-check input { margin: 0; }
   .example-pill { background: rgba(100,100,150,0.18); border: 1px solid rgba(100,100,150,0.3); padding: 3px 10px; border-radius: 999px; font-size: 11px; cursor: pointer; transition: all .15s; color: #cbd5e1; }
   .example-pill:hover { background: rgba(100,100,150,0.35); border-color: rgba(150,150,200,0.5); }
   .example-pill.active { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.6); color: #dbeafe; }
@@ -93,8 +120,60 @@
       <textarea id="raw" rows="24" class="w-full p-3 rounded"></textarea>
     </div>
     <div class="card p-5 lg:col-span-3">
-      <h2 class="font-semibold text-purple-300 mb-3" data-en="wiki/ — extracted concepts" data-zh="wiki/ — 提取的概念"></h2>
-      <div id="wiki" class="space-y-3"><p class="text-gray-500 italic" data-en="Click Extract Concepts to populate." data-zh="点击「提取概念」生成。"></p></div>
+      <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+        <h2 class="font-semibold text-purple-300" data-en="wiki/ — extracted concepts" data-zh="wiki/ — 提取的概念"></h2>
+        <div class="flex gap-1 text-xs" id="view-tabs">
+          <button class="view-tab active" data-view="list" data-en="List" data-zh="列表"></button>
+          <button class="view-tab" data-view="graph" data-en="Graph" data-zh="图谱"></button>
+          <button class="view-tab" data-view="compare" data-en="Compare" data-zh="对比"></button>
+          <button class="view-tab" data-view="brief" data-en="Brief" data-zh="简报"></button>
+        </div>
+      </div>
+
+      <!-- LIST VIEW (default) -->
+      <div id="view-list">
+        <div id="wiki" class="space-y-3"><p class="text-gray-500 italic" data-en="Click Extract Concepts to populate." data-zh="点击「提取概念」生成。"></p></div>
+      </div>
+
+      <!-- GRAPH VIEW -->
+      <div id="view-graph" class="hidden">
+        <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+          <div id="graph-legend" class="flex gap-2 flex-wrap"></div>
+          <div class="flex items-center gap-3">
+            <span id="graph-stats"></span>
+            <button id="graph-fit" class="px-2 py-1 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700" data-en="Fit" data-zh="适应"></button>
+          </div>
+        </div>
+        <div id="cy" class="rounded-lg bg-[#0b1220] border border-gray-800" style="width:100%; height:520px;"></div>
+        <div id="graph-detail" class="text-xs text-gray-400 mt-3"></div>
+      </div>
+
+      <!-- COMPARE VIEW -->
+      <div id="view-compare" class="hidden">
+        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+          <span class="text-xs text-gray-400" data-en="Select 2-5 concepts to compare their attributes side-by-side." data-zh="选择 2-5 个概念对比属性。"></span>
+          <button id="compare-run" class="btn text-xs" disabled data-en="Compare selected" data-zh="对比选中"></button>
+        </div>
+        <div id="compare-picker" class="flex gap-2 flex-wrap mb-3"></div>
+        <div id="compare-output"></div>
+      </div>
+
+      <!-- BRIEF VIEW -->
+      <div id="view-brief" class="hidden">
+        <div class="flex items-center gap-2 mb-3 flex-wrap">
+          <label class="text-xs text-gray-400" data-en="Pick a concept:" data-zh="选择概念："></label>
+          <select id="brief-pick" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200"></select>
+          <select id="brief-lang" class="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200">
+            <option value="en">EN</option>
+            <option value="zh">中文</option>
+          </select>
+          <button id="brief-run" class="btn text-xs" data-en="Compile Brief" data-zh="编译简报"></button>
+          <button id="brief-download" class="btn btn-secondary text-xs hidden" data-en="⬇ Download .md" data-zh="⬇ 下载 .md"></button>
+        </div>
+        <div id="brief-output" class="prose-invert bg-[#0b1220] border border-gray-800 rounded-lg p-5 text-sm text-gray-300 leading-relaxed" style="min-height:360px;">
+          <p class="text-gray-500 italic" data-en="Pick a concept and click Compile Brief to generate a citable markdown briefing." data-zh="选个概念然后点「编译简报」，后端会按带引用的 Markdown 报告格式输出。"></p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -355,6 +434,243 @@ $('lint-btn').addEventListener('click', async () => {
 $('clear-btn').addEventListener('click', () => loadExample('cn-llm'));
 $('raw').addEventListener('input', updateRawStats);
 document.querySelectorAll('.example-pill').forEach(p => p.addEventListener('click', () => loadExample(p.dataset.example)));
+
+// ══════════════════════════════════════════════════════════════════════
+// VIEW TABS — List / Graph / Compare / Brief
+// ══════════════════════════════════════════════════════════════════════
+const TYPE_COLORS = {
+  entity: '#60a5fa', metric: '#34d399', opinion: '#fbbf24',
+  claim: '#a78bfa', event: '#f472b6',
+};
+let cy = null;
+let compareSelected = new Set();
+
+document.querySelectorAll('.view-tab').forEach(tab => {
+  tab.addEventListener('click', () => switchView(tab.dataset.view));
+});
+
+function switchView(view) {
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  ['list', 'graph', 'compare', 'brief'].forEach(v => $(`view-${v}`).classList.toggle('hidden', v !== view));
+  if (view === 'graph') renderGraph();
+  if (view === 'compare') renderComparePicker();
+  if (view === 'brief') renderBriefPicker();
+}
+
+// ── Graph view ──
+async function renderGraph() {
+  if (!concepts.length) {
+    $('cy').innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 italic text-sm">Extract concepts first.</div>';
+    $('graph-stats').textContent = '';
+    $('graph-legend').innerHTML = '';
+    return;
+  }
+  let data;
+  try {
+    const res = await fetch('/api/karpathy?action=graph', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ concepts })
+    });
+    data = await res.json();
+  } catch (e) {
+    $('cy').innerHTML = `<div class="p-4 text-red-400 text-sm">graph API error: ${e.message}</div>`;
+    return;
+  }
+
+  // Legend
+  $('graph-legend').innerHTML = Object.entries(data.type_counts || {}).map(([t, n]) =>
+    `<span class="legend-pill"><span class="legend-dot" style="background:${TYPE_COLORS[t] || '#94a3b8'}"></span>${t} · ${n}</span>`
+  ).join('');
+  $('graph-stats').textContent = `${data.nodes.length} nodes · ${data.edges.length} edges · ${data.num_contradictions} with ⚠ conflicts`;
+
+  // Clean slate
+  $('cy').innerHTML = '';
+  if (typeof cytoscape === 'undefined') {
+    $('cy').innerHTML = `<div class="p-4 text-red-400 text-sm">cytoscape.js failed to load (network blocked?).</div>`;
+    return;
+  }
+  cy = cytoscape({
+    container: $('cy'),
+    elements: [
+      ...data.nodes.map(n => ({ data: n })),
+      ...data.edges.map(e => ({ data: { id: `${e.source}__${e.target}`, source: e.source, target: e.target } }))
+    ],
+    style: [
+      { selector: 'node', style: {
+        'background-color': n => TYPE_COLORS[n.data('type')] || '#94a3b8',
+        'label': 'data(label)',
+        'color': '#e2e8f0',
+        'font-size': 11,
+        'font-family': "'Inter', sans-serif",
+        'text-margin-y': -6,
+        'text-outline-width': 2,
+        'text-outline-color': '#0f172a',
+        'width': n => 24 + 20 * (n.data('confidence') || 0.5),
+        'height': n => 24 + 20 * (n.data('confidence') || 0.5),
+        'border-width': n => n.data('has_contradiction') ? 3 : 1,
+        'border-color': n => n.data('has_contradiction') ? '#ef4444' : 'rgba(255,255,255,0.2)',
+      } },
+      { selector: 'edge', style: {
+        'width': 1.5, 'line-color': 'rgba(167,139,250,0.35)',
+        'curve-style': 'straight', 'target-arrow-shape': 'none',
+      } },
+      { selector: 'node:selected', style: {
+        'border-width': 3, 'border-color': '#fcd34d',
+      } },
+    ],
+    layout: { name: 'cose', animate: true, animationDuration: 600, idealEdgeLength: 120, nodeRepulsion: 8000, padding: 30 },
+    minZoom: 0.3, maxZoom: 3,
+    wheelSensitivity: 0.25,
+  });
+
+  cy.on('tap', 'node', (evt) => {
+    const n = evt.target.data();
+    const c = concepts.find(x => x.name === n.id);
+    if (!c) return;
+    const attrList = Object.entries(c.attributes || {}).map(([k, v]) => {
+      const conflict = String(v).includes(' / ');
+      return `<li class="${conflict ? 'text-red-300' : ''}">${k}: <b>${v}</b>${conflict ? ' ⚠' : ''}</li>`;
+    }).join('');
+    $('graph-detail').innerHTML = `
+      <div class="card p-3">
+        <div class="font-bold text-blue-200 mb-1">${c.name} <span class="ml-2 type-pill type-${c.type}">${c.type}</span></div>
+        ${attrList ? `<ul class="list-disc ml-5 text-[11px] space-y-0.5">${attrList}</ul>` : '<span class="italic text-gray-500 text-xs">no attrs</span>'}
+        ${(c.evidence || []).length ? `<div class="mt-2 text-[11px] text-gray-400 italic">“${c.evidence[0].quote.slice(0, 200)}”</div>` : ''}
+      </div>`;
+  });
+  cy.on('tap', (evt) => { if (evt.target === cy) $('graph-detail').innerHTML = ''; });
+}
+
+$('graph-fit').addEventListener('click', () => { if (cy) cy.fit(null, 40); });
+
+// ── Compare view ──
+function renderComparePicker() {
+  const picker = $('compare-picker');
+  if (!concepts.length) {
+    picker.innerHTML = '<p class="text-gray-500 italic text-sm">Extract concepts first.</p>';
+    $('compare-run').disabled = true;
+    return;
+  }
+  picker.innerHTML = concepts.map(c => {
+    const checked = compareSelected.has(c.name);
+    return `<label class="compare-check ${checked ? 'checked' : ''}">
+      <input type="checkbox" ${checked ? 'checked' : ''} data-cmp="${c.name}"/>
+      <span class="type-pill type-${c.type}" style="font-size:9px;">${c.type}</span>
+      <span>${c.name}</span>
+    </label>`;
+  }).join('');
+  picker.querySelectorAll('input[data-cmp]').forEach(el => {
+    el.addEventListener('change', () => {
+      if (el.checked) { compareSelected.add(el.dataset.cmp); }
+      else { compareSelected.delete(el.dataset.cmp); }
+      if (compareSelected.size > 5) {
+        const first = compareSelected.values().next().value;
+        compareSelected.delete(first);
+      }
+      renderComparePicker();
+    });
+  });
+  $('compare-run').disabled = compareSelected.size < 2;
+}
+
+$('compare-run').addEventListener('click', async () => {
+  const names = [...compareSelected];
+  if (names.length < 2) return;
+  $('compare-output').innerHTML = '<div class="p-3"><span class="spinner"></span> <span class="ml-2 text-gray-400 text-sm">Pivoting attributes…</span></div>';
+  try {
+    const res = await fetch('/api/karpathy?action=compare', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ concepts, names })
+    });
+    const data = await res.json();
+    if (!data.rowcount) {
+      $('compare-output').innerHTML = '<p class="text-amber-300 text-sm p-3">Selected concepts have no extracted attributes to compare.</p>';
+      return;
+    }
+    const conflictRows = data.metrics.filter(r => r.has_contradiction).length;
+    const tbl = `
+      <div class="text-xs text-gray-500 mb-2">
+        ${data.selected.length} concepts · ${data.metrics.length} metrics · ${conflictRows} row(s) with conflicts
+      </div>
+      <div class="overflow-x-auto">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th class="metric-col">Metric</th>
+            ${data.selected.map(n => `<th>${n}<br><span class="text-[10px] font-normal text-gray-500">type=${data.types[n]||'—'} · conf=${Math.round((data.confidence[n]||0)*100)}%</span></th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${data.metrics.map(row => `
+            <tr class="${row.has_contradiction ? 'has-conflict' : ''}">
+              <td>${row.metric}${row.has_contradiction ? ' ⚠' : ''}</td>
+              ${data.selected.map(n => {
+                const v = row.values[n];
+                if (v == null) return '<td class="cell-empty">—</td>';
+                const isConflictVal = String(v).includes(' / ');
+                return `<td class="${isConflictVal ? 'cell-conflict' : ''}">${v}</td>`;
+              }).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>`;
+    $('compare-output').innerHTML = tbl;
+  } catch (e) {
+    $('compare-output').innerHTML = `<p class="text-red-400 text-sm p-3">Compare API error: ${e.message}</p>`;
+  }
+});
+
+// ── Brief view ──
+function renderBriefPicker() {
+  const sel = $('brief-pick');
+  sel.innerHTML = concepts.map(c => `<option value="${c.name}">${c.name}</option>`).join('') || '<option>—</option>';
+}
+
+$('brief-run').addEventListener('click', async () => {
+  const name = $('brief-pick').value;
+  const lang = $('brief-lang').value;
+  if (!name) return;
+  $('brief-output').innerHTML = '<div class="flex items-center gap-2"><span class="spinner"></span><span class="text-gray-400 text-sm">Compiling brief…</span></div>';
+  try {
+    const res = await fetch('/api/karpathy?action=brief', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ concepts, name, lang })
+    });
+    const data = await res.json();
+    if (!data.markdown) {
+      $('brief-output').innerHTML = `<p class="text-amber-300">No brief could be compiled for "${name}".</p>`;
+      $('brief-download').classList.add('hidden');
+      return;
+    }
+    const html = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(data.markdown) : `<pre class="whitespace-pre-wrap">${data.markdown}</pre>`;
+    $('brief-output').innerHTML = `<div class="brief-md">${html}</div>`;
+    $('brief-download').classList.remove('hidden');
+    $('brief-download').onclick = () => {
+      const blob = new Blob([data.markdown], { type: 'text/markdown' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${name.replace(/[\\s/]+/g, '_')}_brief.md`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+  } catch (e) {
+    $('brief-output').innerHTML = `<p class="text-red-400">Brief API error: ${e.message}</p>`;
+  }
+});
+
+// Refresh views when concepts change
+const origExtract = $('extract-btn').onclick;
+const origRenderConcepts = renderConcepts;
+window.renderConcepts = function(list) {
+  origRenderConcepts(list);
+  compareSelected.clear();
+  // If a non-list view is currently active, refresh it
+  const active = document.querySelector('.view-tab.active')?.dataset?.view;
+  if (active === 'graph') renderGraph();
+  if (active === 'compare') renderComparePicker();
+  if (active === 'brief') renderBriefPicker();
+};
 
 loadExample('cn-llm');
 renderConcepts([]);
