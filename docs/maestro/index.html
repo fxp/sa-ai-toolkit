@@ -6,129 +6,31 @@
 <title>Maestro — YAML Mobile Test Simulator</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body {
-    background: #0f172a;
-    color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    margin: 0;
-  }
-  .card {
-    background: rgba(30,30,50,0.6);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(100,100,150,0.2);
-    border-radius: 12px;
-  }
+  body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; margin: 0; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); border-radius: 12px; }
   .mono { font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, monospace; }
-  textarea.yaml-editor {
-    width: 100%;
-    height: 480px;
-    background: #0b1020;
-    color: #cbd5e1;
-    border: 1px solid rgba(100,100,150,0.3);
-    border-radius: 8px;
-    padding: 16px;
-    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    resize: vertical;
-    outline: none;
-  }
+  textarea.yaml-editor { width: 100%; height: 420px; background: #0b1020; color: #cbd5e1; border: 1px solid rgba(100,100,150,0.3); border-radius: 8px; padding: 16px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.6; resize: vertical; outline: none; }
   textarea.yaml-editor:focus { border-color: #60a5fa; }
-
-  /* Phone bezel */
-  .phone {
-    width: 300px;
-    height: 600px;
-    background: #1a1a2e;
-    border-radius: 42px;
-    padding: 14px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px #333 inset;
-    margin: 0 auto;
-    position: relative;
-  }
-  .phone::before {
-    content: '';
-    position: absolute;
-    top: 14px; left: 50%; transform: translateX(-50%);
-    width: 90px; height: 20px; background: #0a0a14; border-radius: 12px; z-index: 3;
-  }
-  .phone-screen {
-    width: 100%; height: 100%;
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 30px; overflow: hidden; position: relative;
-    color: #1e293b;
-    display: flex; flex-direction: column;
-  }
-  .phone-statusbar {
-    height: 30px; background: transparent; font-size: 11px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; color: #1e293b; padding-top: 8px;
-  }
-  .phone-body { flex: 1; overflow-y: auto; padding: 16px; }
-
-  .sp-btn {
-    display: block; width: 100%; padding: 12px; border-radius: 10px;
-    background: linear-gradient(135deg, #3b82f6, #6366f1);
-    color: white; font-weight: 600; text-align: center; margin: 8px 0;
-    border: none; cursor: pointer; font-size: 14px;
-    transition: all 0.2s;
-  }
+  .phone { width: 300px; height: 600px; background: #1a1a2e; border-radius: 42px; padding: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px #333 inset; margin: 0 auto; position: relative; }
+  .phone::before { content: ''; position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 90px; height: 20px; background: #0a0a14; border-radius: 12px; z-index: 3; }
+  .phone-screen { width: 100%; height: 100%; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 30px; overflow: hidden; position: relative; color: #1e293b; display: flex; flex-direction: column; }
+  .phone-statusbar { height: 30px; font-size: 11px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #1e293b; padding-top: 8px; }
+  .phone-body { flex: 1; overflow-y: auto; padding: 16px; transition: opacity 0.2s; }
+  .sp-btn { display: block; width: 100%; padding: 12px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; font-weight: 600; text-align: center; margin: 8px 0; border: none; cursor: pointer; font-size: 14px; }
   .sp-btn.secondary { background: white; color: #3b82f6; border: 1px solid #cbd5e1; }
-  .sp-btn.ghost { background: transparent; color: #64748b; }
-  .sp-input {
-    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1;
-    background: white; font-size: 14px; margin: 6px 0;
-    color: #1e293b;
-  }
-  .sp-input:focus { border-color: #3b82f6; outline: none; }
-  .sp-highlight-green { animation: flashGreen 0.8s ease; }
-  .sp-highlight-blue { animation: flashBlue 0.6s ease; }
-  @keyframes flashGreen {
-    0%, 100% { background-color: initial; box-shadow: none; }
-    50% { background-color: #bbf7d0; box-shadow: 0 0 0 3px #22c55e; }
-  }
-  @keyframes flashBlue {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(0.96); box-shadow: 0 0 0 3px #3b82f6; }
-  }
-  .check-badge {
-    position: absolute; top: 4px; right: 4px;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: #22c55e; color: white; font-size: 12px;
-    display: flex; align-items: center; justify-content: center;
-    animation: popIn 0.3s ease;
-  }
-  @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-
+  .sp-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; font-size: 14px; margin: 6px 0; color: #1e293b; }
+  .flash { animation: flashGreen 0.7s ease; }
+  @keyframes flashGreen { 0%,100% { background-color: initial; } 50% { background-color: #bbf7d0; box-shadow: 0 0 0 3px #22c55e inset; } }
   .log-line { font-size: 12px; padding: 3px 0; border-bottom: 1px solid rgba(100,100,150,0.1); }
-  .log-ok { color: #4ade80; }
-  .log-err { color: #f87171; }
-  .log-info { color: #94a3b8; }
-  .log-run { color: #60a5fa; }
-
-  .lang-toggle {
-    position: fixed; top: 16px; right: 16px; z-index: 50;
-    padding: 6px 14px; border-radius: 999px;
-    background: rgba(30,30,50,0.8); border: 1px solid rgba(100,100,150,0.3);
-    color: #e2e8f0; font-size: 13px; cursor: pointer;
-  }
-
-  .yaml-line-active { background: rgba(96,165,250,0.2); }
-
-  .toolbar-btn {
-    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
-    border: 1px solid rgba(100,100,150,0.3); cursor: pointer;
-    background: rgba(30,30,50,0.6); color: #e2e8f0;
-  }
+  .log-ok { color: #4ade80; } .log-err { color: #f87171; } .log-info { color: #94a3b8; } .log-run { color: #60a5fa; }
+  .lang-toggle { position: fixed; top: 16px; right: 16px; z-index: 50; padding: 6px 14px; border-radius: 999px; background: rgba(30,30,50,0.8); border: 1px solid rgba(100,100,150,0.3); color: #e2e8f0; font-size: 13px; cursor: pointer; }
+  .toolbar-btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1px solid rgba(100,100,150,0.3); cursor: pointer; background: rgba(30,30,50,0.6); color: #e2e8f0; }
   .toolbar-btn.primary { background: linear-gradient(135deg, #3b82f6, #6366f1); border: none; }
-  .toolbar-btn:hover { transform: translateY(-1px); }
-  .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  select.preset {
-    padding: 8px 12px; border-radius: 8px;
-    background: rgba(30,30,50,0.6); color: #e2e8f0;
-    border: 1px solid rgba(100,100,150,0.3); font-size: 13px;
-  }
+  .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  select.preset { padding: 8px 12px; border-radius: 8px; background: rgba(30,30,50,0.6); color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); font-size: 13px; }
+  .parse-status { font-size: 12px; padding: 4px 10px; border-radius: 6px; }
+  .parse-ok { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .parse-err { background: rgba(239,68,68,0.15); color: #f87171; }
 </style>
 </head>
 <body>
@@ -137,52 +39,44 @@
 
 <div class="max-w-7xl mx-auto px-6 py-8">
   <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
-
   <div class="mt-4 mb-6">
     <h1 class="text-3xl font-bold" data-en="Maestro — Mobile Test Simulator" data-zh="Maestro —— 移动端测试模拟器">Maestro — Mobile Test Simulator</h1>
-    <p class="text-slate-400 mt-2" data-en="Write YAML test flows on the left. Watch them run on a simulated phone on the right." data-zh="左侧编写 YAML 测试流程，右侧模拟手机实时执行。">Write YAML test flows on the left. Watch them run on a simulated phone on the right.</p>
+    <p class="text-slate-400 mt-2" data-en="YAML parsed by PyYAML backend. Trace generated server-side, replayed in the browser." data-zh="YAML 由 Python 后端（PyYAML）解析，执行轨迹服务端生成并在浏览器回放。">YAML parsed by PyYAML backend. Trace generated server-side, replayed in the browser.</p>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- LEFT: YAML editor -->
     <div class="card p-5">
       <div class="flex items-center gap-3 mb-3 flex-wrap">
         <select id="preset" class="preset">
-          <option value="login" data-en="Flow: SmartPet Login" data-zh="流程：SmartPet 登录">Flow: SmartPet Login</option>
-          <option value="hospital" data-en="Flow: Search Hospital" data-zh="流程：搜索医院">Flow: Search Hospital</option>
-          <option value="order" data-en="Flow: Order Flow" data-zh="流程：下单流程">Flow: Order Flow</option>
+          <option value="login">Flow: SmartPet Login</option>
+          <option value="hospital">Flow: Search Hospital</option>
+          <option value="order">Flow: Order Flow</option>
         </select>
         <button id="run-btn" class="toolbar-btn primary" data-en="▶ Run Test" data-zh="▶ 运行测试">▶ Run Test</button>
         <button id="reset-btn" class="toolbar-btn" data-en="Reset" data-zh="重置">Reset</button>
+        <span id="parse-status" class="parse-status"></span>
         <span id="status-chip" class="text-xs text-slate-400 ml-auto"></span>
       </div>
       <textarea id="yaml" class="yaml-editor" spellcheck="false"></textarea>
       <div class="mt-4">
         <div class="text-xs uppercase tracking-wider text-slate-500 mb-2" data-en="Execution Log" data-zh="执行日志">Execution Log</div>
-        <div id="log" class="card mono p-3" style="height: 140px; overflow-y: auto; background: #0b1020;"></div>
+        <div id="log" class="card mono p-3" style="height: 160px; overflow-y: auto; background: #0b1020;"></div>
       </div>
     </div>
 
-    <!-- RIGHT: Phone simulator -->
     <div class="card p-5 flex flex-col items-center">
       <div class="phone">
-        <div class="phone-screen" id="screen">
-          <div class="phone-statusbar">
-            <span>9:41</span>
-            <span>●●● 100%</span>
-          </div>
-          <div class="phone-body" id="phone-body">
-            <!-- Initial: home screen -->
-          </div>
+        <div class="phone-screen">
+          <div class="phone-statusbar"><span>9:41</span><span>●●● 100%</span></div>
+          <div class="phone-body" id="phone-body"></div>
         </div>
       </div>
-      <div class="mt-4 text-xs text-slate-500" data-en="Simulated device • Tap interactions reflect YAML commands" data-zh="模拟设备 · 点击交互实时反映 YAML 命令">Simulated device • Tap interactions reflect YAML commands</div>
+      <div class="mt-4 text-xs text-slate-500" data-en="Simulated device • screen transitions driven by backend trace" data-zh="模拟设备 · 页面跳转由后端轨迹驱动">Simulated device • screen transitions driven by backend trace</div>
     </div>
   </div>
 </div>
 
 <script>
-// ===== Preset YAML flows =====
 const PRESETS = {
   login: `appId: com.newco.smartpet
 name: "SmartPet Login Flow"
@@ -224,121 +118,33 @@ name: "Order Pet Food Flow"
 - assertVisible: "下单成功"`
 };
 
-// ===== App screens (rendered in phone) =====
+// Screen renderers keyed by backend screen names.
 const screens = {
-  loading: () => `<div class="flex flex-col items-center justify-center h-full text-center pt-32">
-    <div class="text-5xl mb-4">🐾</div>
-    <div class="text-xl font-bold text-blue-600">SmartPet</div>
-    <div class="mt-8 text-slate-400 text-xs" data-runtime>Loading...</div>
-  </div>`,
-  home: () => `<div>
-    <div class="text-center mb-4">
-      <div class="text-3xl">🐾</div>
-      <div class="font-bold text-lg text-blue-600" data-label>SmartPet</div>
-      <div class="text-xs text-slate-500" data-en="Your pet's best friend" data-zh="宠物伙伴一站式服务">Your pet's best friend</div>
-    </div>
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="bg-blue-50 p-3 rounded-lg text-center" data-label>🏥 找医院</div>
-      <div class="bg-pink-50 p-3 rounded-lg text-center" data-label>🛒 商城</div>
-      <div class="bg-amber-50 p-3 rounded-lg text-center" data-label>📔 日记</div>
-      <div class="bg-green-50 p-3 rounded-lg text-center" data-label>👤 我的</div>
-    </div>
-    <button class="sp-btn" data-label>登录</button>
-  </div>`,
-  loginForm: () => `<div>
-    <div class="text-center mb-4 mt-4">
-      <div class="font-bold text-lg" data-label>登录 SmartPet</div>
-    </div>
-    <label class="text-xs text-slate-500" data-label>手机号</label>
-    <input class="sp-input" data-input="phone" placeholder="请输入手机号" />
-    <div class="flex gap-2">
-      <input class="sp-input flex-1" data-input="code" placeholder="验证码" />
-      <button class="sp-btn secondary" style="width:auto; padding: 10px 14px; margin: 6px 0;" data-label>获取验证码</button>
-    </div>
-    <div class="text-xs text-green-600 mt-1 hidden" id="code-sent" data-label>验证码已发送</div>
-    <button class="sp-btn mt-4" data-label>确认登录</button>
-  </div>`,
-  loggedIn: () => `<div class="text-center pt-20">
-    <div class="text-5xl mb-4">🎉</div>
-    <div class="text-xl font-bold text-green-600" data-label>欢迎回来</div>
-    <div class="text-slate-500 text-sm mt-2" data-label>13800138000</div>
-    <button class="sp-btn mt-8" data-label>进入主页</button>
-  </div>`,
-  hospitalList: () => `<div>
-    <div class="font-bold text-lg mb-3" data-label>找医院</div>
-    <input class="sp-input" data-input="search" placeholder="搜索" />
-    <button class="sp-btn secondary" data-label>搜索按钮</button>
-    <div class="mt-3 space-y-2">
-      <div class="p-3 bg-white rounded-lg border border-slate-200" data-label>爱心宠物医院 <span class="text-xs text-slate-400">1.2km</span></div>
-      <div class="p-3 bg-white rounded-lg border border-slate-200" data-label>康贝宠物诊所 <span class="text-xs text-slate-400">2.5km</span></div>
-    </div>
-  </div>`,
-  hospitalDetail: () => `<div>
-    <div class="font-bold text-lg mb-2" data-label>爱心宠物医院</div>
-    <div class="text-xs text-slate-500 mb-3">★ 4.8 · 营业中 · 1.2km</div>
-    <div class="p-3 bg-blue-50 rounded-lg text-sm mb-3" data-label>专业宠物医疗 24小时服务</div>
-    <button class="sp-btn" data-label>预约挂号</button>
-    <button class="sp-btn secondary" data-label>电话咨询</button>
-  </div>`,
-  mall: () => `<div>
-    <div class="font-bold text-lg mb-3" data-label>商城</div>
-    <div class="grid grid-cols-2 gap-3">
-      <div class="p-3 bg-white rounded-lg border" data-label>🥫 狗粮<div class="text-blue-600 mt-1">¥89</div></div>
-      <div class="p-3 bg-white rounded-lg border" data-label>🐟 猫粮<div class="text-blue-600 mt-1">¥99</div></div>
-      <div class="p-3 bg-white rounded-lg border" data-label>🦴 零食<div class="text-blue-600 mt-1">¥29</div></div>
-      <div class="p-3 bg-white rounded-lg border" data-label>🎾 玩具<div class="text-blue-600 mt-1">¥39</div></div>
-    </div>
-  </div>`,
-  product: () => `<div>
-    <div class="text-center text-5xl py-4">🥫</div>
-    <div class="font-bold" data-label>优质狗粮 3kg</div>
-    <div class="text-blue-600 font-bold text-xl mt-2">¥89</div>
-    <div class="text-xs text-slate-500 mt-2 mb-4" data-label>精选牛肉配方 · 营养均衡</div>
-    <button class="sp-btn" data-label>立即购买</button>
-  </div>`,
-  checkout: () => `<div>
-    <div class="font-bold text-lg mb-3" data-label>确认订单</div>
-    <label class="text-xs text-slate-500" data-label>地址</label>
-    <input class="sp-input" data-input="addr" placeholder="收货地址" />
-    <div class="p-3 bg-slate-50 rounded-lg text-sm mt-3">
-      <div data-label>优质狗粮 3kg × 1</div>
-      <div class="text-blue-600 mt-1">¥89.00</div>
-    </div>
-    <button class="sp-btn mt-4" data-label>提交订单</button>
-  </div>`,
-  orderSuccess: () => `<div class="text-center pt-20">
-    <div class="text-5xl mb-4">✅</div>
-    <div class="text-xl font-bold text-green-600" data-label>下单成功</div>
-    <div class="text-slate-500 text-sm mt-2" data-label>预计 2 天内送达</div>
-  </div>`
+  splash: () => `<div class="flex flex-col items-center justify-center h-full text-center pt-32"><div class="text-5xl mb-4">🐾</div><div class="text-xl font-bold text-blue-600">SmartPet</div></div>`,
+  home: () => `<div><div class="text-center mb-4"><div class="text-3xl">🐾</div><div class="font-bold text-lg text-blue-600">SmartPet</div><div class="text-xs text-slate-500">Your pet's best friend</div></div>
+    <div class="grid grid-cols-2 gap-3 mb-4"><div class="bg-blue-50 p-3 rounded-lg text-center">🏥 找医院</div><div class="bg-pink-50 p-3 rounded-lg text-center">🛒 商城</div><div class="bg-amber-50 p-3 rounded-lg text-center">📔 日记</div><div class="bg-green-50 p-3 rounded-lg text-center">👤 我的</div></div>
+    <button class="sp-btn">登录</button></div>`,
+  loginForm: () => `<div><div class="text-center mb-4 mt-4"><div class="font-bold text-lg">登录 SmartPet</div></div>
+    <label class="text-xs text-slate-500">手机号</label><input class="sp-input" placeholder="请输入手机号" />
+    <div class="flex gap-2"><input class="sp-input flex-1" placeholder="验证码" /><button class="sp-btn secondary" style="width:auto; padding: 10px 14px; margin: 6px 0;">获取验证码</button></div>
+    <div class="text-xs text-green-600 mt-1">验证码已发送</div>
+    <button class="sp-btn mt-4">确认登录</button></div>`,
+  loggedIn: () => `<div class="text-center pt-20"><div class="text-5xl mb-4">🎉</div><div class="text-xl font-bold text-green-600">欢迎回来</div><div class="text-slate-500 text-sm mt-2">13800138000</div></div>`,
+  hospitalList: () => `<div><div class="font-bold text-lg mb-3">找医院</div><input class="sp-input" placeholder="搜索" /><button class="sp-btn secondary">搜索按钮</button>
+    <div class="mt-3 space-y-2"><div class="p-3 bg-white rounded-lg border border-slate-200">爱心宠物医院 <span class="text-xs text-slate-400">1.2km</span></div><div class="p-3 bg-white rounded-lg border border-slate-200">康贝宠物诊所 <span class="text-xs text-slate-400">2.5km</span></div></div></div>`,
+  hospitalDetail: () => `<div><div class="font-bold text-lg mb-2">爱心宠物医院</div><div class="text-xs text-slate-500 mb-3">★ 4.8 · 营业中</div><button class="sp-btn">预约挂号</button></div>`,
+  mall: () => `<div><div class="font-bold text-lg mb-3">商城</div><div class="grid grid-cols-2 gap-3"><div class="p-3 bg-white rounded-lg border">🥫 狗粮<div class="text-blue-600 mt-1">¥89</div></div><div class="p-3 bg-white rounded-lg border">🐟 猫粮<div class="text-blue-600 mt-1">¥99</div></div></div></div>`,
+  product: () => `<div><div class="text-center text-5xl py-4">🥫</div><div class="font-bold">优质狗粮 3kg</div><div class="text-blue-600 font-bold text-xl mt-2">¥89</div><button class="sp-btn">立即购买</button></div>`,
+  checkout: () => `<div><div class="font-bold text-lg mb-3">确认订单</div><label class="text-xs text-slate-500">地址</label><input class="sp-input" placeholder="收货地址" /><button class="sp-btn mt-4">提交订单</button></div>`,
+  orderSuccess: () => `<div class="text-center pt-20"><div class="text-5xl mb-4">✅</div><div class="text-xl font-bold text-green-600">下单成功</div></div>`
 };
 
 function setScreen(name) {
   const body = document.getElementById('phone-body');
+  const fn = screens[name] || screens.home;
   body.style.opacity = '0';
-  setTimeout(() => {
-    body.innerHTML = screens[name]();
-    body.style.opacity = '1';
-  }, 150);
+  setTimeout(() => { body.innerHTML = fn(); body.style.opacity = '1'; }, 120);
 }
-
-// ===== Navigation map: tap target => next screen =====
-const NAV = {
-  '登录': 'loginForm',
-  '确认登录': 'loggedIn',
-  '进入主页': 'home',
-  '找医院': 'hospitalList',
-  '搜索按钮': 'hospitalList',
-  '爱心宠物医院': 'hospitalDetail',
-  '预约挂号': 'loggedIn',
-  '商城': 'mall',
-  '狗粮': 'product',
-  '立即购买': 'checkout',
-  '提交订单': 'orderSuccess'
-};
-
-// ===== Runner =====
-let running = false;
 
 function log(msg, cls='log-info') {
   const el = document.getElementById('log');
@@ -346,161 +152,104 @@ function log(msg, cls='log-info') {
   const line = document.createElement('div');
   line.className = 'log-line ' + cls;
   line.textContent = `[${ts}] ${msg}`;
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
+  el.appendChild(line); el.scrollTop = el.scrollHeight;
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function findElByText(text) {
-  const body = document.getElementById('phone-body');
-  const candidates = body.querySelectorAll('[data-label], [data-input]');
-  for (const el of candidates) {
-    const t = (el.textContent || '') + ' ' + (el.placeholder || '') + ' ' + (el.getAttribute('data-input') || '');
-    if (t.includes(text)) return el;
-  }
-  // text-based fallback
-  for (const el of body.querySelectorAll('*')) {
-    if (el.children.length === 0 && el.textContent.includes(text)) return el;
-  }
-  return null;
-}
-
-function findInputByContext(lastTappedText) {
-  const body = document.getElementById('phone-body');
-  const map = {
-    '手机号': 'phone', '验证码': 'code', '搜索': 'search', '地址': 'addr'
-  };
-  const key = map[lastTappedText] || null;
-  if (key) {
-    const inp = body.querySelector(`[data-input="${key}"]`);
-    if (inp) return inp;
-  }
-  // Fallback: first empty input
-  return body.querySelector('input.sp-input');
-}
-
-function parseYaml(text) {
-  const lines = text.split('\n');
-  const out = [];
-  for (const line of lines) {
-    const m = line.match(/^\s*-\s*(\w+)(?::\s*"?([^"]*)"?)?\s*$/);
-    if (m) {
-      out.push({ cmd: m[1], arg: m[2] || null, raw: line });
+async function parseNow(text) {
+  try {
+    const res = await fetch('/api/maestro?action=parse', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ yaml: text })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({error: res.statusText}));
+      setParseStatus(false, err.error || 'parse failed');
+      return null;
     }
+    const data = await res.json();
+    setParseStatus(true, `✓ ${data.parsed.steps.length} steps`);
+    return data.parsed;
+  } catch (e) {
+    setParseStatus(false, 'network error');
+    return null;
   }
-  return out;
 }
 
+function setParseStatus(ok, msg) {
+  const el = document.getElementById('parse-status');
+  el.textContent = msg;
+  el.className = 'parse-status ' + (ok ? 'parse-ok' : 'parse-err');
+}
+
+let running = false;
 async function runTest() {
   if (running) return;
   running = true;
-  document.getElementById('run-btn').disabled = true;
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
   document.getElementById('status-chip').textContent = '● Running';
   document.getElementById('status-chip').style.color = '#60a5fa';
   document.getElementById('log').innerHTML = '';
 
-  const yaml = document.getElementById('yaml').value;
-  const commands = parseYaml(yaml);
-  log(`Parsed ${commands.length} commands`, 'log-info');
-
-  let lastTapped = null;
-  let passed = 0, failed = 0;
-
-  for (const c of commands) {
-    try {
-      if (c.cmd === 'launchApp') {
-        log('→ launchApp', 'log-run');
-        setScreen('loading');
-        await wait(1000);
-        setScreen('home');
-        await wait(400);
-        log('  ✓ app launched', 'log-ok'); passed++;
-      } else if (c.cmd === 'assertVisible') {
-        log(`→ assertVisible: "${c.arg}"`, 'log-run');
-        await wait(200);
-        const el = findElByText(c.arg);
-        if (el) {
-          el.classList.add('sp-highlight-green');
-          const badge = document.createElement('span');
-          badge.className = 'check-badge';
-          badge.textContent = '✓';
-          if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
-          el.appendChild(badge);
-          await wait(800);
-          badge.remove();
-          el.classList.remove('sp-highlight-green');
-          log(`  ✓ visible: "${c.arg}"`, 'log-ok'); passed++;
-        } else {
-          log(`  ✗ not found: "${c.arg}"`, 'log-err'); failed++;
-        }
-      } else if (c.cmd === 'tapOn') {
-        log(`→ tapOn: "${c.arg}"`, 'log-run');
-        const el = findElByText(c.arg);
-        if (el) {
-          el.classList.add('sp-highlight-blue');
-          await wait(600);
-          el.classList.remove('sp-highlight-blue');
-          lastTapped = c.arg;
-          // Side effects
-          if (c.arg === '获取验证码') {
-            const cs = document.getElementById('code-sent');
-            if (cs) cs.classList.remove('hidden');
-          }
-          if (NAV[c.arg]) {
-            setScreen(NAV[c.arg]);
-            await wait(700);
-          }
-          log(`  ✓ tapped: "${c.arg}"`, 'log-ok'); passed++;
-        } else {
-          log(`  ✗ tap target not found: "${c.arg}"`, 'log-err'); failed++;
-        }
-      } else if (c.cmd === 'inputText') {
-        log(`→ inputText: "${c.arg}"`, 'log-run');
-        const inp = findInputByContext(lastTapped);
-        if (inp) {
-          inp.focus();
-          inp.value = '';
-          for (const ch of c.arg) {
-            inp.value += ch;
-            await wait(50);
-          }
-          log(`  ✓ entered: "${c.arg}"`, 'log-ok'); passed++;
-        } else {
-          log(`  ✗ no input focused`, 'log-err'); failed++;
-        }
-      } else {
-        log(`→ (skipped) ${c.raw.trim()}`, 'log-info');
-      }
-    } catch (e) {
-      log('  ✗ ' + e.message, 'log-err'); failed++;
+  const yamlText = document.getElementById('yaml').value;
+  try {
+    const res = await fetch('/api/maestro?action=simulate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ yaml: yamlText })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({error: res.statusText}));
+      log('backend error: ' + (err.error || res.status), 'log-err');
+      document.getElementById('status-chip').textContent = '● backend error';
+      document.getElementById('status-chip').style.color = '#f87171';
+      btn.disabled = false; running = false; return;
     }
+    const data = await res.json();
+    const trace = data.trace || [];
+    log(`Parsed ${data.parsed.steps.length} steps. Running…`, 'log-info');
+    let passed = 0, failed = 0;
+    for (const t of trace) {
+      log(`→ ${t.cmd}${t.arg ? ': "' + t.arg + '"' : ''}`, 'log-run');
+      await wait(Math.min(t.duration_ms || 400, 1200));
+      setScreen(t.screen);
+      if (t.result === 'pass') { passed++; log(`  ✓ ${t.cmd} [screen: ${t.screen}]`, 'log-ok'); }
+      else { failed++; log(`  ✗ ${t.cmd}`, 'log-err'); }
+    }
+    log(`━━━ Done: ${passed} passed, ${failed} failed ━━━`, failed ? 'log-err' : 'log-ok');
+    document.getElementById('status-chip').textContent = failed ? `● ${failed} failed` : `● ${passed} passed`;
+    document.getElementById('status-chip').style.color = failed ? '#f87171' : '#4ade80';
+  } catch (e) {
+    log('network error: ' + e.message, 'log-err');
+    log('Backend /api/maestro?action=simulate is required. No JS fallback.', 'log-info');
   }
-
-  log(`━━━ Done: ${passed} passed, ${failed} failed ━━━`, failed ? 'log-err' : 'log-ok');
-  document.getElementById('status-chip').textContent = failed ? `● ${failed} failed` : `● ${passed} passed`;
-  document.getElementById('status-chip').style.color = failed ? '#f87171' : '#4ade80';
-  document.getElementById('run-btn').disabled = false;
+  btn.disabled = false;
   running = false;
-}
-
-function resetPhone() {
-  setScreen('home');
-  document.getElementById('log').innerHTML = '';
-  document.getElementById('status-chip').textContent = '';
 }
 
 document.getElementById('preset').addEventListener('change', (e) => {
   document.getElementById('yaml').value = PRESETS[e.target.value];
+  parseNow(PRESETS[e.target.value]);
 });
 document.getElementById('run-btn').addEventListener('click', runTest);
-document.getElementById('reset-btn').addEventListener('click', resetPhone);
+document.getElementById('reset-btn').addEventListener('click', () => {
+  setScreen('home');
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('status-chip').textContent = '';
+});
 
-// Init
+// Live parse on YAML change (debounced)
+let parseTimer = null;
+document.getElementById('yaml').addEventListener('input', () => {
+  clearTimeout(parseTimer);
+  parseTimer = setTimeout(() => parseNow(document.getElementById('yaml').value), 500);
+});
+
 document.getElementById('yaml').value = PRESETS.login;
 setScreen('home');
+parseNow(PRESETS.login);
 
-// ===== i18n =====
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
   let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');

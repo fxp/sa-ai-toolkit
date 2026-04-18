@@ -146,7 +146,7 @@
   </details>
 
   <footer class="mt-8 pt-6 border-t border-gray-800 text-center text-gray-500 text-xs">
-    <span data-en="API backend: /api/detect, /api/predict, /api/run, /api/diagnose · Vercel Serverless" data-zh="API后端: /api/detect, /api/predict, /api/run, /api/diagnose · Vercel Serverless 驱动"></span>
+    <span data-en="API backend: /api/industrial?action=detect|predict|run|diagnose · Vercel Serverless" data-zh="API后端: /api/industrial?action=detect|predict|run|diagnose · Vercel Serverless 驱动"></span>
   </footer>
 </div>
 
@@ -323,11 +323,11 @@ async function apiPost(path, body = {}) {
 
 async function runDetect() {
   setBusy(true); setStatus('Running perception...', 'text-blue-400');
-  log('<span class="prompt">&#9655;</span> GET /api/detect — SAM3 + SAM-Audio', 'highlight');
+  log('<span class="prompt">&#9655;</span> GET /api/industrial?action=detect — SAM3 + SAM-Audio', 'highlight');
   animateScan(1500);
   await delay(800);
   try {
-    const data = await apiGet('/api/detect');
+    const data = await apiGet('/api/industrial?action=detect');
     const visuals = data.visual?.detections || [];
     const audios = data.audio?.anomalies || [];
     log(`  visual: ${visuals.length} defects found`, 'output');
@@ -357,10 +357,10 @@ async function runDetect() {
 
 async function runPredict() {
   setBusy(true); setStatus('Running prediction...', 'text-blue-400');
-  log('<span class="prompt">&#9655;</span> GET /api/predict — TimesFM forecast', 'highlight');
+  log('<span class="prompt">&#9655;</span> GET /api/industrial?action=predict — TimesFM forecast', 'highlight');
   await delay(1000);
   try {
-    const data = await apiGet('/api/predict');
+    const data = await apiGet('/api/industrial?action=predict');
     const yf = data.yield_forecast || data.yield;
     const rul = data.rul;
     drawPrediction(yf, rul);
@@ -386,10 +386,10 @@ async function runPredict() {
 
 async function runDiagnose() {
   setBusy(true); setStatus('Running diagnosis...', 'text-blue-400');
-  log('<span class="prompt">&#9655;</span> POST /api/diagnose — LLM root cause analysis', 'highlight');
+  log('<span class="prompt">&#9655;</span> POST /api/industrial?action=diagnose — LLM root cause analysis', 'highlight');
   await delay(1500);
   try {
-    const data = await apiPost('/api/diagnose', { use_llm: false });
+    const data = await apiPost('/api/industrial?action=diagnose', { use_llm: false });
     $('#diag-status').textContent = 'Diagnosis complete';
     $('#diag-status').className = 'tag bg-purple-900/50 text-purple-300';
     const causes = data.root_causes || data.causes || [

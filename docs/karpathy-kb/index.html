@@ -23,6 +23,7 @@
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-secondary { background: rgba(100,100,150,0.2); border: 1px solid rgba(100,100,150,0.3); }
   .lint-row { padding: 8px 12px; border-radius: 6px; background: rgba(20,20,30,0.5); margin-bottom: 6px; }
+  .lint-ok { color: #4ade80; } .lint-warn { color: #facc15; } .lint-err { color: #f87171; }
 </style>
 </head>
 <body class="min-h-screen">
@@ -36,12 +37,15 @@
 <div class="max-w-7xl mx-auto px-6 py-8">
   <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
   <h1 class="text-3xl font-bold mt-3 gradient-text" data-en="Karpathy Knowledge Base" data-zh="Karpathy 知识库">Karpathy Knowledge Base</h1>
-  <p class="text-gray-400 mt-1" data-en="Paste raw notes → extract concepts → lint for contradictions." data-zh="粘贴原始笔记 → 提取概念 → 检查矛盾。">Paste raw notes → extract concepts → lint for contradictions.</p>
+  <p class="text-gray-400 mt-1" data-en="Paste raw notes → Python backend extracts concepts (yake) and lints the KB." data-zh="粘贴原始笔记 → Python 后端（yake）提取概念并检查知识库。">Paste raw notes → Python backend extracts concepts (yake) and lints the KB.</p>
 
-  <div class="flex gap-2 mt-4">
+  <div class="flex gap-2 mt-4 flex-wrap">
     <button id="extract-btn" class="btn" data-en="Extract Concepts" data-zh="提取概念">Extract Concepts</button>
     <button id="lint-btn" class="btn btn-secondary" data-en="Lint" data-zh="一致性检查">Lint</button>
     <button id="clear-btn" class="btn btn-secondary" data-en="Clear" data-zh="清空">Clear</button>
+    <label class="text-sm text-gray-400 ml-2 flex items-center gap-1">N:
+      <input id="n-input" type="number" value="5" min="2" max="12" class="w-14 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm" />
+    </label>
     <span id="status" class="flex items-center gap-2 ml-3 text-sm text-gray-400"></span>
   </div>
 
@@ -50,150 +54,121 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-6">
     <div class="card p-5">
       <h2 class="font-semibold text-blue-300 mb-3" data-en="Raw Notes" data-zh="原始笔记">Raw Notes</h2>
-      <textarea id="raw" rows="22" class="w-full p-3 rounded text-sm" data-en-placeholder="Paste raw text here..." data-zh-placeholder="粘贴原始文本..."></textarea>
+      <textarea id="raw" rows="22" class="w-full p-3 rounded text-sm"></textarea>
     </div>
     <div class="card p-5">
       <h2 class="font-semibold text-purple-300 mb-3" data-en="Wiki (Concepts)" data-zh="Wiki（概念）">Wiki (Concepts)</h2>
       <div id="wiki" class="space-y-3 text-sm"><p class="text-gray-500 italic" data-en="No concepts extracted yet." data-zh="还没有提取概念。">No concepts extracted yet.</p></div>
     </div>
     <div class="card p-5">
-      <h2 class="font-semibold text-pink-300 mb-3" data-en="Compilation Report" data-zh="编译报告">Compilation Report</h2>
-      <pre id="output" class="text-xs text-gray-400 whitespace-pre-wrap font-mono"></pre>
+      <h2 class="font-semibold text-pink-300 mb-3" data-en="Lint Report" data-zh="检查报告">Lint Report</h2>
+      <pre id="output" class="text-xs text-gray-400 whitespace-pre-wrap font-mono">(Run Lint after extracting concepts.)</pre>
     </div>
   </div>
 </div>
 
 <script>
-const STORAGE = 'karpathy-kb-state';
 const DEFAULT_RAW = `The AI customer service market is exploding. In 2026, Gartner estimates over 60% of enterprise customer support will be handled by AI agents. However, many deployments have failed because companies underestimated the integration cost.
 
 OpenAI and Anthropic dominate the foundation model layer. But verticalized players like Sierra and Decagon are winning by focusing narrowly on customer service workflows. Sierra raised $175M at a $4.5B valuation in 2024.
 
-The key insight is that generic chatbots lose. Companies want outcome-based pricing: pay per resolved ticket, not per API call. This shifts risk from the buyer to the vendor and creates stronger alignment.
+The key insight is that generic chatbots lose. Companies want outcome-based pricing: pay per resolved ticket, not per API call.
 
-Contrarian view: Some argue that fully autonomous agents are still 2-3 years away. Human-in-the-loop systems remain safer for regulated industries like healthcare and finance. Nevertheless, tier-1 support for SaaS is ready for full automation today.
+Contrarian view: Some argue that fully autonomous agents are still 2-3 years away. Human-in-the-loop systems remain safer for regulated industries like healthcare and finance.
 
-Knowledge base quality is the real bottleneck. Most enterprises have fragmented, outdated docs. Before deploying any agent, companies must invest in cleaning and structuring their KB. This pre-work often takes 3-6 months.`;
+Knowledge base quality is the real bottleneck. Most enterprises have fragmented, outdated docs. Before deploying any agent, companies must invest in cleaning and structuring their KB.`;
 
 const $ = id => document.getElementById(id);
-let state = JSON.parse(localStorage.getItem(STORAGE) || 'null') || { raw: DEFAULT_RAW, concepts: [], output: '' };
+let concepts = [];
 
-function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
+$('raw').value = DEFAULT_RAW;
 
-function render() {
-  $('raw').value = state.raw;
+function renderConcepts(list) {
   const wiki = $('wiki');
-  if (!state.concepts.length) {
+  if (!list.length) {
     wiki.innerHTML = '<p class="text-gray-500 italic">No concepts extracted yet.</p>';
-  } else {
-    wiki.innerHTML = state.concepts.map(c => `
-      <div class="concept-card">
-        <div class="font-semibold text-blue-200">${c.title}</div>
-        <div class="text-gray-300 text-xs mt-1 leading-relaxed">${c.summary}</div>
-        <div class="mt-2">${c.links.map(l => `<span class="link-badge">[[${l}]]</span>`).join('')}</div>
-      </div>
-    `).join('');
+    return;
   }
-  $('output').textContent = state.output || '(No compilation yet)';
-}
-
-$('raw').addEventListener('input', e => { state.raw = e.target.value; save(); });
-
-function extractConcepts(text) {
-  const sentences = text.split(/(?<=[.!?。！？])\s+/).filter(s => s.trim().length > 20);
-  const phraseCount = {};
-  const stopWords = new Set(['The','This','That','These','Those','However','Nevertheless','But','And','For','With','From','About']);
-  sentences.forEach(s => {
-    const matches = s.match(/\b[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,3}\b/g) || [];
-    matches.forEach(m => {
-      if (stopWords.has(m.split(' ')[0])) return;
-      if (m.length < 4) return;
-      phraseCount[m] = (phraseCount[m] || 0) + 1;
-    });
-  });
-  // also pick key lowercase noun phrases by frequency heuristic
-  const keywords = Object.entries(phraseCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
-  // fallback if few caps
-  if (keywords.length < 3) {
-    const wordFreq = {};
-    text.toLowerCase().replace(/[^\w\s]/g,' ').split(/\s+/).filter(w=>w.length>5).forEach(w=>{ wordFreq[w]=(wordFreq[w]||0)+1; });
-    Object.entries(wordFreq).sort((a,b)=>b[1]-a[1]).slice(0,5-keywords.length).forEach(([w])=>keywords.push(w[0].toUpperCase()+w.slice(1)));
-  }
-  const concepts = keywords.map(kw => {
-    const related = sentences.filter(s => s.toLowerCase().includes(kw.toLowerCase())).slice(0,2).join(' ');
-    const summary = related || `Concept referenced in the source material regarding ${kw}.`;
-    const others = keywords.filter(k => k !== kw).slice(0,3);
-    return { title: kw, summary: summary.slice(0, 240) + (summary.length > 240 ? '…' : ''), links: others };
-  });
-  return concepts;
-}
-
-function buildCompilation(concepts) {
-  const refCount = concepts.reduce((a,c) => a + c.links.length, 0);
-  const now = new Date().toISOString().slice(0,16).replace('T',' ');
-  return `# Compilation Report
-Generated: ${now}
-
-## Stats
-- Concepts extracted: ${concepts.length}
-- Cross-references: ${refCount}
-- Avg links / concept: ${(refCount/Math.max(concepts.length,1)).toFixed(1)}
-
-## Concepts
-${concepts.map((c,i)=>`${i+1}. ${c.title}  →  [${c.links.join(', ')}]`).join('\n')}
-
-## Potential Issues
-- ${concepts.length < 3 ? 'Too few concepts — consider expanding source text.' : 'Coverage looks reasonable.'}
-- ${refCount === 0 ? 'No cross-references found.' : 'Cross-link graph intact.'}
-- 1 contrarian framing detected (see "however", "contrary").
-
-## Next steps
-- Review concept summaries for accuracy
-- Add source citations
-- Run /lint to validate`;
+  wiki.innerHTML = list.map(c => `
+    <div class="concept-card">
+      <div class="font-semibold text-blue-200">${c.name}</div>
+      <div class="text-gray-300 text-xs mt-1 leading-relaxed">${c.summary}</div>
+      <div class="mt-2">${(c.cross_links || []).map(l => `<span class="link-badge">[[${l}]]</span>`).join('') || '<span class="text-gray-500 text-xs italic">no cross-links</span>'}</div>
+    </div>`).join('');
 }
 
 $('extract-btn').addEventListener('click', async () => {
   const btn = $('extract-btn');
   btn.disabled = true;
   $('status').innerHTML = '<span class="spinner"></span><span>Thinking…</span>';
-  await new Promise(r => setTimeout(r, 1500));
-  const concepts = extractConcepts(state.raw);
-  state.concepts = concepts;
-  state.output = buildCompilation(concepts);
-  save();
-  render();
-  $('status').textContent = `Extracted ${concepts.length} concepts.`;
+  try {
+    const res = await fetch('/api/karpathy?action=extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: $('raw').value, n: +$('n-input').value || 5 })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      $('status').textContent = '✗ ' + (err.error || res.status);
+      $('wiki').innerHTML = `<div class="text-red-400">Backend error — /api/karpathy?action=extract is required.</div>`;
+      btn.disabled = false;
+      return;
+    }
+    const data = await res.json();
+    concepts = data.concepts || [];
+    renderConcepts(concepts);
+    $('status').textContent = `Extracted ${concepts.length} concepts.`;
+  } catch (e) {
+    $('status').textContent = '✗ network error';
+    $('wiki').innerHTML = `<div class="text-red-400">Network error: ${e.message}.</div>`;
+  }
   btn.disabled = false;
-  setTimeout(() => $('status').textContent = '', 3000);
+  setTimeout(() => $('status').textContent = '', 4000);
 });
 
 $('lint-btn').addEventListener('click', async () => {
   const results = $('lint-results');
   results.classList.remove('hidden');
   results.innerHTML = '<div class="card p-4"><div class="flex items-center gap-2"><span class="spinner"></span><span>Running checks…</span></div></div>';
-  await new Promise(r => setTimeout(r, 1200));
-  const text = state.raw.toLowerCase();
-  const contraFound = /however|contrary|but |contrarian|nevertheless/.test(text);
-  const deadLinks = state.concepts.some(c => c.links.some(l => !state.concepts.find(k => k.title === l)));
-  const unsourced = !/\b(gartner|idc|mckinsey|study|report|source|\d{4})\b/i.test(state.raw);
-  results.innerHTML = `
-    <div class="card p-4">
-      <h3 class="font-semibold mb-2 text-blue-300">Lint Results</h3>
-      <div class="lint-row">${contraFound ? '⚠️' : '✓'} <span data-en="Contradictions check" data-zh="矛盾检查">Contradictions check</span> — ${contraFound ? 'found contrarian framing, review for conflicts' : 'clean'}</div>
-      <div class="lint-row">${deadLinks ? '⚠️' : '✓'} <span data-en="Dead links check" data-zh="死链检查">Dead links check</span> — ${deadLinks ? 'some [[links]] target missing concepts' : 'all links resolve'}</div>
-      <div class="lint-row">${unsourced ? '⚠️' : '✓'} <span data-en="Unsourced claims" data-zh="无来源断言">Unsourced claims</span> — ${unsourced ? 'no citations detected' : 'citations present'}</div>
-    </div>`;
+  if (!concepts.length) {
+    results.innerHTML = `<div class="card p-4 text-amber-300">Extract concepts first, then run Lint.</div>`;
+    return;
+  }
+  try {
+    const res = await fetch('/api/karpathy?action=lint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ concepts })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      results.innerHTML = `<div class="card p-4 text-red-400">Backend error — ${err.error || res.status}</div>`;
+      return;
+    }
+    const r = await res.json();
+    const pill = (ok, text) => `<span class="${ok?'lint-ok':'lint-warn'}">${ok?'✓':'⚠️'} ${text}</span>`;
+    results.innerHTML = `
+      <div class="card p-4">
+        <h3 class="font-semibold mb-2 text-blue-300">Lint Results — ${r.total_issues} issue(s)</h3>
+        <div class="lint-row">${pill(r.orphaned.length===0, `Orphaned concepts: ${r.orphaned.length ? r.orphaned.join(', ') : 'none'}`)}</div>
+        <div class="lint-row">${pill(r.short_summaries.length===0, `Short summaries: ${r.short_summaries.length ? r.short_summaries.join(', ') : 'none'}`)}</div>
+        <div class="lint-row">${pill(r.duplicates.length===0, `Duplicates: ${r.duplicates.length ? r.duplicates.map(p=>p.join(' ~ ')).join('; ') : 'none'}`)}</div>
+      </div>`;
+    $('output').textContent = JSON.stringify(r, null, 2);
+  } catch (e) {
+    results.innerHTML = `<div class="card p-4 text-red-400">Network error: ${e.message}</div>`;
+  }
 });
 
 $('clear-btn').addEventListener('click', () => {
-  if (!confirm('Clear all state?')) return;
-  state = { raw: DEFAULT_RAW, concepts: [], output: '' };
-  save(); render();
+  $('raw').value = DEFAULT_RAW;
+  concepts = [];
+  renderConcepts([]);
+  $('output').textContent = '(Run Lint after extracting concepts.)';
   $('lint-results').classList.add('hidden');
 });
 
-render();
+renderConcepts([]);
 
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';

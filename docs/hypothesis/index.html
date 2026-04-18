@@ -15,19 +15,17 @@
   .btn { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 500; }
   .btn:disabled { opacity: 0.5; }
   .btn-sec { background: rgba(100,100,150,0.2); border: 1px solid rgba(100,100,150,0.3); padding: 8px 16px; border-radius: 8px; color: #e2e8f0; }
-  .hl-data { background: rgba(239,68,68,0.18); border-bottom: 2px solid #ef4444; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
-  .hl-contra { background: rgba(234,179,8,0.18); border-bottom: 2px solid #eab308; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
-  .hl-strat { background: rgba(34,197,94,0.18); border-bottom: 2px solid #22c55e; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
-  .hl-crit { background: rgba(59,130,246,0.18); border-bottom: 2px solid #3b82f6; padding: 1px 3px; border-radius: 3px; cursor: pointer; }
+  .hl-red { background: rgba(239,68,68,0.18); border-bottom: 2px solid #ef4444; padding: 1px 3px; border-radius: 3px; }
+  .hl-yellow { background: rgba(234,179,8,0.18); border-bottom: 2px solid #eab308; padding: 1px 3px; border-radius: 3px; }
+  .hl-green { background: rgba(34,197,94,0.18); border-bottom: 2px solid #22c55e; padding: 1px 3px; border-radius: 3px; }
+  .hl-blue { background: rgba(59,130,246,0.18); border-bottom: 2px solid #3b82f6; padding: 1px 3px; border-radius: 3px; }
   .annotation { font-size: 12px; padding: 8px 10px; border-radius: 8px; margin-top: 6px; display: block; }
-  .ann-data { background: rgba(239,68,68,0.12); border-left: 3px solid #ef4444; }
-  .ann-contra { background: rgba(234,179,8,0.12); border-left: 3px solid #eab308; }
-  .ann-strat { background: rgba(34,197,94,0.12); border-left: 3px solid #22c55e; }
-  .ann-crit { background: rgba(59,130,246,0.12); border-left: 3px solid #3b82f6; }
+  .ann-red { background: rgba(239,68,68,0.12); border-left: 3px solid #ef4444; }
+  .ann-yellow { background: rgba(234,179,8,0.12); border-left: 3px solid #eab308; }
+  .ann-green { background: rgba(34,197,94,0.12); border-left: 3px solid #22c55e; }
+  .ann-blue { background: rgba(59,130,246,0.12); border-left: 3px solid #3b82f6; }
   .pulse { display: inline-block; width: 10px; height: 10px; background: #60a5fa; border-radius: 50%; animation: pulse 1.2s infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.4); } }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #22c55e; color: #fff; padding: 10px 20px; border-radius: 8px; z-index: 100; animation: slide 3s ease; }
-  @keyframes slide { 0%,100% { opacity: 0; } 10%,90% { opacity: 1; } }
   pre { background: #0b1220; border-radius: 8px; padding: 12px; font-size: 11px; color: #94a3b8; overflow-x: auto; }
 </style>
 </head>
@@ -42,7 +40,7 @@
 <div class="max-w-7xl mx-auto px-6 py-8">
   <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
   <h1 class="text-3xl font-bold mt-3 gradient-text" data-en="Hypothesis Annotator" data-zh="Hypothesis 标注生成器">Hypothesis Annotator</h1>
-  <p class="text-gray-400 mt-1" data-en="Paste an article → auto-highlight key data, contrarian views, strategy, and AI critique." data-zh="粘贴文章 → 自动高亮关键数据、非共识观点、策略、AI 批评。">Paste an article → auto-highlight key data, contrarian views, strategy, and AI critique.</p>
+  <p class="text-gray-400 mt-1" data-en="Paste an article → Python backend classifies each sentence into data / contrarian / strategy / critique." data-zh="粘贴文章 → Python 后端把每句话分类为 数据 / 非共识 / 策略 / 批评。">Paste an article → Python backend classifies each sentence.</p>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
     <div class="card p-5">
@@ -55,7 +53,6 @@
           <option value="4">AI safety debate</option>
         </select>
         <button id="analyze" class="btn" data-en="Analyze" data-zh="分析">Analyze</button>
-        <button id="post" class="btn-sec" data-en="Post to Hypothes.is" data-zh="发布到 Hypothes.is">Post to Hypothes.is</button>
         <span id="status" class="text-sm text-gray-400"></span>
       </div>
       <textarea id="input" rows="20" class="w-full text-sm"></textarea>
@@ -75,78 +72,71 @@
   </div>
 </div>
 
-<div id="toast" class="toast hidden"></div>
-
 <script>
 const PRESETS = [
 `The AI market will reach $1.3T by 2030, with 62% of enterprises planning production deployments in 2026. However, contrary to hype, only 23% of current pilots move to production. Vendors should focus on verticalized workflows rather than horizontal platforms. The strategy must shift from model-as-product to outcome-as-product. AI agents today still hallucinate in critical paths — a real unsolved problem.`,
-`Enterprise AI adoption hit 78% in 2026, up from 41% in 2024. Gartner reports average spend per enterprise is $4.8M annually. However, many deployments stall at POC. Companies must invest in data readiness before agent rollouts. The winning strategy is top-down executive sponsorship combined with bottom-up tooling choices. AI productivity claims remain largely unverified in the field.`,
-`Training a frontier model now costs $200M+, up 3.5x from 2024. But inference costs have dropped 80% in 18 months. Contrary to expectations, model commoditization is accelerating, not slowing. Vendors should pursue specialized fine-tunes over general-purpose scale. The economics favor distillation and mixture-of-experts. AI vendors overstate margins — most still burn cash.`,
-`Multi-agent frameworks now handle 45% of enterprise agent workloads. However, orchestration bugs cause 1 in 4 production incidents. Teams must design for graceful degradation and human handoff. The strategy is fewer, smarter agents over swarms. Current multi-agent systems often underperform single well-prompted models.`,
-`AI safety incidents reached 340 documented cases in 2025, up 2.1x YoY. However, framework regulations remain inconsistent across jurisdictions. Companies should adopt internal red-team requirements before shipping. The key strategy: treat safety as a product feature, not compliance overhead. The industry's self-regulation claims lack teeth.`
+`Enterprise AI adoption hit 78% in 2026, up from 41% in 2024. Gartner reports average spend per enterprise is $4.8M annually. However, many deployments stall at POC. Companies must invest in data readiness before agent rollouts. The winning strategy is top-down executive sponsorship combined with bottom-up tooling choices.`,
+`Training a frontier model now costs $200M+, up 3.5x from 2024. But inference costs have dropped 80% in 18 months. Contrary to expectations, model commoditization is accelerating, not slowing. Vendors should pursue specialized fine-tunes over general-purpose scale. The economics favor distillation and mixture-of-experts.`,
+`Multi-agent frameworks now handle 45% of enterprise agent workloads. However, orchestration bugs cause 1 in 4 production incidents. Teams must design for graceful degradation and human handoff. The strategy is fewer, smarter agents over swarms.`,
+`AI safety incidents reached 340 documented cases in 2025, up 2.1x YoY. However, framework regulations remain inconsistent across jurisdictions. Companies should adopt internal red-team requirements before shipping. The key strategy: treat safety as a product feature, not compliance overhead.`
 ];
 
 const $ = id => document.getElementById(id);
-let annotations = [];
 
 function loadPreset() { $('input').value = PRESETS[+$('preset').value]; }
 $('preset').addEventListener('change', loadPreset);
 loadPreset();
 
-function classify(sentences) {
-  const anns = [];
-  let critAssigned = false;
-  sentences.forEach(s => {
-    const lower = s.toLowerCase();
-    if (/\b\d+([.,]\d+)?\s*(%|x|m|b|t|k|million|billion|trillion|\$)/i.test(s) || /\$\d/.test(s)) {
-      anns.push({ text: s, type: 'data', label: '🔴 Key Data', note: 'Numeric claim — verify source and recency.' });
-    } else if (/\b(but|however|contrary|contrarian|despite|nevertheless|yet|although)\b/.test(lower)) {
-      anns.push({ text: s, type: 'contra', label: '🟡 Contrarian', note: 'Non-consensus framing — worth examining assumptions.' });
-    } else if (/\b(should|must|strategy|focus|pursue|shift|invest|adopt|winning|rollout)\b/.test(lower)) {
-      anns.push({ text: s, type: 'strat', label: '🟢 Strategy', note: 'Prescriptive claim — test against your own context.' });
-    } else if (!critAssigned && s.length > 40) {
-      anns.push({ text: s, type: 'crit', label: '💬 AI Critique', note: 'Broad claim — ask what evidence would disprove it.' });
-      critAssigned = true;
-    }
-  });
-  return anns.slice(0, 6);
+function colorClass(color, prefix) {
+  return `${prefix}-${color}`;
 }
 
 function render(text, anns) {
   let rendered = text;
-  // sort by length desc to avoid nested replacement collisions
-  [...anns].sort((a,b) => b.text.length - a.text.length).forEach(a => {
-    const cls = { data: 'hl-data', contra: 'hl-contra', strat: 'hl-strat', crit: 'hl-crit' }[a.type];
-    const safe = a.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    rendered = rendered.replace(new RegExp(safe), `<span class="${cls}" title="${a.label}">${a.text}</span>`);
+  [...anns].sort((a,b) => b.sentence.length - a.sentence.length).forEach(a => {
+    const safe = a.sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    try {
+      rendered = rendered.replace(new RegExp(safe), `<span class="${colorClass(a.color,'hl')}" title="${a.label}">${a.sentence}</span>`);
+    } catch (e) { /* skip */ }
   });
-  // append annotations
-  const list = anns.map(a => {
-    const cls = { data: 'ann-data', contra: 'ann-contra', strat: 'ann-strat', crit: 'ann-crit' }[a.type];
-    return `<div class="annotation ${cls}"><b>${a.label}</b> — ${a.note}<br><span class="text-gray-400">"${a.text.slice(0,80)}${a.text.length>80?'…':''}"</span></div>`;
-  }).join('');
+  const list = anns.map(a => `
+    <div class="annotation ${colorClass(a.color,'ann')}">
+      <b>${a.label}</b> — ${a.note}<br>
+      <span class="text-gray-400">"${a.sentence.slice(0,120)}${a.sentence.length>120?'…':''}"</span>
+    </div>`).join('');
   $('annotated').innerHTML = `<div class="mb-4">${rendered}</div>${list}`;
-  $('json').textContent = JSON.stringify(anns.map(a => ({ type: a.type, text: a.text, note: a.note })), null, 2);
+  $('json').textContent = JSON.stringify(anns.map(a => ({
+    tag: a.tag, color: a.color, sentence: a.sentence, note: a.note
+  })), null, 2);
 }
 
 $('analyze').addEventListener('click', async () => {
   const btn = $('analyze'); btn.disabled = true;
-  $('status').innerHTML = '<span class="pulse"></span> <span data-en="Analyzing..." data-zh="分析中...">Analyzing...</span>';
-  await new Promise(r => setTimeout(r, 2000));
+  $('status').innerHTML = '<span class="pulse"></span> <span>Analyzing...</span>';
   const text = $('input').value;
-  const sentences = text.split(/(?<=[.!?。！？])\s+/).filter(s => s.trim().length > 10);
-  annotations = classify(sentences);
-  render(text, annotations);
-  $('status').textContent = `✓ ${annotations.length} annotations`;
+  try {
+    const res = await fetch('/api/hypothesis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      $('status').textContent = '✗ ' + (err.error || res.status);
+      $('annotated').innerHTML = `<div class="text-red-400">Backend error — API at /api/hypothesis is required.</div>`;
+      btn.disabled = false;
+      return;
+    }
+    const data = await res.json();
+    const anns = data.annotations || [];
+    render(text, anns);
+    $('status').textContent = `✓ ${anns.length} annotations`;
+  } catch (e) {
+    $('status').textContent = '✗ network error';
+    $('annotated').innerHTML = `<div class="text-red-400">Network error: ${e.message}. The Python API at /api/hypothesis is required.</div>`;
+  }
   btn.disabled = false;
-  setTimeout(() => $('status').textContent = '', 3000);
-});
-
-$('post').addEventListener('click', () => {
-  const toast = $('toast');
-  toast.textContent = '✓ Posted ' + annotations.length + ' annotations to Hypothes.is (simulated)';
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 3000);
+  setTimeout(() => $('status').textContent = '', 4000);
 });
 
 (function() {

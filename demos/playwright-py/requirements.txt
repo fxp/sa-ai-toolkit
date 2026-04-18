@@ -1,0 +1,5 @@
+# simulate_run needs no deps.
+# Only needed for `run_real`:
+#   pip install playwright
+#   playwright install chromium
+playwright>=1.40 ; extra == "real"

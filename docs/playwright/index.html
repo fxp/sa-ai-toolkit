@@ -172,10 +172,38 @@
     <div class="text-xs uppercase tracking-wider text-slate-500 mb-2" data-en="Console Output" data-zh="控制台输出">Console Output</div>
     <div id="log" style="height: 140px; overflow-y: auto; background: #0b1020; border-radius: 6px; padding: 10px;"></div>
   </div>
+
+  <div class="card p-5 mt-6">
+    <h3 class="text-white font-bold mb-2" data-en="▶ Run real tests locally" data-zh="▶ 本地跑真实测试">▶ Run real tests locally</h3>
+    <p class="text-slate-400 text-sm mb-3" data-en="Above is a simulated trace served by /api/playwright. To drive a real Chromium, install Playwright and use the CLI:" data-zh="上面的执行轨迹由 /api/playwright 提供（模拟）。若要驱动真实 Chromium，请安装 Playwright 并使用 CLI：">Above is a simulated trace served by /api/playwright. To drive a real Chromium, install Playwright and use the CLI:</p>
+    <pre class="mono" style="background:#0b1020; padding:12px; border-radius:6px; color:#cbd5e1; font-size:12px;">pip install playwright
+playwright install chromium
+cd demos/playwright-py
+python cli.py real --scenario bing --url https://www.bing.com</pre>
+  </div>
 </div>
 
 <script>
-const SCENARIOS = {
+// UI renderer presets only — business logic (action sequence, code lines,
+// selectors, screenshot marks) comes from /api/playwright?scenario=X.
+const SCENARIO_TITLES = {
+  bing: 'Bing',
+  github: 'GitHub · microsoft/playwright',
+  form: 'Contact — Example',
+  responsive: 'NewCo — Homepage',
+};
+// Map trace action → DOM target id used by PAGES rendering.
+const SELECTOR_TO_SIM_ID = {
+  '#sb_form_q': 'sim-search',
+  '#sb_form_go': 'sim-go',
+  'button[aria-label=Star]': 'sim-star',
+  '#name': 'sim-name',
+  '#email': 'sim-email',
+  '#msg': 'sim-msg',
+  '#submit': 'sim-submit',
+};
+// Legacy — unused, kept for reference:
+const SCENARIOS_OLD_LOCAL = {
   bing: {
     title: 'Bing',
     script: [
@@ -374,11 +402,13 @@ function highlight(line) {
   return h;
 }
 
-function renderCode(scen) {
-  document.getElementById('code').innerHTML = scen.script.map((l, i) =>
+function renderCodeLines(scriptLines) {
+  document.getElementById('code').innerHTML = scriptLines.map((l, i) =>
     `<span class="code-line" data-line="${i}">${highlight(l) || '&nbsp;'}</span>`
   ).join('');
 }
+// Cache of the currently-loaded scenario (script + trace) from the API.
+let currentScenario = null;
 
 let running = false, actionCount = 0;
 function log(msg, cls='log-info') {
@@ -418,6 +448,24 @@ function animateNumber(id, from, to, dur) {
   requestAnimationFrame(step);
 }
 
+async function fetchScenario(name) {
+  const resp = await fetch(`/api/playwright?scenario=${encodeURIComponent(name)}`);
+  if (!resp.ok) throw new Error(`API ${resp.status}: ${await resp.text()}`);
+  return resp.json();
+}
+
+function mapLineIndex(codeLine, script, used) {
+  if (!codeLine) return -1;
+  for (let i = 0; i < script.length; i++) {
+    if (used.has(i)) continue;
+    if (script[i].trim() === codeLine.trim() || script[i].includes(codeLine)) {
+      used.add(i);
+      return i;
+    }
+  }
+  return -1;
+}
+
 async function runTest() {
   if (running) return;
   running = true; actionCount = 0;
@@ -428,82 +476,87 @@ async function runTest() {
   document.getElementById('status-chip').textContent = '● Running';
   document.getElementById('status-chip').style.color = '#60a5fa';
 
-  const scen = SCENARIOS[document.getElementById('preset').value];
-  renderCode(scen);
-
-  const cmdLines = [];
+  const name = document.getElementById('preset').value;
+  let data;
+  try {
+    data = await fetchScenario(name);
+  } catch (err) {
+    log(`✗ API error: ${err.message}`, 'log-run');
+    document.getElementById('status-chip').textContent = '✗ API error';
+    document.getElementById('status-chip').style.color = '#f87171';
+    document.getElementById('run-btn').disabled = false;
+    running = false;
+    alert(`Playwright simulate API failed: ${err.message}`);
+    return;
+  }
+  currentScenario = data;
+  renderCodeLines(data.script);
+  const title = data.title || SCENARIO_TITLES[name] || name;
   const usedLines = new Set();
-  scen.commands.forEach(c => {
-    const kw = c.type === 'goto' ? 'goto' : c.type === 'fill' ? '.fill' :
-               c.type === 'click' ? '.click' : c.type === 'screenshot' ? 'screenshot' :
-               c.type === 'viewport' ? 'set_viewport_size' : 'wait_for_load_state';
-    const idx = scen.script.findIndex((s, i) => s.includes(kw) && !usedLines.has(i));
-    if (idx >= 0) usedLines.add(idx);
-    cmdLines.push(idx);
-  });
 
-  for (let i = 0; i < scen.commands.length; i++) {
-    const cmd = scen.commands[i];
-    highlightLine(cmdLines[i]);
+  for (let i = 0; i < data.trace.length; i++) {
+    const step = data.trace[i];
+    const lineIdx = mapLineIndex(step.code_line, data.script, usedLines);
+    highlightLine(lineIdx);
     await wait(300);
 
-    if (cmd.type === 'goto') {
-      log(`→ page.goto("${cmd.url}")`, 'log-run');
-      document.getElementById('url-bar').textContent = cmd.url;
-      document.getElementById('tab-title').textContent = scen.title;
-      await setPage(cmd.render);
+    if (step.action === 'goto') {
+      log(`→ page.goto("${step.target_url}")`, 'log-run');
+      document.getElementById('url-bar').textContent = step.target_url;
+      document.getElementById('tab-title').textContent = title;
+      if (step.render) await setPage(step.render);
       const domReady = 100 + Math.floor(Math.random()*200);
       const fullLoad = domReady + 200 + Math.floor(Math.random()*400);
       animateNumber('m-dom', 0, domReady, 600);
       animateNumber('m-load', 0, fullLoad, 800);
-      actionCount++;
       log(`  ✓ loaded (${fullLoad}ms)`, 'log-ok');
-    } else if (cmd.type === 'fill') {
-      log(`→ page.locator("#${cmd.sel}").fill("${cmd.val}")`, 'log-run');
-      const inp = document.getElementById('sim-' + cmd.sel);
+    } else if (step.action === 'fill') {
+      log(`→ page.locator("${step.selector}").fill("${step.value}")`, 'log-run');
+      const domId = SELECTOR_TO_SIM_ID[step.selector];
+      const inp = domId && document.getElementById(domId);
       if (inp) {
         inp.focus(); inp.value = '';
-        for (const ch of cmd.val) { inp.value += ch; await wait(45); }
-        actionCount++;
-        log(`  ✓ filled`, 'log-ok');
+        for (const ch of step.value) { inp.value += ch; await wait(45); }
       }
-    } else if (cmd.type === 'click') {
-      log(`→ page.click("#${cmd.sel}")`, 'log-run');
-      const btn = document.getElementById('sim-' + cmd.sel);
+      log(`  ✓ filled`, 'log-ok');
+    } else if (step.action === 'click') {
+      log(`→ page.click("${step.selector}")`, 'log-run');
+      const domId = SELECTOR_TO_SIM_ID[step.selector];
+      const btn = domId && document.getElementById(domId);
       if (btn) {
         btn.classList.add('highlight-click');
         await wait(500);
         btn.classList.remove('highlight-click');
       }
-      if (cmd.render) await setPage(cmd.render);
-      actionCount++;
+      if (step.render) await setPage(step.render);
       log(`  ✓ clicked`, 'log-ok');
-    } else if (cmd.type === 'screenshot') {
-      log(`→ page.screenshot(path="${cmd.label}")`, 'log-run');
+    } else if (step.action === 'screenshot') {
+      log(`→ page.screenshot(path="${step.label}")`, 'log-run');
       const browser = document.getElementById('browser');
       browser.classList.add('flash');
       await wait(600);
       browser.classList.remove('flash');
       const t = document.createElement('div');
       t.className = 'thumb';
-      t.title = cmd.label;
+      t.title = step.label;
       const c1 = Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
       const c2 = Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
       t.style.background = `linear-gradient(135deg, #${c1}, #${c2})`;
       document.getElementById('thumbs').appendChild(t);
-      actionCount++;
-      log(`  ✓ saved ${cmd.label}`, 'log-ok');
-    } else if (cmd.type === 'viewport') {
-      log(`→ page.set_viewport_size({"width": ${cmd.w}})`, 'log-run');
-      document.getElementById('browser').style.width = cmd.w + 'px';
+      log(`  ✓ saved ${step.label}`, 'log-ok');
+    } else if (step.action === 'viewport') {
+      const w = step.viewport && step.viewport.width;
+      log(`→ page.set_viewport_size({"width": ${w}})`, 'log-run');
+      if (w) document.getElementById('browser').style.width = w + 'px';
       await wait(700);
-      actionCount++;
-      log(`  ✓ viewport ${cmd.w}px`, 'log-ok');
-    } else if (cmd.type === 'wait') {
+      log(`  ✓ viewport ${w}px`, 'log-ok');
+    } else if (step.action === 'wait') {
       log(`→ page.wait_for_load_state()`, 'log-run');
       await wait(500);
       log(`  ✓ loaded`, 'log-ok');
     }
+
+    actionCount++;
     document.getElementById('m-actions').textContent = actionCount;
     await wait(200);
   }
@@ -529,14 +582,26 @@ function resetAll() {
   document.querySelectorAll('.code-line').forEach(l => l.classList.remove('active','done'));
 }
 
+async function loadAndRenderScenario() {
+  const name = document.getElementById('preset').value;
+  try {
+    const data = await fetchScenario(name);
+    currentScenario = data;
+    renderCodeLines(data.script);
+  } catch (err) {
+    document.getElementById('code').innerHTML =
+      `<div class="text-red-400 p-3">API error: ${err.message}</div>`;
+  }
+}
+
 document.getElementById('preset').addEventListener('change', () => {
-  renderCode(SCENARIOS[document.getElementById('preset').value]);
   resetAll();
+  loadAndRenderScenario();
 });
 document.getElementById('run-btn').addEventListener('click', runTest);
 document.getElementById('reset-btn').addEventListener('click', resetAll);
 
-renderCode(SCENARIOS.bing);
+loadAndRenderScenario();
 
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';

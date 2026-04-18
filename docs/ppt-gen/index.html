@@ -80,9 +80,11 @@ Roadmap & next steps</textarea></div>
         <button id="add" class="btn" data-en="Add Slide" data-zh="添加一页">Add Slide</button>
         <button id="prev" class="btn-sec">◀ Prev</button>
         <button id="next" class="btn-sec">Next ▶</button>
-        <button id="export" class="btn" data-en="Export PNG" data-zh="导出 PNG">Export PNG</button>
+        <button id="export" class="btn-sec" data-en="Export PNG" data-zh="导出 PNG">Export PNG</button>
+        <button id="export-pptx" class="btn" data-en="Export PPTX" data-zh="导出 PPTX">Export PPTX</button>
         <button id="del" class="btn-sec" data-en="Delete" data-zh="删除">Delete</button>
       </div>
+      <div id="err-banner" class="hidden" style="margin-top:10px; padding:10px; border-radius:8px; background: rgba(127,29,29,0.3); border: 1px solid rgba(248,113,113,0.5); color: #fca5a5; font-size: 12px;"></div>
       <div class="text-xs text-gray-500 pt-2" id="slide-nav"></div>
     </div>
 
@@ -240,6 +242,66 @@ $('export').addEventListener('click', async () => {
   a.href = canvas.toDataURL('image/png');
   a.download = `slide-${state.current + 1}.png`;
   a.click();
+});
+
+const THEME_NAMES = ['blue-orange', 'red-gold', 'green-mint', 'purple-pink'];
+function showErr(msg) {
+  const b = document.getElementById('err-banner');
+  b.textContent = msg; b.classList.remove('hidden');
+}
+function clearErr() { document.getElementById('err-banner').classList.add('hidden'); }
+
+function slideToApiFields(s) {
+  const contentLines = (s.content || '').split('\n').map(l => l.trim()).filter(Boolean);
+  if (s.tmpl === 'cover')   return { title: s.title, subtitle: s.subtitle, company: s.company, date: s.date };
+  if (s.tmpl === 'agenda')  return { title: s.title, items: contentLines };
+  if (s.tmpl === 'data')    return {
+      title: s.title,
+      big_number: contentLines[0] || '78%',
+      description: contentLines.slice(1).join(' ') || 'of enterprises plan AI agent deployments.',
+      source: `${s.company} · ${s.date}`,
+    };
+  if (s.tmpl === 'split')   return { title: s.title, bullets: contentLines,
+      chart: { categories: ['Q1','Q2','Q3','Q4','Q5'], values: [65,48,82,34,71] } };
+  if (s.tmpl === 'summary') return { title: s.title, columns: contentLines.slice(0, 3),
+      company: s.company, date: s.date };
+  return { title: s.title };
+}
+
+document.getElementById('export-pptx').addEventListener('click', async () => {
+  clearErr();
+  const btn = document.getElementById('export-pptx');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Generating PPTX...';
+  try {
+    const first = state.slides[0];
+    const payload = {
+      title: first.title || 'Deck',
+      subtitle: first.subtitle || '',
+      theme: THEME_NAMES[first.theme || 0] || 'blue-orange',
+      slides: state.slides.map(s => ({ template: s.tmpl, fields: slideToApiFields(s) })),
+    };
+    const res = await fetch('/api/ppt', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const bin = atob(data.pptx_base64);
+    const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const blob = new Blob([u8], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = data.filename || 'deck.pptx';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) {
+    showErr(`API error: ${e.message}. Ensure /api/ppt is deployed.`);
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
 });
 
 loadForm(); renderSlide();

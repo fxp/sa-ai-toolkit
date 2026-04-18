@@ -130,60 +130,10 @@
 
 function getLang() { return localStorage.getItem('sa-toolkit-lang') || 'en'; }
 
-const STAGES = {
-  en: [
-    { name: 'Topic scoping', search: false },
-    { name: 'Query decomposition', search: false },
-    { name: 'Literature search', search: true },
-    { name: 'Source ranking', search: false },
-    { name: 'Key claim extraction', search: false },
-    { name: 'Counter-argument search', search: true },
-    { name: 'Evidence triangulation', search: false },
-    { name: 'Domain expert lookup', search: true },
-    { name: 'Data point extraction', search: false },
-    { name: 'Trend identification', search: false },
-    { name: 'Timeline construction', search: false },
-    { name: 'Case study search', search: true },
-    { name: 'Quantitative synthesis', search: false },
-    { name: 'Qualitative synthesis', search: false },
-    { name: 'Hypothesis formulation', search: false },
-    { name: 'Contradiction check', search: false },
-    { name: 'Citation verification', search: false },
-    { name: 'Narrative outlining', search: false },
-    { name: 'Draft writing', search: false },
-    { name: 'Peer review (multi-agent)', search: false },
-    { name: 'Iterative refinement', search: false },
-    { name: 'Final formatting', search: false },
-    { name: 'Report publication', search: false },
-  ],
-  zh: [
-    { name: '主题界定', search: false },
-    { name: '查询拆解', search: false },
-    { name: '文献检索', search: true },
-    { name: '来源排序', search: false },
-    { name: '关键论点抽取', search: false },
-    { name: '反方观点检索', search: true },
-    { name: '证据三角校验', search: false },
-    { name: '领域专家查询', search: true },
-    { name: '数据点提取', search: false },
-    { name: '趋势识别', search: false },
-    { name: '时间线构建', search: false },
-    { name: '案例检索', search: true },
-    { name: '定量综合', search: false },
-    { name: '定性综合', search: false },
-    { name: '假设形成', search: false },
-    { name: '矛盾校验', search: false },
-    { name: '引用核验', search: false },
-    { name: '叙事大纲', search: false },
-    { name: '草稿撰写', search: false },
-    { name: '多 Agent 同行评审', search: false },
-    { name: '迭代打磨', search: false },
-    { name: '最终排版', search: false },
-    { name: '报告发布', search: false },
-  ],
-};
-
-let allSearchResults = [];
+// Stage metadata comes from the backend. Client stores only names for rendering.
+let STAGE_NAMES = { en: [], zh: [] };
+let NUM_STAGES = 23;
+let allStageResults = [];
 let currentTopic = '';
 
 function addLog(text, cls = 'text-gray-400') {
@@ -196,14 +146,21 @@ function addLog(text, cls = 'text-gray-400') {
   el.parentElement.scrollTop = el.parentElement.scrollHeight;
 }
 
+// Initial stage names (populated by backend stage responses; fall back defaults here for first render).
+const STAGE_FALLBACK_NAMES_EN = ['Topic scoping','Query decomposition','Literature search','Source ranking','Key claim extraction','Counter-argument search','Evidence triangulation','Domain expert lookup','Data point extraction','Trend identification','Timeline construction','Case study search','Quantitative synthesis','Qualitative synthesis','Hypothesis formulation','Contradiction check','Citation verification','Narrative outlining','Draft writing','Peer review (multi-agent)','Iterative refinement','Final formatting','Report publication'];
+const STAGE_FALLBACK_NAMES_ZH = ['主题界定','查询拆解','文献检索','来源排序','关键论点抽取','反方观点检索','证据三角校验','领域专家查询','数据点提取','趋势识别','时间线构建','案例检索','定量综合','定性综合','假设形成','矛盾校验','引用核验','叙事大纲','草稿撰写','多 Agent 同行评审','迭代打磨','最终排版','报告发布'];
+const SEARCH_IDX = new Set([2, 5, 7, 11]);
+
 function renderStages() {
   const lang = getLang();
-  const stages = STAGES[lang];
-  const html = stages.map((s, i) => `
+  const names = (STAGE_NAMES[lang] && STAGE_NAMES[lang].length)
+    ? STAGE_NAMES[lang]
+    : (lang === 'zh' ? STAGE_FALLBACK_NAMES_ZH : STAGE_FALLBACK_NAMES_EN);
+  const html = names.map((name, i) => `
     <div id="stage-${i}" class="stage flex items-center gap-2 p-2 border border-gray-700 rounded bg-gray-800/30">
       <span class="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px] text-gray-400 flex-shrink-0" data-idx="${i + 1}">${i + 1}</span>
-      <span class="text-gray-300 truncate">${s.name}</span>
-      ${s.search ? '<span class="ml-auto text-[9px] text-blue-400">&#128269;</span>' : ''}
+      <span class="text-gray-300 truncate">${name}</span>
+      ${SEARCH_IDX.has(i) ? '<span class="ml-auto text-[9px] text-blue-400">&#128269;</span>' : ''}
     </div>
   `).join('');
   document.getElementById('stages').innerHTML = html;
@@ -223,21 +180,20 @@ function markStage(i, status) {
   }
 }
 
-async function apiSearch(query) {
-  try {
-    const r = await fetch(`/api/search?q=${encodeURIComponent(query)}&n=5`);
-    const d = await r.json();
-    return d.results || [];
-  } catch (e) {
-    return [];
-  }
+async function callStageAPI(topic, stageIdx, prevResults, lang) {
+  const resp = await fetch('/api/research?action=stage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic, stage_idx: stageIdx, prev_results: prevResults, lang }),
+  });
+  if (!resp.ok) throw new Error(`API ${resp.status}: ${await resp.text()}`);
+  return resp.json();
 }
 
 async function runResearch(topic) {
   currentTopic = topic;
-  allSearchResults = [];
+  allStageResults = [];
   const lang = getLang();
-  const stages = STAGES[lang];
 
   document.getElementById('progress-section').classList.remove('hidden');
   document.getElementById('log-section').classList.remove('hidden');
@@ -247,138 +203,52 @@ async function runResearch(topic) {
 
   addLog(`<span class="text-blue-400">▶ Research started</span>: "${topic}"`, 'text-blue-400');
 
-  const queries = [
-    topic,
-    `${topic} 2024 2025 trends`,
-    `${topic} criticism limitations`,
-    `${topic} case study examples`,
-  ];
-  let queryIdx = 0;
+  let finalReport = null;
 
-  for (let i = 0; i < stages.length; i++) {
-    markStage(i, 'active');
-    const pct = Math.round(((i + 1) / stages.length) * 100);
-    document.getElementById('progress-bar').style.width = `${pct}%`;
-    document.getElementById('progress-pct').textContent = `${pct}%`;
+  try {
+    for (let i = 0; i < NUM_STAGES; i++) {
+      markStage(i, 'active');
+      const pct = Math.round(((i + 1) / NUM_STAGES) * 100);
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+      document.getElementById('progress-pct').textContent = `${pct}%`;
 
-    addLog(`  <span class="text-yellow-400">›</span> ${stages[i].name}...`);
+      const resp = await callStageAPI(topic, i, allStageResults, lang);
+      const st = resp.stage;
+      allStageResults.push(st);
 
-    if (stages[i].search) {
-      const q = queries[queryIdx % queries.length];
-      queryIdx++;
-      addLog(`    <span class="text-blue-300">search:</span> ${q}`, 'text-gray-500');
-      const results = await apiSearch(q);
-      allSearchResults.push(...results);
-      addLog(`    <span class="text-green-400">← ${results.length} sources found</span>`, 'text-gray-500');
-    } else {
-      await new Promise(r => setTimeout(r, 400 + Math.random() * 600));
+      const displayName = (lang === 'zh' && st.name_zh) ? st.name_zh : st.name;
+      addLog(`  <span class="text-yellow-400">›</span> ${displayName}...`);
+      (st.log || []).forEach(line => addLog(`    <span class="text-gray-500">${line}</span>`, 'text-gray-500'));
+      if (st.uses_search) {
+        addLog(`    <span class="text-green-400">← ${st.search_results.length} sources</span>`, 'text-gray-500');
+      }
+      markStage(i, 'done');
+
+      if (resp.report) finalReport = resp.report;
     }
-
-    markStage(i, 'done');
+  } catch (err) {
+    addLog(`<span class="text-red-400">✗ API error: ${err.message}</span>`, 'text-red-400');
+    alert(getLang() === 'zh' ? `研究管线失败: ${err.message}` : `Research pipeline failed: ${err.message}`);
+    return;
   }
 
-  addLog(`<span class="text-green-400">✓ Research complete — generating report</span>`, 'text-green-400');
-  await new Promise(r => setTimeout(r, 800));
+  if (!finalReport) {
+    addLog(`<span class="text-red-400">✗ No report returned by backend</span>`, 'text-red-400');
+    return;
+  }
 
-  const md = buildReport(topic, allSearchResults);
+  addLog(`<span class="text-green-400">✓ Research complete — rendering report</span>`, 'text-green-400');
+
   document.getElementById('report-section').classList.remove('hidden');
-  document.getElementById('report-content').innerHTML = marked.parse(md);
+  document.getElementById('report-content').innerHTML = marked.parse(finalReport);
 
   document.getElementById('download-btn').onclick = () => {
-    const blob = new Blob([md], { type: 'text/markdown' });
+    const blob = new Blob([finalReport], { type: 'text/markdown' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `research-${topic.slice(0, 40).replace(/[^a-z0-9]+/gi, '-')}.md`;
     a.click();
   };
-}
-
-function buildReport(topic, results) {
-  const lang = getLang();
-  const uniq = [];
-  const seen = new Set();
-  for (const r of results) {
-    if (!r.url || seen.has(r.url)) continue;
-    seen.add(r.url);
-    uniq.push(r);
-  }
-
-  const dateStr = new Date().toISOString().slice(0, 10);
-  if (lang === 'zh') {
-    return `# 研究报告：${topic}
-
-**生成日期**: ${dateStr}
-**检索来源**: ${uniq.length} 条独立来源
-**管线**: AutoResearchClaw 23 阶段
-
----
-
-## 摘要
-
-本报告针对「**${topic}**」展开系统性检索与综合分析，涵盖文献综述、关键论点抽取、反方观点校验、数据三角验证等阶段。共整合 ${uniq.length} 条独立来源，识别出若干关键趋势与潜在争议点。
-
-## 关键发现
-
-${uniq.slice(0, 5).map((r, i) => `${i + 1}. **${r.title}** — ${r.snippet}`).join('\n\n')}
-
-## 主要证据
-
-${uniq.slice(0, 8).map(r => `- ${r.snippet}\n  *来源*: [${r.title}](${r.url})`).join('\n\n') || '- （无检索结果，使用内置模板）'}
-
-## 结论与建议
-
-基于上述检索证据，对于「${topic}」的关键判断如下：
-
-1. **主流观点**: 根据 ${uniq.length} 条来源的综合分析，该领域正处于快速演化期。
-2. **反方视角**: 建议关注潜在的方法论局限与代表性偏差。
-3. **下一步**: 建议进一步深入 1-2 个具体子主题以获得可操作结论。
-
-## 引用来源
-
-${uniq.map((r, i) => `${i + 1}. [${r.title}](${r.url})`).join('\n') || '_（无）_'}
-
----
-
-*本报告由 AutoResearchClaw 自动生成 — 23 阶段管线，DuckDuckGo 搜索驱动*
-`;
-  }
-
-  return `# Research Report: ${topic}
-
-**Generated**: ${dateStr}
-**Sources**: ${uniq.length} unique sources
-**Pipeline**: AutoResearchClaw 23-stage autonomous
-
----
-
-## Executive Summary
-
-This report provides a systematic analysis of "**${topic}**" through literature search, key-claim extraction, counter-argument verification, and evidence triangulation. It synthesizes ${uniq.length} independent sources to surface key trends and points of contention.
-
-## Key Findings
-
-${uniq.slice(0, 5).map((r, i) => `${i + 1}. **${r.title}** — ${r.snippet}`).join('\n\n')}
-
-## Primary Evidence
-
-${uniq.slice(0, 8).map(r => `- ${r.snippet}\n  *Source*: [${r.title}](${r.url})`).join('\n\n') || '- _(No search results — using built-in template)_'}
-
-## Conclusions & Recommendations
-
-Based on the evidence gathered, the following conclusions are drawn about "${topic}":
-
-1. **Mainstream view**: Based on synthesis of ${uniq.length} sources, this field is undergoing rapid evolution.
-2. **Counter-perspective**: Watch for methodological limitations and representation biases in current discourse.
-3. **Next steps**: Recommend 1-2 specific sub-topics for deeper investigation to reach actionable conclusions.
-
-## References
-
-${uniq.map((r, i) => `${i + 1}. [${r.title}](${r.url})`).join('\n') || '_(None)_'}
-
----
-
-*Generated by AutoResearchClaw — 23-stage pipeline, DuckDuckGo search-powered*
-`;
 }
 
 document.getElementById('start-btn').addEventListener('click', () => {

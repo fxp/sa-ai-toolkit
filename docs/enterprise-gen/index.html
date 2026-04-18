@@ -7,106 +7,29 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
-  body {
-    background: #0f172a; color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    margin: 0;
-  }
-  .card {
-    background: rgba(30,30,50,0.6);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(100,100,150,0.2);
-    border-radius: 12px;
-  }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
-  .lang-toggle {
-    position: fixed; top: 16px; right: 16px; z-index: 50;
-    padding: 6px 14px; border-radius: 999px;
-    background: rgba(30,30,50,0.8); border: 1px solid rgba(100,100,150,0.3);
-    color: #e2e8f0; font-size: 13px; cursor: pointer;
-  }
-
-  input.field, select.field, textarea.field {
-    width: 100%; padding: 10px 12px; border-radius: 8px;
-    background: rgba(15,23,42,0.7); color: #e2e8f0;
-    border: 1px solid rgba(100,100,150,0.3); font-size: 14px;
-    outline: none;
-  }
+  body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', sans-serif; margin: 0; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); border-radius: 12px; }
+  .lang-toggle { position: fixed; top: 16px; right: 16px; z-index: 50; padding: 6px 14px; border-radius: 999px; background: rgba(30,30,50,0.8); border: 1px solid rgba(100,100,150,0.3); color: #e2e8f0; font-size: 13px; cursor: pointer; }
+  input.field, select.field, textarea.field { width: 100%; padding: 10px 12px; border-radius: 8px; background: rgba(15,23,42,0.7); color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); font-size: 14px; outline: none; }
   input.field:focus, select.field:focus { border-color: #60a5fa; }
-
-  .btn {
-    padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
-    background: linear-gradient(135deg, #3b82f6, #6366f1); color: white;
-    border: none; cursor: pointer;
-  }
+  .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; border: none; cursor: pointer; }
   .btn:disabled { opacity: 0.4; }
-  .btn-ghost {
-    background: rgba(30,30,50,0.6); border: 1px solid rgba(100,100,150,0.3);
-    color: #e2e8f0;
-  }
-
-  .check-chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: 999px;
-    background: rgba(30,30,50,0.6); border: 1px solid rgba(100,100,150,0.3);
-    font-size: 13px; cursor: pointer; margin: 4px;
-    user-select: none;
-  }
-  .check-chip input { accent-color: #60a5fa; }
+  .btn-ghost { background: rgba(30,30,50,0.6); border: 1px solid rgba(100,100,150,0.3); color: #e2e8f0; }
+  .check-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(30,30,50,0.6); border: 1px solid rgba(100,100,150,0.3); font-size: 13px; cursor: pointer; margin: 4px; user-select: none; }
   .check-chip.active { background: rgba(59,130,246,0.2); border-color: #60a5fa; }
-
-  .stage {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px; border-radius: 8px;
-    background: rgba(15,23,42,0.5);
-    margin-bottom: 8px;
-  }
-  .stage.done { border-left: 3px solid #22c55e; }
-  .stage.active { border-left: 3px solid #3b82f6; background: rgba(59,130,246,0.1); }
-  .spinner {
-    width: 16px; height: 16px; border-radius: 50%;
-    border: 2px solid #3b82f6; border-top-color: transparent;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid rgba(100,100,150,0.15); }
-  th { color: #94a3b8; font-weight: 500; font-size: 11px; text-transform: uppercase; }
-  tr.top { background: rgba(59,130,246,0.08); }
-  .score-bar {
-    display: inline-block; width: 80px; height: 6px; background: rgba(100,100,150,0.2);
-    border-radius: 3px; overflow: hidden; vertical-align: middle;
-  }
-  .score-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #a78bfa); transition: width 0.6s; }
-
-  .tab-btn {
-    padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 13px;
-    background: transparent; color: #94a3b8; border: none; cursor: pointer;
-    border-bottom: 2px solid transparent;
-  }
+  .tab-btn { padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 13px; background: transparent; color: #94a3b8; border: none; cursor: pointer; border-bottom: 2px solid transparent; }
   .tab-btn.active { color: #e2e8f0; border-bottom-color: #60a5fa; }
-
-  .md-content {
-    font-size: 14px; line-height: 1.7; color: #e2e8f0;
-  }
+  .md-content { font-size: 14px; line-height: 1.7; color: #e2e8f0; }
   .md-content h1 { font-size: 24px; font-weight: bold; margin: 20px 0 12px; color: #f1f5f9; }
   .md-content h2 { font-size: 18px; font-weight: bold; margin: 18px 0 10px; color: #f1f5f9; border-bottom: 1px solid rgba(100,100,150,0.2); padding-bottom: 6px; }
   .md-content h3 { font-size: 16px; font-weight: 600; margin: 14px 0 8px; color: #cbd5e1; }
-  .md-content p { margin: 10px 0; color: #cbd5e1; }
-  .md-content ul, .md-content ol { margin: 10px 0; padding-left: 22px; }
-  .md-content li { margin: 4px 0; color: #cbd5e1; }
-  .md-content code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #fbbf24; }
-  .md-content table { margin: 10px 0; }
+  .md-content p, .md-content li { color: #cbd5e1; }
+  .md-content table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  .md-content th, .md-content td { padding: 6px 10px; border-bottom: 1px solid rgba(100,100,150,0.2); text-align: left; }
   .md-content th { background: rgba(59,130,246,0.1); color: #cbd5e1; }
-
-  .progress-bar {
-    height: 6px; background: rgba(100,100,150,0.2); border-radius: 3px; overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%; background: linear-gradient(90deg, #3b82f6, #6366f1);
-    transition: width 0.3s;
-  }
+  .md-content code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #fbbf24; font-size: 12px; }
+  .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #3b82f6; border-top-color: transparent; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -115,96 +38,86 @@
 
 <div class="max-w-6xl mx-auto px-6 py-8">
   <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
-
   <div class="mt-4 mb-6">
     <h1 class="text-3xl font-bold" data-en="Enterprise Demo Package Generator" data-zh="企业级演示方案生成器">Enterprise Demo Package Generator</h1>
-    <p class="text-slate-400 mt-2" data-en="Answer a few questions. Get a full AI-adoption demo package with ranked scenarios, schedule, and runbook." data-zh="回答几个问题，获取一份包含评分、日程和执行手册的完整AI落地演示方案。">Answer a few questions. Get a full AI-adoption demo package.</p>
+    <p class="text-slate-400 mt-2" data-en="Answer a few questions. Get a full AI-adoption demo package with ranked scenarios, schedule, and runbook." data-zh="回答几个问题，获取一份包含评分、日程和执行手册的完整AI落地演示方案。"></p>
   </div>
 
-  <!-- STEP 1: FORM -->
+  <div id="err-banner" class="hidden card p-3 mb-4" style="background: rgba(127,29,29,0.3); border-color: rgba(248,113,113,0.5); color: #fca5a5;"></div>
+
   <div id="step-form" class="card p-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div>
-        <label class="text-sm text-slate-400 mb-1 block" data-en="Company name" data-zh="企业名称">Company name</label>
-        <input id="f-company" class="field" placeholder="e.g. Alibaba" value="Alibaba" />
+        <label class="text-sm text-slate-400 mb-1 block" data-en="Company name" data-zh="企业名称"></label>
+        <input id="f-company" class="field" value="Alibaba" />
       </div>
       <div>
-        <label class="text-sm text-slate-400 mb-1 block" data-en="Industry" data-zh="行业">Industry</label>
+        <label class="text-sm text-slate-400 mb-1 block" data-en="Industry" data-zh="行业"></label>
         <select id="f-industry" class="field">
-          <option value="banking" data-en="Banking" data-zh="金融/银行">Banking</option>
-          <option value="manufacturing" data-en="Manufacturing" data-zh="制造业">Manufacturing</option>
-          <option value="aerospace" data-en="Aerospace" data-zh="航空航天">Aerospace</option>
-          <option value="healthcare" data-en="Healthcare" data-zh="医疗健康">Healthcare</option>
-          <option value="retail" data-en="Retail" data-zh="零售">Retail</option>
-          <option value="consulting" data-en="Consulting" data-zh="咨询">Consulting</option>
-          <option value="logistics" data-en="Logistics" data-zh="物流">Logistics</option>
-          <option value="realestate" data-en="Real Estate" data-zh="房地产">Real Estate</option>
-          <option value="energy" data-en="Energy" data-zh="能源">Energy</option>
-          <option value="tech" data-en="Tech" data-zh="科技">Tech</option>
+          <option value="banking">Banking</option>
+          <option value="manufacturing">Manufacturing</option>
+          <option value="aerospace">Aerospace</option>
+          <option value="healthcare">Healthcare</option>
+          <option value="retail">Retail</option>
+          <option value="consulting">Consulting</option>
+          <option value="logistics">Logistics</option>
+          <option value="realestate">Real Estate</option>
+          <option value="energy">Energy</option>
+          <option value="tech" selected>Tech</option>
         </select>
       </div>
       <div>
-        <label class="text-sm text-slate-400 mb-1 block" data-en="Employee count" data-zh="员工规模">Employee count</label>
+        <label class="text-sm text-slate-400 mb-1 block" data-en="Employee count" data-zh="员工规模"></label>
         <div id="f-size" class="flex flex-wrap gap-2">
-          <label class="check-chip"><input type="radio" name="size" value="<500"><span data-en="<500" data-zh="<500">&lt;500</span></label>
-          <label class="check-chip active"><input type="radio" name="size" value="500-5000" checked><span data-en="500-5000" data-zh="500-5000">500-5000</span></label>
-          <label class="check-chip"><input type="radio" name="size" value="5000-50000"><span data-en="5000-50000" data-zh="5000-50000">5000-50000</span></label>
-          <label class="check-chip"><input type="radio" name="size" value=">50000"><span data-en=">50000" data-zh=">50000">&gt;50000</span></label>
+          <label class="check-chip"><input type="radio" name="size" value="<500">&lt;500</label>
+          <label class="check-chip active"><input type="radio" name="size" value="500-5000" checked>500-5000</label>
+          <label class="check-chip"><input type="radio" name="size" value="5000-50000">5000-50000</label>
+          <label class="check-chip"><input type="radio" name="size" value=">50000">&gt;50000</label>
         </div>
       </div>
       <div>
-        <label class="text-sm text-slate-400 mb-1 block" data-en="Target audience" data-zh="目标受众">Target audience</label>
+        <label class="text-sm text-slate-400 mb-1 block" data-en="Target audience" data-zh="目标受众"></label>
         <select id="f-audience" class="field">
-          <option value="executives" data-en="Executives" data-zh="高管">Executives</option>
-          <option value="engineering" data-en="Engineering" data-zh="工程团队">Engineering</option>
-          <option value="business" data-en="Business users" data-zh="业务人员">Business users</option>
-          <option value="allhands" data-en="All-hands" data-zh="全员">All-hands</option>
+          <option value="executives">Executives</option>
+          <option value="engineering">Engineering</option>
+          <option value="business">Business users</option>
+          <option value="allhands">All-hands</option>
         </select>
       </div>
     </div>
 
     <div class="mt-5">
-      <label class="text-sm text-slate-400 mb-1 block" data-en="Pain points (pick any that apply)" data-zh="痛点（多选）">Pain points (pick any that apply)</label>
+      <label class="text-sm text-slate-400 mb-1 block" data-en="Pain points (pick any that apply)" data-zh="痛点（多选）"></label>
       <div id="f-pain" class="flex flex-wrap"></div>
     </div>
 
     <div class="mt-5">
       <label class="text-sm text-slate-400 mb-1 block">
-        <span data-en="Presentation length:" data-zh="演示时长：">Presentation length:</span>
+        <span data-en="Presentation length:" data-zh="演示时长："></span>
         <span id="f-min-label" class="ml-2 text-blue-400 font-bold">90</span>
-        <span data-en=" min" data-zh=" 分钟"> min</span>
+        <span data-en=" min" data-zh=" 分钟"></span>
       </label>
       <input id="f-min" type="range" min="30" max="180" value="90" step="15" class="w-full accent-blue-500" />
     </div>
 
     <div class="mt-6 flex gap-3">
-      <button id="btn-generate" class="btn" data-en="✨ Generate Package" data-zh="✨ 生成方案">✨ Generate Package</button>
+      <button id="btn-generate" class="btn" data-en="✨ Generate Package" data-zh="✨ 生成方案"></button>
     </div>
   </div>
 
-  <!-- STEP 2: PROGRESS -->
   <div id="step-progress" class="card p-6 mt-6 hidden">
-    <h2 class="text-lg font-bold mb-4" data-en="Generating your package..." data-zh="正在生成方案...">Generating your package...</h2>
-    <div id="stages"></div>
-    <div class="mt-4">
-      <div class="progress-bar"><div id="overall-bar" class="progress-fill" style="width: 0%"></div></div>
-    </div>
-    <div id="live-scoring" class="mt-4 hidden">
-      <div class="text-xs text-slate-400 mb-2" data-en="Scoring demos live..." data-zh="实时评分中...">Scoring demos live...</div>
-      <div id="live-table"></div>
-    </div>
+    <div class="flex items-center gap-3"><div class="spinner"></div><span data-en="Generating via /api/enterprise?action=generate..." data-zh="正在调用 /api/enterprise?action=generate ..."></span></div>
   </div>
 
-  <!-- STEP 3: RESULT -->
   <div id="step-result" class="hidden mt-6">
     <div class="card p-1">
       <div class="flex border-b border-slate-700">
-        <button class="tab-btn active" data-tab="profile" data-en="Profile" data-zh="企业画像">Profile</button>
-        <button class="tab-btn" data-tab="matrix" data-en="Scoring Matrix" data-zh="评分矩阵">Scoring Matrix</button>
-        <button class="tab-btn" data-tab="schedule" data-en="Schedule" data-zh="日程">Schedule</button>
-        <button class="tab-btn" data-tab="runbook" data-en="RUNBOOK" data-zh="执行手册">RUNBOOK</button>
-        <button id="btn-download" class="ml-auto btn btn-ghost mr-1 my-1" data-en="⬇ Download Report" data-zh="⬇ 下载报告">⬇ Download Report</button>
-        <button id="btn-restart" class="btn btn-ghost my-1 mr-1" data-en="↺ New" data-zh="↺ 新建">↺ New</button>
+        <button class="tab-btn active" data-tab="profile" data-en="Profile" data-zh="企业画像"></button>
+        <button class="tab-btn" data-tab="matrix" data-en="Scoring Matrix" data-zh="评分矩阵"></button>
+        <button class="tab-btn" data-tab="schedule" data-en="Schedule" data-zh="日程"></button>
+        <button class="tab-btn" data-tab="runbook" data-en="RUNBOOK" data-zh="执行手册"></button>
+        <button id="btn-download" class="ml-auto btn btn-ghost mr-1 my-1" data-en="⬇ Download" data-zh="⬇ 下载"></button>
+        <button id="btn-restart" class="btn btn-ghost my-1 mr-1" data-en="↺ New" data-zh="↺ 新建"></button>
       </div>
       <div class="p-6">
         <div id="tab-profile" class="tab-panel md-content"></div>
@@ -217,7 +130,6 @@
 </div>
 
 <script>
-// ===== Config =====
 const PAIN_POINTS = [
   { k: 'doc',      en: 'Document processing',   zh: '文档处理' },
   { k: 'collab',   en: 'Collaboration speed',   zh: '协作效率' },
@@ -234,25 +146,6 @@ const PAIN_POINTS = [
   { k: 'test',     en: 'Testing automation',    zh: '测试自动化' }
 ];
 
-// Industry fit matrix (0-10 per industry per demo)
-const DEMOS = [
-  { id: 'autoresearch', name: 'Auto-Research',     pain: ['market','decision','km'],      fit: {banking:9, manufacturing:6, aerospace:7, healthcare:8, retail:8, consulting:10, logistics:6, realestate:7, energy:7, tech:9}, impact: 9 },
-  { id: 'orguplift',    name: 'Org Uplift',        pain: ['talent','collab','innov'],     fit: {banking:7, manufacturing:7, aerospace:7, healthcare:6, retail:6, consulting:9, logistics:6, realestate:6, energy:6, tech:10}, impact: 8 },
-  { id: 'ceodash',      name: 'CEO Dashboard',     pain: ['decision','market','risk'],    fit: {banking:9, manufacturing:8, aerospace:8, healthcare:7, retail:9, consulting:8, logistics:8, realestate:8, energy:8, tech:9}, impact: 9 },
-  { id: 'gstack',       name: 'GStack (DevEx)',    pain: ['talent','innov','test'],       fit: {banking:5, manufacturing:5, aerospace:6, healthcare:5, retail:5, consulting:6, logistics:5, realestate:4, energy:5, tech:10}, impact: 8 },
-  { id: 'hypothesis',   name: 'Hypothesis Testing',pain: ['innov','decision','km'],       fit: {banking:8, manufacturing:7, aerospace:7, healthcare:8, retail:7, consulting:10, logistics:6, realestate:7, energy:7, tech:9}, impact: 7 },
-  { id: 'industrial',   name: 'Industrial AI',     pain: ['qc','risk','legacy'],          fit: {banking:4, manufacturing:10, aerospace:10, healthcare:6, retail:5, consulting:5, logistics:8, realestate:4, energy:9, tech:7}, impact: 10 },
-  { id: 'karpathy',     name: 'Karpathy KB',       pain: ['km','docburden','collab'],     fit: {banking:8, manufacturing:7, aerospace:8, healthcare:8, retail:7, consulting:9, logistics:7, realestate:7, energy:7, tech:10}, impact: 8 },
-  { id: 'maestro',      name: 'Maestro (Mobile)',  pain: ['test','qc','docburden'],       fit: {banking:8, manufacturing:5, aerospace:5, healthcare:7, retail:10, consulting:5, logistics:7, realestate:8, energy:5, tech:10}, impact: 7 },
-  { id: 'playwright',   name: 'Playwright',        pain: ['test','qc','docburden'],       fit: {banking:8, manufacturing:5, aerospace:5, healthcare:6, retail:9, consulting:5, logistics:7, realestate:7, energy:5, tech:10}, impact: 7 },
-  { id: 'pptgen',       name: 'PPT Generator',     pain: ['docburden','collab','km'],     fit: {banking:8, manufacturing:7, aerospace:7, healthcare:7, retail:7, consulting:10, logistics:7, realestate:8, energy:7, tech:9}, impact: 7 },
-  { id: 'entgen',       name: 'Enterprise Gen',    pain: ['collab','docburden','km'],     fit: {banking:8, manufacturing:7, aerospace:7, healthcare:7, retail:7, consulting:10, logistics:7, realestate:7, energy:7, tech:9}, impact: 8 },
-  { id: 'satoolkit',    name: 'SA Toolkit',        pain: ['collab','docburden'],          fit: {banking:7, manufacturing:6, aerospace:6, healthcare:6, retail:7, consulting:9, logistics:6, realestate:7, energy:6, tech:9}, impact: 7 },
-  { id: 'compliance',   name: 'Compliance Agent',  pain: ['comp','risk','doc'],           fit: {banking:10, manufacturing:7, aerospace:9, healthcare:10, retail:7, consulting:8, logistics:7, realestate:8, energy:9, tech:7}, impact: 9 },
-  { id: 'onboard',      name: 'Onboarding Agent',  pain: ['talent','docburden','km'],     fit: {banking:8, manufacturing:7, aerospace:7, healthcare:8, retail:8, consulting:8, logistics:7, realestate:7, energy:7, tech:9}, impact: 7 }
-];
-
-// ===== Pain chip builder =====
 (function() {
   const box = document.getElementById('f-pain');
   PAIN_POINTS.forEach(p => {
@@ -264,235 +157,79 @@ const DEMOS = [
   });
 })();
 
-// radio chip active toggle
 document.querySelectorAll('#f-size .check-chip input').forEach(inp => {
   inp.addEventListener('change', () => {
     document.querySelectorAll('#f-size .check-chip').forEach(c => c.classList.remove('active'));
     inp.parentElement.classList.add('active');
   });
 });
-
-// minutes label
 document.getElementById('f-min').addEventListener('input', e => {
   document.getElementById('f-min-label').textContent = e.target.value;
 });
 
-// ===== Generate flow =====
-async function generate() {
-  const company = document.getElementById('f-company').value || 'Acme Corp';
-  const industry = document.getElementById('f-industry').value;
-  const size = document.querySelector('input[name=size]:checked').value;
-  const audience = document.getElementById('f-audience').value;
-  const mins = +document.getElementById('f-min').value;
-  const pains = Array.from(document.querySelectorAll('#f-pain input:checked')).map(i => i.value);
+function showError(msg) {
+  const b = document.getElementById('err-banner');
+  b.textContent = msg; b.classList.remove('hidden');
+}
+function clearError() { document.getElementById('err-banner').classList.add('hidden'); }
 
+async function generate() {
+  clearError();
+  const profile = {
+    company: document.getElementById('f-company').value || 'Acme Corp',
+    industry: document.getElementById('f-industry').value,
+    size: document.querySelector('input[name=size]:checked').value,
+    audience: document.getElementById('f-audience').value,
+    minutes: +document.getElementById('f-min').value,
+    pain_points: Array.from(document.querySelectorAll('#f-pain input:checked')).map(i => i.value),
+  };
   document.getElementById('step-form').classList.add('hidden');
   document.getElementById('step-progress').classList.remove('hidden');
-
-  // Stage 1: search company info
-  setStages([
-    { t: 'Searching company info', state: 'active' },
-    { t: 'Scoring demos', state: 'pending' },
-    { t: 'Selecting top N for schedule', state: 'pending' },
-    { t: 'Compiling markdown report', state: 'pending' }
-  ]);
-  await animBar(0, 25, 1500);
-  let companyInfo = null;
+  document.getElementById('step-result').classList.add('hidden');
   try {
-    const res = await fetch('/api/search?q=' + encodeURIComponent(company), { method: 'GET' });
-    if (res.ok) companyInfo = await res.json();
-  } catch (e) { /* offline / no api */ }
-
-  // Stage 2: score demos
-  setStages([
-    { t: 'Searching company info', state: 'done' },
-    { t: 'Scoring demos', state: 'active' },
-    { t: 'Selecting top N for schedule', state: 'pending' },
-    { t: 'Compiling markdown report', state: 'pending' }
-  ]);
-  document.getElementById('live-scoring').classList.remove('hidden');
-  const scored = [];
-  const liveTable = document.getElementById('live-table');
-  liveTable.innerHTML = '';
-  for (let i = 0; i < DEMOS.length; i++) {
-    const d = DEMOS[i];
-    const painMatch = d.pain.reduce((acc, p) => acc + (pains.includes(p) ? 2 : 0), 0);
-    const painNorm = Math.min(10, painMatch);
-    const fit = d.fit[industry] || 5;
-    const score = Math.round(0.4 * painNorm + 0.4 * fit + 0.2 * d.impact);
-    scored.push({ ...d, score, painNorm, fit });
-    const row = document.createElement('div');
-    row.className = 'flex items-center gap-2 py-1 text-sm';
-    row.innerHTML = `<span class="w-32 truncate">${d.name}</span>
-      <span class="score-bar"><span class="score-fill" style="width: ${score*10}%"></span></span>
-      <span class="ml-auto font-mono text-blue-400">${score}</span>`;
-    liveTable.appendChild(row);
-    await animBar(25, 25 + ((i+1)/DEMOS.length)*40, 80);
+    const res = await fetch('/api/enterprise?action=generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const pkg = await res.json();
+    if (pkg.error) throw new Error(pkg.error);
+    window.__pkg = pkg;
+    document.getElementById('step-progress').classList.add('hidden');
+    document.getElementById('step-result').classList.remove('hidden');
+    renderTab('profile');
+  } catch (e) {
+    document.getElementById('step-progress').classList.add('hidden');
+    document.getElementById('step-form').classList.remove('hidden');
+    showError(`API error: ${e.message}. Ensure /api/enterprise?action=generate is deployed.`);
   }
-
-  // Stage 3: select top 10
-  setStages([
-    { t: 'Searching company info', state: 'done' },
-    { t: 'Scoring demos', state: 'done' },
-    { t: 'Selecting top N for schedule', state: 'active' },
-    { t: 'Compiling markdown report', state: 'pending' }
-  ]);
-  scored.sort((a,b) => b.score - a.score);
-  const top = scored.slice(0, 10);
-  await animBar(65, 80, 900);
-
-  // Stage 4: compile
-  setStages([
-    { t: 'Searching company info', state: 'done' },
-    { t: 'Scoring demos', state: 'done' },
-    { t: 'Selecting top N for schedule', state: 'done' },
-    { t: 'Compiling markdown report', state: 'active' }
-  ]);
-  const pkg = buildPackage({ company, industry, size, audience, mins, pains, scored, top, companyInfo });
-  await animBar(80, 100, 900);
-  setStages([
-    { t: 'Searching company info', state: 'done' },
-    { t: 'Scoring demos', state: 'done' },
-    { t: 'Selecting top N for schedule', state: 'done' },
-    { t: 'Compiling markdown report', state: 'done' }
-  ]);
-
-  window.__pkg = pkg;
-  setTimeout(showResult, 400);
-}
-
-function setStages(list) {
-  const el = document.getElementById('stages');
-  el.innerHTML = list.map(s => `
-    <div class="stage ${s.state}">
-      ${s.state === 'active' ? '<div class="spinner"></div>' : s.state === 'done' ? '<div class="text-green-400">✓</div>' : '<div class="text-slate-600">○</div>'}
-      <div>${s.t}</div>
-    </div>
-  `).join('');
-}
-
-function animBar(from, to, dur) {
-  return new Promise(resolve => {
-    const bar = document.getElementById('overall-bar');
-    const start = performance.now();
-    function step(now) {
-      const t = Math.min(1, (now - start) / dur);
-      bar.style.width = (from + (to - from) * t) + '%';
-      if (t < 1) requestAnimationFrame(step); else resolve();
-    }
-    requestAnimationFrame(step);
-  });
-}
-
-// ===== Package builder =====
-function buildPackage(ctx) {
-  const { company, industry, size, audience, mins, pains, scored, top, companyInfo } = ctx;
-  const painText = pains.length ? pains.map(p => PAIN_POINTS.find(x => x.k === p)?.en).join(', ') : '(none selected)';
-  const perDemoMin = Math.max(5, Math.floor(mins / top.length));
-
-  const profile = `# ${company} — Company Profile
-
-**Industry:** ${industry}
-**Size:** ${size}
-**Target Audience:** ${audience}
-**Presentation Length:** ${mins} minutes
-**Reported Pain Points:** ${painText}
-
-## Snapshot
-${companyInfo?.summary || `${company} is a ${industry} leader. This profile was generated from user input; connect the /api/search endpoint for live company intelligence.`}
-
-## Strategic Focus Areas
-- **Primary drivers**: ${pains.slice(0,3).map(p => PAIN_POINTS.find(x=>x.k===p)?.en).join(' · ') || 'operational efficiency'}
-- **Audience tuning**: ${audience === 'executives' ? 'ROI, timeline, risk' : audience === 'engineering' ? 'architecture, integration, reliability' : audience === 'business' ? 'workflow, usability, adoption' : 'strategic vision, pilot roadmap'}
-- **Scale considerations**: ${size} employees — ${size === '>50000' ? 'multi-region rollout' : size === '5000-50000' ? 'phased rollout across BUs' : 'fast single-team pilot'}
-`;
-
-  const matrix = `# Scoring Matrix (all ${scored.length} demos)
-
-| # | Demo | Pain Match | Industry Fit | Impact | **Score** |
-|---|------|-----------:|-------------:|-------:|----------:|
-${scored.map((d,i) => `| ${i+1} | ${d.name} | ${d.painNorm}/10 | ${d.fit}/10 | ${d.impact}/10 | **${d.score}** |`).join('\n')}
-
-**Formula:** \`score = 0.4 × pain_match + 0.4 × industry_fit + 0.2 × impact_potential\`
-
-**Top ${top.length}** advanced to the schedule.`;
-
-  const schedule = `# Presentation Schedule — ${mins} min
-
-**Audience:** ${audience} · **Per demo:** ~${perDemoMin} min
-
-| Slot | Time | Demo | Focus |
-|------|------|------|-------|
-${top.map((d, i) => `| ${i+1} | ${i*perDemoMin}–${(i+1)*perDemoMin} min | **${d.name}** (score ${d.score}) | ${d.pain.map(p=>PAIN_POINTS.find(x=>x.k===p)?.en).join(', ')} |`).join('\n')}
-
-## Opening Remarks
-Welcome ${company}. Today we'll walk through ${top.length} concrete AI applications tailored to ${industry}. Each demo lives in a runnable form — expect to leave with actionable next steps.`;
-
-  const runbook = `# RUNBOOK — ${company}
-
-## Pre-Flight Checklist
-- [ ] Verify each demo URL loads (top ${top.length} demos)
-- [ ] Confirm audience headcount & connection details
-- [ ] Load opening slides; test screen share
-- [ ] Prepare audience-specific Q&A cards (${audience})
-
-## Demo Walkthrough
-${top.map((d, i) => `### ${i+1}. ${d.name} (${perDemoMin} min)
-**Target pain:** ${d.pain.map(p=>PAIN_POINTS.find(x=>x.k===p)?.en).join(', ')}
-**Hook:** "For ${industry} teams struggling with ${PAIN_POINTS.find(x=>x.k===d.pain[0])?.en.toLowerCase()}, this demo shows how AI cuts cycle time."
-**Script:**
-1. Frame the pain (30s)
-2. Run the demo end-to-end (${perDemoMin-2} min)
-3. Call out the ROI moment (30s)
-**Backup plan:** If live demo fails, screenshot fallback in \`/screenshots/${d.id}.png\`
-`).join('\n')}
-
-## Post-Demo
-- Capture Q&A in the shared doc
-- Send follow-up within 24 hours (use /sa-toolkit email template)
-- Schedule pilot kickoff within 2 weeks
-`;
-
-  return { profile, matrix, schedule, runbook, company };
-}
-
-function showResult() {
-  document.getElementById('step-progress').classList.add('hidden');
-  document.getElementById('step-result').classList.remove('hidden');
-  renderTab('profile');
 }
 
 function renderTab(name) {
   const pkg = window.__pkg;
+  if (!pkg) return;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
   const el = document.getElementById('tab-' + name);
   el.classList.remove('hidden');
-  el.innerHTML = marked.parse(pkg[name]);
+  el.innerHTML = marked.parse(pkg[name] || '');
 }
-
-document.querySelectorAll('.tab-btn').forEach(b => {
-  b.addEventListener('click', () => renderTab(b.dataset.tab));
-});
-
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => renderTab(b.dataset.tab)));
 document.getElementById('btn-generate').addEventListener('click', generate);
 document.getElementById('btn-restart').addEventListener('click', () => {
   document.getElementById('step-result').classList.add('hidden');
   document.getElementById('step-form').classList.remove('hidden');
 });
 document.getElementById('btn-download').addEventListener('click', () => {
-  const p = window.__pkg;
+  const p = window.__pkg; if (!p) return;
   const md = `${p.profile}\n\n---\n\n${p.matrix}\n\n---\n\n${p.schedule}\n\n---\n\n${p.runbook}`;
   const blob = new Blob([md], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${p.company.replace(/\s+/g,'_')}_demo_package.md`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `${(p.company || 'package').replace(/\s+/g,'_')}_demo_package.md`;
   a.click();
-  URL.revokeObjectURL(url);
 });
 
-// ===== i18n =====
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
   let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
@@ -501,9 +238,6 @@ document.getElementById('btn-download').addEventListener('click', () => {
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
       const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
-    });
-    document.querySelectorAll('[data-en-placeholder][data-zh-placeholder]').forEach(el => {
-      el.placeholder = el.getAttribute(`data-${l}-placeholder`);
     });
     const lab = document.getElementById('lang-label');
     if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';

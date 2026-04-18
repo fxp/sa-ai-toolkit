@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CEO Agent Dashboard — NewCo Inc</title>
+<title>CEO Agent Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -40,13 +40,18 @@
         <span class="pulse-dot inline-block w-2 h-2 bg-green-400 rounded-full mr-1"></span>
         <span id="current-time" class="text-gray-300"></span>
         <span class="mx-2">·</span>
-        <span data-en="NewCo Inc · 1,487 employees · Series C · $2.3B valuation" data-zh="NewCo Inc · 1,487人 · C轮 · 估值23亿美元"></span>
+        <span id="company-header">Loading…</span>
       </p>
     </div>
-    <button id="refresh-brief" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:opacity-90">
-      &#128260; <span data-en="Refresh Brief" data-zh="刷新洞察"></span>
-    </button>
+    <div class="flex gap-2">
+      <input id="company-input" class="px-3 py-2 bg-gray-800/60 border border-gray-700 rounded-lg text-sm text-white" placeholder="Company" value="NewCo Inc" />
+      <button id="refresh-brief" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:opacity-90">
+        &#128260; <span data-en="Refresh Brief" data-zh="刷新洞察"></span>
+      </button>
+    </div>
   </div>
+
+  <div id="err-banner" class="hidden mb-4 p-3 rounded-lg bg-red-900/40 border border-red-700 text-red-200 text-sm"></div>
 
   <div class="card rounded-xl p-6 mb-6 glow border-blue-700/40">
     <div class="flex items-center justify-between mb-4">
@@ -59,20 +64,13 @@
     <div id="brief-content" class="space-y-3"></div>
   </div>
 
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-    <div class="card rounded-lg p-3"><div class="text-xs text-gray-400">ARR</div><div class="text-xl font-bold text-white">$142M</div><div class="text-xs text-green-400">&#8599; +18% QoQ</div></div>
-    <div class="card rounded-lg p-3"><div class="text-xs text-gray-400" data-en="Headcount" data-zh="员工数"></div><div class="text-xl font-bold text-white">1,487</div><div class="text-xs text-blue-400" data-en="+12 this week" data-zh="本周+12"></div></div>
-    <div class="card rounded-lg p-3"><div class="text-xs text-gray-400">NRR</div><div class="text-xl font-bold text-white">128%</div><div class="text-xs text-green-400">&#8599; +3pt MoM</div></div>
-    <div class="card rounded-lg p-3"><div class="text-xs text-gray-400">eNPS</div><div class="text-xl font-bold text-white">+42</div><div class="text-xs text-yellow-400">&#8600; -5 MoM</div></div>
-    <div class="card rounded-lg p-3"><div class="text-xs text-gray-400" data-en="Burn Multiple" data-zh="烧钱倍数"></div><div class="text-xl font-bold text-white">1.2x</div><div class="text-xs text-green-400" data-en="Healthy" data-zh="健康"></div></div>
-    <div class="card rounded-lg p-3"><div class="text-xs text-gray-400" data-en="Runway" data-zh="现金流"></div><div class="text-xl font-bold text-white">22mo</div><div class="text-xs text-gray-400" data-en="at current burn" data-zh="按当前烧钱"></div></div>
-  </div>
+  <div id="metric-tiles" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
 
   <div class="grid lg:grid-cols-2 gap-4 mb-6">
     <div class="card rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-bold text-gray-300" data-en="ARR Growth (12 mo)" data-zh="年收入增长 (12个月)"></h3>
-        <span class="text-xs text-gray-500">$142M / $180M target</span>
+        <span class="text-xs text-gray-500" id="arr-target-label"></span>
       </div>
       <canvas id="arr-chart" height="120"></canvas>
     </div>
@@ -117,27 +115,27 @@
   </div>
 
   <footer class="text-center text-xs text-gray-500 py-6 border-t border-gray-800">
-    <span data-en="Inspired by Meta's CEO Agent concept · Synthetic data · Not real company metrics" data-zh="受 Meta CEO Agent 思路启发 · 合成数据 · 非真实公司指标"></span>
+    <span data-en="Inspired by Meta's CEO Agent concept · Synthetic data via /api/ceo_* · Not real company metrics" data-zh="受 Meta CEO Agent 思路启发 · /api/ceo_* 合成数据 · 非真实公司指标"></span>
   </footer>
 </div>
 
 <script>
-(function() {
-  const STORAGE_KEY = 'sa-toolkit-lang';
-  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
-  function apply(l) {
-    lang = l; localStorage.setItem(STORAGE_KEY, l);
-    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
-    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
-      const t = el.getAttribute(`data-${l}`);
-      if (t) el.textContent = t;
-    });
-    const lab = document.getElementById('lang-label');
-    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
-  }
-  document.getElementById('lang-toggle').addEventListener('click', () => { apply(lang === 'en' ? 'zh' : 'en'); setTimeout(renderAll, 50); });
-  apply(lang);
-})();
+// ========= i18n =========
+const STORAGE_KEY = 'sa-toolkit-lang';
+function getLang() { return localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en'); }
+function setLang(l) {
+  localStorage.setItem(STORAGE_KEY, l);
+  document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+    const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
+  });
+  const lab = document.getElementById('lang-label');
+  if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
+}
+document.getElementById('lang-toggle').addEventListener('click', () => {
+  const nl = getLang() === 'en' ? 'zh' : 'en'; setLang(nl); loadAll();
+});
+setLang(getLang());
 
 function updateTime() {
   document.getElementById('current-time').textContent = new Date().toLocaleString(undefined, {
@@ -146,100 +144,31 @@ function updateTime() {
 }
 updateTime(); setInterval(updateTime, 60000);
 
-const BRIEFS = [
-  { en: [
-    { title: 'GPU cluster utilization hit 94% overnight', priority: 'high', detail: 'Inference latency P99 up 18%. Two options: (A) activate H200 burst ($180k/wk), (B) rate-limit tier-2. Recommend A — retention risk > cost.', source: 'Datadog + Snowflake' },
-    { title: 'Competitor X shipped multi-agent orchestration', priority: 'medium', detail: 'Their GA yesterday targets same ICP. Sales reports 3 deals mentioned it. We ship similar in 6 weeks. Consider accelerating.', source: 'Gong + LinkedIn' },
-    { title: 'Engineering attrition risk in Platform team', priority: 'medium', detail: '2 senior ICs interviewed externally this week. Both GPU infra. Losing either delays roadmap 4-8 weeks. Schedule skip-levels.', source: 'Lattice + Gem' },
-  ], zh: [
-    { title: 'GPU 集群昨夜利用率突破 94%', priority: 'high', detail: '推理 P99 延迟+18%。两选项：(A) 激活 H200 弹性 ($180k/周)，(B) 限流二级客户。建议 A — 留存风险 > 成本。', source: 'Datadog + Snowflake' },
-    { title: '竞品 X 发布多 Agent 编排', priority: 'medium', detail: '昨日 GA，目标客户同我们。销售反馈本周 3 单主动提及。我方类似功能 6 周后，建议加速。', source: 'Gong + LinkedIn' },
-    { title: 'Platform 团队流失风险', priority: 'medium', detail: '本周 2 位 senior IC 外部面试。均在 GPU 基础设施组，流失会让路线图延期 4-8 周。建议越级沟通。', source: 'Lattice + Gem' },
-  ] },
-  { en: [
-    { title: 'Enterprise pipeline $8.4M slipped from Q2', priority: 'high', detail: '3 Fortune 500 deals pushed to Q3 citing "procurement freeze". All started in January — suggests TOFU quality issue from late 2024 marketing.', source: 'Salesforce + Clari' },
-    { title: 'Open-source community contribution spike', priority: 'low', detail: 'GitHub PRs up 340% WoW after Karpathy tweet. 47 new external contributors. Triage + land good ones within 48h.', source: 'GitHub + Linear' },
-    { title: 'Board deck needs narrative refresh', priority: 'medium', detail: 'AI infra tailwind is now table stakes. Competitors pitch platform moats. Our real advantage: distribution. Draft attached.', source: 'AI-generated' },
-  ], zh: [
-    { title: '$8.4M 企业管道从 Q2 滑到 Q3', priority: 'high', detail: '3 笔财富500强订单推迟到 Q3，统一理由"采购冻结"。都在 1 月启动，暗示 2024 年底市场动作致 TOFU 质量问题。', source: 'Salesforce + Clari' },
-    { title: '开源社区贡献激增', priority: 'low', detail: 'GitHub PR 周同比 +340%，起因 Karpathy 推文。47 位新外部贡献者。48h 内 triage + 合并优质 PR。', source: 'GitHub + Linear' },
-    { title: '董事会 Deck 需要新叙事', priority: 'medium', detail: 'AI 基建顺风已烂大街。竞品讲平台护城河。我们真正的优势：分销能力。草稿已附。', source: 'AI 生成' },
-  ] },
-];
+// ========= Error banner =========
+function showError(msg) {
+  const b = document.getElementById('err-banner');
+  b.textContent = msg;
+  b.classList.remove('hidden');
+}
+function clearError() { document.getElementById('err-banner').classList.add('hidden'); }
 
-const DECISIONS = { en: [
-  { title: 'Approve H200 GPU burst capacity ($720k/mo)', risk: 'low', ai: 'Recommend APPROVE. Payback < 1mo if avoids 1 churn.', impact: '+$2.1M ARR' },
-  { title: 'Reorg: merge Platform + Infra teams', risk: 'high', ai: 'Recommend DEFER. Timing bad (Q4 sprint). Revisit post-launch.', impact: '-15% overhead, +attrition risk' },
-  { title: 'Hire VP Sales Enterprise (US-East)', risk: 'medium', ai: 'Recommend APPROVE. Pre-close top 2 candidates in parallel. 11wk ramp.', impact: '+$4.8M Q4 pipeline' },
-], zh: [
-  { title: '批准 H200 GPU 弹性容量 ($720k/月)', risk: 'low', ai: '建议批准。如避免 1 客户流失，回本 < 1 个月。', impact: '+$2.1M ARR' },
-  { title: '合并 Platform + Infra 团队', risk: 'high', ai: '建议推迟。时机不对（Q4 冲刺期），发布后重评。', impact: '-15%管理成本, +流失风险' },
-  { title: '招聘 VP Sales Enterprise (美东)', risk: 'medium', ai: '建议批准。Top 2 候选人并行预 close。Ramp 11 周。', impact: '+$4.8M Q4 管道' },
-] };
+// ========= API =========
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`);
+  return res.json();
+}
 
-const COMPETITORS = { en: [
-  { time: '2h ago', src: 'TechCrunch', text: 'Anthropic launches "Claude for Enterprise" — overlaps with our mid-market ICP', sentiment: 'threat' },
-  { time: '6h ago', src: 'LinkedIn', text: 'Competitor X poached our Director of ML (Janet K.) — 4yr tenure', sentiment: 'threat' },
-  { time: '1d ago', src: 'HackerNews', text: 'OSS challenger hits 12k stars in 2 weeks — "80% of our features, free"', sentiment: 'watch' },
-  { time: '2d ago', src: 'The Information', text: 'Rival raised $400M Series D at $4.2B — 2x our valuation', sentiment: 'threat' },
-  { time: '3d ago', src: 'Gong', text: '3 prospect calls this week mentioned Competitor Y\'s price cut', sentiment: 'watch' },
-  { time: '4d ago', src: 'Reddit', text: 'Former employee of Competitor Z AMA: "roadmap in disarray"', sentiment: 'opportunity' },
-  { time: '5d ago', src: 'Twitter', text: 'Our logo mentioned in 42 CIO threads this week (7x baseline)', sentiment: 'opportunity' },
-], zh: [
-  { time: '2 小时前', src: 'TechCrunch', text: 'Anthropic 推 "Claude for Enterprise" — 与我们中端 ICP 重合', sentiment: 'threat' },
-  { time: '6 小时前', src: 'LinkedIn', text: '竞品 X 挖走我们 ML 总监 Janet K.（4年司龄）', sentiment: 'threat' },
-  { time: '1 天前', src: 'HackerNews', text: '开源挑战者 2 周涨到 12k star — "80% 功能免费"', sentiment: 'watch' },
-  { time: '2 天前', src: 'The Information', text: '对手融 $400M D 轮，估值 $4.2B（我们 2 倍）', sentiment: 'threat' },
-  { time: '3 天前', src: 'Gong', text: '本周 3 个电话提到竞品 Y 降价', sentiment: 'watch' },
-  { time: '4 天前', src: 'Reddit', text: '竞品 Z 前员工 AMA："组织调整后路线图混乱"', sentiment: 'opportunity' },
-  { time: '5 天前', src: 'Twitter', text: '我们 logo 本周被 42 条 CIO 帖提到（基线 7 倍）', sentiment: 'opportunity' },
-] };
+function currentCompany() { return document.getElementById('company-input').value.trim() || 'NewCo Inc'; }
 
-const ACTIONS = { en: [
-  { priority: 1, title: '10:30 AM — Skip-level with Platform team', why: 'Before lunch. Two ICs critical.', owner: 'You' },
-  { priority: 2, title: '12:00 PM — Approve GPU burst in Slack #exec', why: '$720k decision, evidence attached.', owner: 'You' },
-  { priority: 3, title: '2:00 PM — Call Fortune 500 buyer (deal slip)', why: '$3.2M at stake. Freeze may be negotiable.', owner: 'You + Head of Sales' },
-  { priority: 4, title: '3:30 PM — Review Competitor X launch analysis', why: 'Product + Marketing standup prep.', owner: 'Product delivers, you review' },
-  { priority: 5, title: '5:00 PM — Check-in with CFO on burn forecast', why: 'Runway revision post-GPU decision.', owner: 'You + CFO' },
-], zh: [
-  { priority: 1, title: '10:30 — Platform 团队越级沟通', why: '午餐前。两位资深 IC 关键。', owner: '你' },
-  { priority: 2, title: '12:00 — Slack #exec 批准 GPU 弹性预算', why: '$720k 决策，证据已附。', owner: '你' },
-  { priority: 3, title: '14:00 — 致电财富500强客户（订单滑期）', why: '$3.2M 订单。"采购冻结"可能可谈。', owner: '你 + 销售负责人' },
-  { priority: 4, title: '15:30 — 审阅竞品 X 发布分析', why: '产品+市场明早早会准备。', owner: '产品交付，你审阅' },
-  { priority: 5, title: '17:00 — 与 CFO 对齐烧钱预测', why: 'GPU 决策后重算 runway。', owner: '你 + CFO' },
-] };
-
-const MOODS = [
-  { dept: 'Engineering', size: 482, mood: [4, 3, 4, 3, 2] },
-  { dept: 'Product', size: 124, mood: [5, 2, 3, 4, 4] },
-  { dept: 'Sales', size: 231, mood: [3, 2, 4, 4, 5] },
-  { dept: 'Marketing', size: 87, mood: [4, 2, 2, 5, 4] },
-  { dept: 'Customer Success', size: 143, mood: [3, 3, 4, 3, 3] },
-  { dept: 'Finance', size: 42, mood: [4, 1, 2, 4, 3] },
-  { dept: 'People', size: 38, mood: [5, 1, 3, 5, 4] },
-  { dept: 'Design', size: 56, mood: [4, 2, 3, 5, 5] },
-];
-const MOOD_LABELS = { en: ['Focused', 'Tired', 'Anxious', 'Happy', 'Motivated'], zh: ['专注', '疲惫', '焦虑', '开心', '积极'] };
-let briefIdx = 0;
-
-function getLang() { return localStorage.getItem('sa-toolkit-lang') || 'en'; }
-
-function renderBrief(thinking = false) {
-  const lang = getLang();
+// ========= Renderers =========
+function renderBrief(brief) {
   const out = document.getElementById('brief-content');
-  if (thinking) {
-    out.innerHTML = `<div class="flex items-center gap-2 text-gray-400 thinking">
-      <span class="inline-block w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-      <span>${lang === 'zh' ? '正在分析 Datadog / Salesforce / Gong / Lattice / GitHub 的信号...' : 'Analyzing signals across Datadog, Salesforce, Gong, Lattice, GitHub...'}</span>
-    </div>`;
-    return;
-  }
-  const brief = (BRIEFS[briefIdx % BRIEFS.length][lang] || BRIEFS[briefIdx % BRIEFS.length].en);
   out.innerHTML = brief.map((b, i) => {
     const color = b.priority === 'high' ? 'red' : b.priority === 'medium' ? 'yellow' : 'blue';
     return `<div class="border-l-4 border-${color}-500 pl-3 py-1">
       <div class="flex items-start gap-2">
-        <span class="text-${color}-400 font-bold text-sm flex-shrink-0 mt-0.5">${i + 1}.</span>
+        <span class="text-${color}-400 font-bold text-sm flex-shrink-0 mt-0.5">${i+1}.</span>
         <div class="flex-1">
           <div class="text-white font-bold text-sm">${b.title}</div>
           <div class="text-gray-400 text-xs mt-1">${b.detail}</div>
@@ -251,19 +180,67 @@ function renderBrief(thinking = false) {
   }).join('');
 }
 
-function renderDecisions() {
+function renderMetrics(m) {
   const lang = getLang();
-  const items = DECISIONS[lang] || DECISIONS.en;
+  document.getElementById('company-header').textContent =
+    `${m.company} · ${m.headcount.toLocaleString()} ${lang === 'zh' ? '员工' : 'employees'}`;
+  const tiles = [
+    { lbl: 'ARR', val: m.arr, sub: m.arr_change, color: 'green' },
+    { lbl: lang === 'zh' ? '员工数' : 'Headcount', val: m.headcount.toLocaleString(), sub: m.headcount_delta, color: 'blue' },
+    { lbl: 'NRR', val: m.nrr, sub: m.nrr_change, color: 'green' },
+    { lbl: 'eNPS', val: m.enps, sub: m.enps_change, color: 'yellow' },
+    { lbl: lang === 'zh' ? '烧钱倍数' : 'Burn Multiple', val: m.burn, sub: m.burn_label, color: 'green' },
+    { lbl: lang === 'zh' ? '现金流' : 'Runway', val: m.runway, sub: m.runway_label, color: 'gray' },
+  ];
+  document.getElementById('metric-tiles').innerHTML = tiles.map(t => `
+    <div class="card rounded-lg p-3">
+      <div class="text-xs text-gray-400">${t.lbl}</div>
+      <div class="text-xl font-bold text-white">${t.val}</div>
+      <div class="text-xs text-${t.color}-400">${t.sub}</div>
+    </div>`).join('');
+  document.getElementById('arr-target-label').textContent =
+    `${m.arr} / $${Math.round(m.series.target[m.series.target.length - 1])}M target`;
+  renderCharts(m.series);
+}
+
+let arrChart, deptChart;
+function renderCharts(s) {
+  const arrCtx = document.getElementById('arr-chart').getContext('2d');
+  if (arrChart) arrChart.destroy();
+  arrChart = new Chart(arrCtx, {
+    type: 'line',
+    data: { labels: s.labels, datasets: [
+      { label: 'ARR ($M)', data: s.arr, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 },
+      { label: 'Target', data: s.target, borderColor: '#94a3b8', borderDash: [4, 4], fill: false, pointRadius: 0 },
+    ] },
+    options: { plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } },
+      scales: { x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } }, y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } } } }
+  });
+  const deptCtx = document.getElementById('dept-radar').getContext('2d');
+  if (deptChart) deptChart.destroy();
+  deptChart = new Chart(deptCtx, {
+    type: 'radar',
+    data: { labels: s.radar_labels, datasets: [
+      { label: 'Current', data: s.radar_current, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)', pointBackgroundColor: '#10b981' },
+      { label: 'Last Q', data: s.radar_prev, borderColor: '#64748b', borderDash: [4, 4], backgroundColor: 'rgba(100,116,139,0.1)' },
+    ] },
+    options: { plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } },
+      scales: { r: { angleLines: { color: 'rgba(255,255,255,0.1)' }, grid: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: '#94a3b8', font: { size: 10 } }, ticks: { color: '#64748b', backdropColor: 'transparent' }, min: 0, max: 10 } } }
+  });
+}
+
+function renderDecisions(items) {
+  const lang = getLang();
   document.getElementById('decisions').innerHTML = items.map(d => {
-    const riskColor = d.risk === 'high' ? 'red' : d.risk === 'medium' ? 'yellow' : 'green';
+    const rc = d.risk === 'high' ? 'red' : d.risk === 'medium' ? 'yellow' : 'green';
     return `<div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
       <div class="flex items-start gap-3">
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-1">
             <h4 class="text-white font-bold text-sm">${d.title}</h4>
-            <span class="tag bg-${riskColor}-900/50 text-${riskColor}-300">${d.risk} risk</span>
+            <span class="tag bg-${rc}-900/50 text-${rc}-300">${d.risk} risk</span>
           </div>
-          <div class="text-xs text-blue-300 mb-2">&#129504; ${d.ai}</div>
+          <div class="text-xs text-blue-300 mb-2">&#129504; ${d.ai_rec}</div>
           <div class="text-xs text-gray-500">Impact: <span class="text-green-400">${d.impact}</span></div>
         </div>
         <div class="flex flex-col gap-2 flex-shrink-0">
@@ -275,9 +252,23 @@ function renderDecisions() {
   }).join('');
 }
 
-function renderCompetitors() {
-  const lang = getLang();
-  const items = COMPETITORS[lang] || COMPETITORS.en;
+function renderMood(data) {
+  const labels = data.labels;
+  const colors = ['bg-red-900', 'bg-orange-700', 'bg-yellow-600', 'bg-green-600', 'bg-green-400'];
+  document.getElementById('mood-heatmap').innerHTML = `
+    <div class="grid" style="grid-template-columns: 140px repeat(5, 1fr); gap: 4px;">
+      <div></div>
+      ${labels.map(l => `<div class="text-gray-400 text-center text-[10px]">${l}</div>`).join('')}
+      ${data.rows.map(m => `
+        <div class="text-gray-300 text-[11px] truncate pr-2 flex items-center justify-between">
+          <span>${m.dept}</span><span class="text-gray-500 text-[10px]">${m.size}</span>
+        </div>
+        ${m.mood.map(v => `<div class="heat-cell ${colors[v-1] || 'bg-gray-800'} h-6 rounded flex items-center justify-center text-[10px] text-white font-bold cursor-pointer">${v}</div>`).join('')}
+      `).join('')}
+    </div>`;
+}
+
+function renderCompetitors(items) {
   document.getElementById('competitor-feed').innerHTML = items.map(c => {
     const icon = c.sentiment === 'threat' ? '&#9888;' : c.sentiment === 'opportunity' ? '&#128640;' : '&#128065;';
     const color = c.sentiment === 'threat' ? 'red' : c.sentiment === 'opportunity' ? 'green' : 'blue';
@@ -285,15 +276,13 @@ function renderCompetitors() {
       <span class="text-${color}-400 text-sm flex-shrink-0">${icon}</span>
       <div class="flex-1 text-xs">
         <div class="text-gray-300">${c.text}</div>
-        <div class="text-gray-500 mt-0.5">${c.time} · ${c.src}</div>
+        <div class="text-gray-500 mt-0.5">${c.time} · ${c.source}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-function renderActions() {
-  const lang = getLang();
-  const items = ACTIONS[lang] || ACTIONS.en;
+function renderActions(items) {
   document.getElementById('actions').innerHTML = items.map(a => `
     <div class="flex items-center gap-3 p-3 bg-gray-800/40 rounded-lg hover:bg-gray-800/70 transition">
       <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${a.priority}</div>
@@ -302,84 +291,56 @@ function renderActions() {
         <div class="text-xs text-gray-400 mt-0.5">${a.why}</div>
       </div>
       <div class="text-xs text-gray-500 text-right flex-shrink-0"><div>${a.owner}</div></div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function renderMoodHeatmap() {
-  const lang = getLang();
-  const labels = MOOD_LABELS[lang] || MOOD_LABELS.en;
-  const colors = ['bg-red-900', 'bg-orange-700', 'bg-yellow-600', 'bg-green-600', 'bg-green-400'];
-  document.getElementById('mood-heatmap').innerHTML = `
-    <div class="grid" style="grid-template-columns: 140px repeat(5, 1fr); gap: 4px;">
-      <div></div>
-      ${labels.map(l => `<div class="text-gray-400 text-center text-[10px]">${l}</div>`).join('')}
-      ${MOODS.map(m => `
-        <div class="text-gray-300 text-[11px] truncate pr-2 flex items-center justify-between">
-          <span>${m.dept}</span>
-          <span class="text-gray-500 text-[10px]">${m.size}</span>
-        </div>
-        ${m.mood.map(v => `
-          <div class="heat-cell ${colors[v - 1] || 'bg-gray-800'} h-6 rounded flex items-center justify-center text-[10px] text-white font-bold cursor-pointer">${v}</div>
-        `).join('')}
-      `).join('')}
-    </div>`;
-}
+// ========= Load =========
+let briefIdx = 0;
 
-let arrChart, deptChart;
-function renderCharts() {
-  const arrCtx = document.getElementById('arr-chart').getContext('2d');
-  if (arrChart) arrChart.destroy();
-  arrChart = new Chart(arrCtx, {
-    type: 'line',
-    data: {
-      labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'],
-      datasets: [
-        { label: 'ARR ($M)', data: [82, 89, 95, 102, 108, 115, 120, 126, 131, 135, 139, 142], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 },
-        { label: 'Target', data: [85, 95, 105, 115, 125, 135, 145, 155, 162, 168, 174, 180], borderColor: '#94a3b8', borderDash: [4, 4], fill: false, pointRadius: 0 },
-      ],
-    },
-    options: {
-      plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } },
-      scales: { x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } }, y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } } },
-    },
-  });
-  const deptCtx = document.getElementById('dept-radar').getContext('2d');
-  if (deptChart) deptChart.destroy();
-  deptChart = new Chart(deptCtx, {
-    type: 'radar',
-    data: {
-      labels: ['Engineering', 'Product', 'Sales', 'Marketing', 'CS', 'Finance', 'People', 'Design'],
-      datasets: [
-        { label: 'Current', data: [7.2, 8.1, 6.8, 8.5, 7.8, 9.0, 8.7, 9.1], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)', pointBackgroundColor: '#10b981' },
-        { label: 'Last Q', data: [7.8, 7.5, 7.2, 8.0, 7.5, 8.8, 8.3, 8.9], borderColor: '#64748b', borderDash: [4, 4], backgroundColor: 'rgba(100,116,139,0.1)' },
-      ],
-    },
-    options: {
-      plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } },
-      scales: { r: { angleLines: { color: 'rgba(255,255,255,0.1)' }, grid: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: '#94a3b8', font: { size: 10 } }, ticks: { color: '#64748b', backdropColor: 'transparent' }, min: 0, max: 10 } },
-    },
-  });
-}
-
-function renderAll() {
-  renderBrief(); renderDecisions(); renderCompetitors(); renderActions(); renderMoodHeatmap(); renderCharts();
+async function loadAll() {
+  clearError();
+  const c = encodeURIComponent(currentCompany());
+  const l = getLang();
+  try {
+    const [brief, metrics, decisions, mood, competitors, actions] = await Promise.all([
+      fetchJson(`/api/ceo?action=brief?company=${c}&idx=${briefIdx}&lang=${l}`),
+      fetchJson(`/api/ceo?action=metrics?company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=decisions?company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=mood?company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=competitors?company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=actions?company=${c}&lang=${l}`),
+    ]);
+    renderBrief(brief.brief);
+    renderMetrics(metrics);
+    renderDecisions(decisions.decisions);
+    renderMood(mood);
+    renderCompetitors(competitors.feed);
+    renderActions(actions.actions);
+  } catch (e) {
+    showError(`API error: ${e.message}. Ensure /api/ceo_* handlers are deployed.`);
+  }
 }
 
 document.getElementById('refresh-brief').addEventListener('click', async () => {
   const badge = document.getElementById('brief-status');
   badge.textContent = 'Thinking...';
   badge.className = 'tag bg-blue-900/50 text-blue-300 thinking';
-  renderBrief(true);
-  await new Promise(r => setTimeout(r, 2000));
   briefIdx++;
-  renderBrief(false);
-  badge.textContent = 'Ready';
-  badge.className = 'tag bg-green-900/50 text-green-300';
+  try {
+    const c = encodeURIComponent(currentCompany());
+    const l = getLang();
+    const brief = await fetchJson(`/api/ceo?action=brief?company=${c}&idx=${briefIdx}&lang=${l}`);
+    renderBrief(brief.brief);
+    badge.textContent = 'Ready'; badge.className = 'tag bg-green-900/50 text-green-300';
+  } catch (e) {
+    showError(`API error: ${e.message}`);
+    badge.textContent = 'Error'; badge.className = 'tag bg-red-900/50 text-red-300';
+  }
 });
 
-renderAll();
-</script>
+document.getElementById('company-input').addEventListener('change', loadAll);
 
+loadAll();
+</script>
 </body>
 </html>

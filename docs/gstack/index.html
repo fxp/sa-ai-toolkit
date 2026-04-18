@@ -11,9 +11,13 @@
   .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   #lang-toggle { cursor: pointer; } #lang-toggle:hover { background: rgba(100,150,255,0.2); }
   .terminal { background: #09090f; border: 1px solid #1e293b; border-radius: 10px; font-family: 'JetBrains Mono','Fira Code','Menlo',monospace; font-size: 13px; line-height: 1.6; padding: 18px; min-height: 480px; max-height: 640px; overflow-y: auto; white-space: pre-wrap; }
-  .prompt-g { color: #22c55e; } .prompt-c { color: #60a5fa; }
-  .warn { color: #f59e0b; } .err { color: #ef4444; } .ok { color: #22c55e; }
-  .dim { color: #64748b; } .hl { color: #e0e7ff; }
+  .prompt { color: #60a5fa; }
+  .output { color: #e2e8f0; }
+  .highlight { color: #e0e7ff; font-weight: 500; }
+  .warn { color: #f59e0b; }
+  .err { color: #ef4444; }
+  .ok { color: #22c55e; }
+  .dim { color: #64748b; }
   select, textarea, button, input { font-family: inherit; }
   select { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); padding: 6px 12px; border-radius: 8px; }
   textarea { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); border-radius: 8px; padding: 10px; width: 100%; }
@@ -33,163 +37,78 @@
 <div class="max-w-5xl mx-auto px-6 py-8">
   <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
   <h1 class="text-3xl font-bold mt-3 gradient-text" data-en="gstack Terminal" data-zh="gstack 终端">gstack Terminal</h1>
-  <p class="text-gray-400 mt-1" data-en="Try gstack slash commands without installing anything." data-zh="无需安装，直接体验 gstack 斜杠命令。">Try gstack slash commands without installing anything.</p>
+  <p class="text-gray-400 mt-1" data-en="Try gstack slash commands — rendered from the Python backend." data-zh="体验 gstack 斜杠命令 —— 由 Python 后端生成脚本。">Try gstack slash commands — rendered from the Python backend.</p>
 
   <div class="card p-4 mt-5 flex items-center gap-3 flex-wrap">
     <label class="text-sm text-gray-400" data-en="Command:" data-zh="命令：">Command:</label>
     <select id="cmd">
-      <option value="/office-hours">/office-hours</option>
-      <option value="/autoplan">/autoplan</option>
-      <option value="/qa">/qa</option>
-      <option value="/ship">/ship</option>
+      <option value="office-hours">/office-hours</option>
+      <option value="autoplan">/autoplan</option>
+      <option value="qa">/qa</option>
+      <option value="ship">/ship</option>
     </select>
+    <input id="user-input" class="px-2 py-1 rounded bg-gray-900 border border-gray-700 text-sm w-64" data-en-placeholder="Optional idea for /office-hours" data-zh-placeholder="可选：向 /office-hours 传入一句话" />
     <button id="run" class="btn" data-en="Run" data-zh="运行">Run</button>
     <button id="clear" class="btn-sec" data-en="Clear" data-zh="清空">Clear</button>
   </div>
 
   <div id="term" class="terminal mt-4"></div>
-
-  <div id="input-area" class="mt-3 hidden">
-    <textarea id="user-input" rows="3" data-en-placeholder="Type your answer and press Ctrl+Enter..." data-zh-placeholder="输入回答，按 Ctrl+Enter 提交..."></textarea>
-    <button id="submit-input" class="btn mt-2" data-en="Submit" data-zh="提交">Submit</button>
-  </div>
 </div>
 
 <script>
 const term = document.getElementById('term');
-const inputArea = document.getElementById('input-area');
-const userInput = document.getElementById('user-input');
-let running = false; let inputResolver = null;
-function append(html) { term.innerHTML += html; term.scrollTop = term.scrollHeight; }
+let running = false;
+
+function appendLine(text, cls) {
+  const span = document.createElement('span');
+  span.className = cls || 'output';
+  span.textContent = text;
+  term.appendChild(span);
+  term.appendChild(document.createElement('br'));
+  term.scrollTop = term.scrollHeight;
+}
+
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-async function typewrite(text, cls='') {
-  const span = document.createElement('span'); if (cls) span.className = cls;
-  term.appendChild(span);
-  for (const ch of text) { span.textContent += ch; term.scrollTop = term.scrollHeight; await sleep(ch === '\n' ? 5 : 12); }
-}
-function line(text='', cls='') { append(`<span class="${cls}">${text}</span>\n`); }
-async function askUser(prompt) {
-  await typewrite(prompt + '\n', 'hl');
-  inputArea.classList.remove('hidden'); userInput.value = ''; userInput.focus();
-  return new Promise(resolve => { inputResolver = resolve; });
-}
-document.getElementById('submit-input').addEventListener('click', () => {
-  if (inputResolver) {
-    const v = userInput.value.trim() || '(no input)';
-    inputArea.classList.add('hidden');
-    append(`<span class="dim">› ${v}</span>\n`);
-    inputResolver(v); inputResolver = null;
-  }
-});
-userInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) document.getElementById('submit-input').click();
-});
-async function spinner(label, ms) {
-  const frames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
-  const span = document.createElement('span'); span.className = 'ok';
-  term.appendChild(span);
-  const start = Date.now(); let i = 0;
-  while (Date.now() - start < ms) { span.textContent = `${frames[i++ % frames.length]} ${label}`; await sleep(80); }
-  span.textContent = `✓ ${label}`; append('\n');
-}
 
-async function cmdOfficeHours() {
-  await typewrite('YC Office Hours — 6 forcing questions\n', 'prompt-c');
-  await typewrite('──────────────────────────────────────\n\n', 'dim');
-  const idea = await askUser('$ Describe your startup idea in one sentence:');
-  const questions = [
-    '1. Who, specifically, are your first 10 users? (Names, not personas.)',
-    '2. What does the status quo cost them today — in dollars or hours?',
-    '3. What is the narrowest wedge you can ship in 4 weeks?',
-    '4. Why you, why now? What unfair advantage do you have?',
-    '5. What observation from the real world sparked this idea?',
-    '6. In 3 years, what does the future look like if you succeed?'
-  ];
-  for (const q of questions) { await sleep(800); await askUser('? ' + q); }
-  await sleep(600);
-  await typewrite('\n── Reframe Summary ───────────────────\n', 'prompt-c');
-  await typewrite(`Idea: ${idea}\n`, 'hl');
-  await typewrite('→ Your wedge is clear. Biggest gap: desperate specificity on the first 10 users.\n', 'warn');
-  await typewrite('→ Next action: get 3 concrete user names on a whiteboard by Friday.\n', 'ok');
-  await typewrite('\n✓ Saved to ./office-hours/' + new Date().toISOString().slice(0,10) + '.md\n', 'ok');
-}
-
-async function cmdAutoplan() {
-  await typewrite('/autoplan — three-phase plan review\n', 'prompt-c');
-  await typewrite('──────────────────────────────────────\n\n', 'dim');
-  await typewrite('Phase 1: CEO review (scope & 10-star product)\n', 'hl');
-  await spinner('Exploring scope expansions…', 3000);
-  line('  • Rethink premise: should we expand to multi-tenant?', 'dim');
-  line('  • Decision: HOLD SCOPE — ship v1, expand in v2.', 'ok');
-  await sleep(400);
-  await typewrite('\nPhase 2: Design review (UX & taste)\n', 'hl');
-  await spinner('Scoring visual hierarchy…', 3000);
-  line('  • Density: 7/10  — tighten card padding', 'dim');
-  line('  • Motion: 6/10  — add 200ms transitions', 'dim');
-  line('  • Decision: polish before ship.', 'ok');
-  await sleep(400);
-  await typewrite('\nPhase 3: Eng review (architecture)\n', 'hl');
-  await spinner('Tracing data flow & edge cases…', 3000);
-  line('  • Edge case: empty state not handled — add fallback', 'warn');
-  line('  • Test coverage: 68% → target 80%', 'dim');
-  line('  • Decision: LGTM with 2 followups.', 'ok');
-  await typewrite('\n✓ Plan locked. 3 taste decisions surfaced at approval gate.\n', 'ok');
-}
-
-async function cmdQA() {
-  await typewrite('/qa — systematic test + fix loop\n', 'prompt-c');
-  await typewrite('──────────────────────────────────────\n\n', 'dim');
-  await typewrite('Running 47 tests…\n', 'hl');
-  for (let i = 1; i <= 47; i++) {
-    const isFail = [12, 23, 38].includes(i);
-    const tag = isFail ? '<span class="err">✗</span>' : '<span class="ok">✓</span>';
-    append(`${tag} <span class="dim">test_${String(i).padStart(3,'0')}</span>\n`);
-    await sleep(50);
-  }
-  await typewrite('\n3 failures detected:\n', 'err');
-  line('  ✗ test_012  empty_state_renders_fallback', 'err');
-  line('  ✗ test_023  lang_toggle_persists_to_localStorage', 'err');
-  line('  ✗ test_038  kb_lint_flags_unsourced_claims', 'err');
-  await sleep(600);
-  await typewrite('\nApplying atomic fixes…\n', 'hl');
-  await spinner('fix 1/3: add empty state fallback', 1200); line('  committed: a3f2e1', 'dim');
-  await spinner('fix 2/3: persist lang to localStorage', 1200); line('  committed: b8c0d5', 'dim');
-  await spinner('fix 3/3: flag unsourced claims in lint', 1200); line('  committed: d7e9a4', 'dim');
-  await typewrite('\nRe-running…\n', 'hl');
-  await spinner('47 tests', 1500);
-  await typewrite('✓ All 47 tests passing. 3 commits on branch qa-fixes.\n', 'ok');
-}
-
-async function cmdShip() {
-  await typewrite('/ship — land & deploy\n', 'prompt-c');
-  await typewrite('──────────────────────────────────────\n\n', 'dim');
-  await spinner('git sync main', 1500);
-  line('  3 commits ahead, 0 behind.', 'dim');
-  await spinner('running tests (47)', 2000);
-  line('  all green.', 'ok');
-  await spinner('bump VERSION 1.4.2 → 1.4.3', 800);
-  await spinner('update CHANGELOG', 600);
-  await spinner('git push origin feature/interactive-demos', 1200);
-  await spinner('gh pr create', 1500);
-  await typewrite('\n✓ PR #247 opened: "Add interactive demo pages"\n', 'ok');
-  await typewrite('  https://github.com/your-org/repo/pull/247\n', 'prompt-c');
-  await typewrite('\nNext: run /land-and-deploy to merge & verify prod.\n', 'dim');
-}
-
-const COMMANDS = { '/office-hours': cmdOfficeHours, '/autoplan': cmdAutoplan, '/qa': cmdQA, '/ship': cmdShip };
-
-document.getElementById('run').addEventListener('click', async () => {
+async function runCommand() {
   if (running) return;
   running = true;
+  const btn = document.getElementById('run');
+  btn.disabled = true;
   const cmd = document.getElementById('cmd').value;
-  append(`<span class="prompt-g">$</span> <span class="hl">gstack ${cmd}</span>\n`);
-  try { await COMMANDS[cmd](); } catch(e) { append(`<span class="err">error: ${e.message}</span>\n`); }
-  append('\n');
+  const input = document.getElementById('user-input').value;
+  appendLine(`$ gstack /${cmd}`, 'prompt');
+
+  try {
+    const url = new URL('/api/gstack', window.location.origin);
+    url.searchParams.set('command', cmd);
+    if (input) url.searchParams.set('input', input);
+    const res = await fetch(url);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      appendLine('error: ' + (err.error || res.status), 'err');
+      running = false; btn.disabled = false; return;
+    }
+    const data = await res.json();
+    const script = data.script || [];
+    for (const item of script) {
+      await sleep(item.delay_ms || 100);
+      appendLine(item.text, item.class || 'output');
+    }
+    appendLine('', '');
+  } catch (e) {
+    appendLine('network error: ' + e.message, 'err');
+    appendLine('(Backend /api/gstack is required. No JS fallback.)', 'dim');
+  }
   running = false;
-});
+  btn.disabled = false;
+}
+
+document.getElementById('run').addEventListener('click', runCommand);
 document.getElementById('clear').addEventListener('click', () => { term.innerHTML = ''; });
 
-append('<span class="prompt-c">gstack v1.4.2</span>  <span class="dim">— pick a command above and hit Run.</span>\n\n');
+appendLine('gstack v1.4.2 — pick a command and hit Run. Script streams from /api/gstack.', 'prompt');
+appendLine('', '');
 
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';

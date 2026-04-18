@@ -1,13 +1,23 @@
-"""
-Search API proxy for demos.
-Calls DuckDuckGo HTML endpoint (no API key needed) and returns JSON results.
-Falls back to preset results if scraping fails.
+"""Consolidated research handler.
+
+?action=stage (POST) — run autoresearch stage
+?action=search (GET) — DuckDuckGo search proxy with fallback
 """
 from http.server import BaseHTTPRequestHandler
 import json
+import os
+import re
 import urllib.parse
 import urllib.request
-import re
+import importlib.util as _ilu
+
+_CORE_PATH = os.path.join(os.path.dirname(__file__), '..', 'demos', 'autoresearch-py', 'core.py')
+_spec = _ilu.spec_from_file_location("autoresearch_core", _CORE_PATH)
+_mod = _ilu.module_from_spec(_spec); _spec.loader.exec_module(_mod)
+run_stage = _mod.run_stage
+build_report = _mod.build_report
+NUM_STAGES = _mod.NUM_STAGES
+
 
 FALLBACK_RESULTS = [
     {
@@ -39,7 +49,6 @@ FALLBACK_RESULTS = [
 
 
 def search_duckduckgo(query: str, max_results: int = 8):
-    """Scrape DuckDuckGo HTML results (no API key)."""
     try:
         url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(query)}"
         req = urllib.request.Request(
@@ -51,9 +60,6 @@ def search_duckduckgo(query: str, max_results: int = 8):
         )
         with urllib.request.urlopen(req, timeout=5) as resp:
             html = resp.read().decode("utf-8", errors="ignore")
-
-        # Parse result cards — pattern: <a class="result__a" href="URL">TITLE</a>
-        #                              <a class="result__snippet">SNIPPET</a>
         results = []
         pattern = re.compile(
             r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>.*?'
@@ -64,7 +70,6 @@ def search_duckduckgo(query: str, max_results: int = 8):
             if len(results) >= max_results:
                 break
             raw_url = m.group(1)
-            # DuckDuckGo wraps URLs: /l/?kh=-1&uddg=<encoded>
             if "uddg=" in raw_url:
                 match = re.search(r"uddg=([^&]+)", raw_url)
                 real_url = urllib.parse.unquote(match.group(1)) if match else raw_url
@@ -73,7 +78,6 @@ def search_duckduckgo(query: str, max_results: int = 8):
             title = re.sub(r"<[^>]+>", "", m.group(2)).strip()
             snippet = re.sub(r"<[^>]+>", "", m.group(3)).strip()
             results.append({"title": title, "url": real_url, "snippet": snippet})
-
         return results if results else None
     except Exception:
         return None
@@ -83,34 +87,75 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         params = urllib.parse.parse_qs(parsed.query)
-        query = (params.get("q") or [""])[0]
-        max_results = int((params.get("n") or ["8"])[0])
+        action = (params.get("action") or [""])[0]
+        if action == "search":
+            query = (params.get("q") or [""])[0]
+            try:
+                max_results = int((params.get("n") or ["8"])[0])
+            except ValueError:
+                max_results = 8
+            if not query:
+                self._json(400, {"error": "missing q param"})
+                return
+            results = search_duckduckgo(query, max_results)
+            if not results:
+                q_lower = query.lower()
+                results = [r for r in FALLBACK_RESULTS if any(
+                    w in (r["title"] + r["snippet"]).lower()
+                    for w in q_lower.split() if len(w) > 2
+                )] or FALLBACK_RESULTS[:3]
+            self._json(200, {"query": query, "results": results, "count": len(results)})
+        elif action == "stage":
+            self._json(200, {"stages": NUM_STAGES, "usage": "POST {topic, stage_idx, prev_results}"})
+        else:
+            self._json(400, {"error": "unknown action", "available": ["stage", "search"]})
 
-        if not query:
-            self._json(400, {"error": "missing q param"})
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query)
+        length = int(self.headers.get("Content-Length", 0))
+        try:
+            body = json.loads(self.rfile.read(length)) if length else {}
+        except Exception:
+            self._json(400, {"error": "invalid JSON"})
             return
-
-        results = search_duckduckgo(query, max_results)
-        if not results:
-            # Fallback: filter preset results by query relevance
-            q_lower = query.lower()
-            results = [r for r in FALLBACK_RESULTS if any(
-                w in (r["title"] + r["snippet"]).lower()
-                for w in q_lower.split() if len(w) > 2
-            )] or FALLBACK_RESULTS[:3]
-
-        self._json(200, {"query": query, "results": results, "count": len(results)})
+        action = (params.get("action") or [""])[0] or body.get("action") or ""
+        if action == "stage":
+            topic = (body.get("topic") or "").strip()
+            stage_idx = body.get("stage_idx")
+            prev = body.get("prev_results") or []
+            lang = body.get("lang") or "en"
+            if not topic:
+                self._json(400, {"error": "missing topic"})
+                return
+            if not isinstance(stage_idx, int) or stage_idx < 0 or stage_idx >= NUM_STAGES:
+                self._json(400, {"error": f"stage_idx must be 0..{NUM_STAGES - 1}"})
+                return
+            try:
+                res = run_stage(topic, stage_idx, prev)
+                resp = {"stage": res, "num_stages": NUM_STAGES}
+                if stage_idx == NUM_STAGES - 1:
+                    all_results = list(prev) + [res]
+                    resp["report"] = build_report(topic, all_results, lang=lang)
+                self._json(200, resp)
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+        else:
+            self._json(400, {"error": "unknown action", "available": ["stage"]})
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self._cors()
         self.end_headers()
+
+    def _cors(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def _json(self, code, data):
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self._cors()
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
