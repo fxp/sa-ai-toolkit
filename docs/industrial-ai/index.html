@@ -78,7 +78,7 @@
         <svg id="visual-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet" class="w-full h-full">
           <rect width="400" height="400" fill="#0a0f1c"/>
           <!-- Real Kaggle sample image. Defaults to Severstal's one redistributable strip; rewritten on every detect run. -->
-          <image id="visual-image" href="/samples/severstal/sample_01.jpg"
+          <image id="visual-image" href="samples/severstal/sample_01.jpg"
                  x="0" y="142" width="400" height="116" preserveAspectRatio="xMidYMid meet"/>
           <g id="visual-overlays"></g>
           <line id="scanline" x1="0" y1="0" x2="400" y2="0" stroke="#60a5fa" stroke-width="2" opacity="0" class="scanline"/>
@@ -598,9 +598,9 @@ $('#btn-diagnose').addEventListener('click', runDiagnose);
 $('#btn-run-all').addEventListener('click', runAll);
 // Preview image shown before any detection runs — one clean sample per dataset.
 const DATASET_PREVIEW = {
-  severstal: { url: '/samples/severstal/sample_01.jpg', native: [1758, 256], caption: 'Severstal coil · 1758×256 · Kaggle' },
-  neu:       { url: '/samples/neu/patches_1.jpg',       native: [200, 200],  caption: 'NEU-DET patches · 200×200 · Kaggle' },
-  casting:   { url: '/samples/casting/def_front.jpeg',  native: [300, 300],  caption: 'Casting impeller (defective) · 300×300 · Kaggle' },
+  severstal: { url: 'samples/severstal/sample_01.jpg', native: [1758, 256], caption: 'Severstal coil · 1758×256 · Kaggle' },
+  neu:       { url: 'samples/neu/patches_1.jpg',       native: [200, 200],  caption: 'NEU-DET patches · 200×200 · Kaggle' },
+  casting:   { url: 'samples/casting/def_front.jpeg',  native: [300, 300],  caption: 'Casting impeller (defective) · 300×300 · Kaggle' },
 };
 function applyDatasetPreview() {
   const p = DATASET_PREVIEW[currentDataset()] || DATASET_PREVIEW.severstal;

@@ -32,7 +32,7 @@ DATA_DIR = Path("/tmp/test_data")
 #   - NEU-DET samples: github.com/siddhartamukherjee/NEU-DET-Steel-Surface-Defect-Detection
 #   - Casting samples: github.com/naxty/gcp-automated-quality-inspection
 #   - Severstal sample cropped from github.com/shubacca/Severstal-Steel-Defect-Segmentation
-SAMPLE_BASE = "/samples"
+SAMPLE_BASE = "samples"
 
 DATASETS = {
     # https://www.kaggle.com/c/severstal-steel-defect-detection
