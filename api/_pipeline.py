@@ -20,18 +20,119 @@ BIGMODEL_KEY = os.getenv("BIGMODEL_API_KEY", "")
 DATA_DIR = Path("/tmp/test_data")
 
 # ══════════════════════════════════════════════════
+# 真实缺陷数据集注册表 (Kaggle)
+# 类别先验、图像数、分辨率均取自公开数据集元信息，
+# 供感知层按真实分布进行抽样，使 demo 数据贴近产线。
+# ══════════════════════════════════════════════════
+
+DATASETS = {
+    # https://www.kaggle.com/c/severstal-steel-defect-detection
+    "severstal": {
+        "id": "severstal",
+        "name": "Severstal Steel Defect Detection",
+        "source": "Kaggle competition (Severstal, 2019)",
+        "url": "https://www.kaggle.com/c/severstal-steel-defect-detection",
+        "material": "hot-rolled steel coil",
+        "resolution": [1600, 256],
+        "total_images": 18074,
+        "total_objects": 19958,
+        "train_images": 12568,
+        "test_images": 5506,
+        "unlabeled_ratio": 0.63,
+        "classes": [
+            # counts & prior from datasetninja.com/severstal
+            {"type": "defect_1", "label": "Class 1 · pitting", "severity": "medium",
+             "area_px": 180, "count": 3082, "prior": 0.154},
+            {"type": "defect_2", "label": "Class 2 · inclusion", "severity": "high",
+             "area_px": 140, "count": 321, "prior": 0.016},
+            {"type": "defect_3", "label": "Class 3 · scale (majority)", "severity": "medium",
+             "area_px": 420, "count": 14648, "prior": 0.734},
+            {"type": "defect_4", "label": "Class 4 · large patch", "severity": "high",
+             "area_px": 640, "count": 1907, "prior": 0.095},
+        ],
+        # fraction of real images that carry >=1 defect (19958 / 18074 ≈ 1.1, but ~6666 labelled)
+        "p_any_defect": 0.37,
+    },
+    # https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database
+    "neu": {
+        "id": "neu",
+        "name": "NEU-DET Surface Defect Database",
+        "source": "Northeastern University (Song & Yan, 2013)",
+        "url": "https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database",
+        "material": "hot-rolled steel strip",
+        "resolution": [200, 200],
+        "total_images": 1800,
+        "total_objects": 1800,
+        "classes": [
+            # balanced: 300 images per class
+            {"type": "crazing",        "label": "Crazing (cr)",        "severity": "medium", "area_px": 220, "count": 300, "prior": 1/6},
+            {"type": "inclusion",      "label": "Inclusion (in)",      "severity": "high",   "area_px": 260, "count": 300, "prior": 1/6},
+            {"type": "patches",        "label": "Patches (pa)",        "severity": "medium", "area_px": 420, "count": 300, "prior": 1/6},
+            {"type": "pitted_surface", "label": "Pitted surface (ps)", "severity": "high",   "area_px": 320, "count": 300, "prior": 1/6},
+            {"type": "rolled_in_scale","label": "Rolled-in scale (rs)","severity": "medium", "area_px": 280, "count": 300, "prior": 1/6},
+            {"type": "scratches",      "label": "Scratches (sc)",      "severity": "low",    "area_px": 180, "count": 300, "prior": 1/6},
+        ],
+        # NEU-DET is defect-only (every image is a defect)
+        "p_any_defect": 1.0,
+    },
+    # https://www.kaggle.com/datasets/ravirajsinh45/real-life-industrial-dataset-of-casting-product
+    "casting": {
+        "id": "casting",
+        "name": "Casting Product — Submersible Pump Impeller",
+        "source": "Kaggle / Pilot Technocast (Ravirajsinh Dabhi, 2020)",
+        "url": "https://www.kaggle.com/datasets/ravirajsinh45/real-life-industrial-dataset-of-casting-product",
+        "material": "aluminum submersible-pump impeller (top view)",
+        "resolution": [300, 300],
+        "total_images": 7348,
+        "train_defective": 3758,
+        "train_ok": 2875,
+        "test_defective": 453,
+        "test_ok": 262,
+        "classes": [
+            # 4211 defective / 7348 total ≈ 57.3%
+            {"type": "def_front", "label": "Defective (blow-hole / burr / shrink)",
+             "severity": "high", "area_px": 900, "count": 4211, "prior": 0.573},
+            {"type": "ok_front",  "label": "OK",
+             "severity": "low",  "area_px": 0,   "count": 3137, "prior": 0.427},
+        ],
+        # p_any_defect represents "frame shows a defective part"
+        "p_any_defect": 0.573,
+    },
+}
+
+DEFAULT_DATASET = "severstal"
+
+
+def _dataset(name: str | None):
+    return DATASETS.get(name or DEFAULT_DATASET, DATASETS[DEFAULT_DATASET])
+
+
+def _sample_class(ds: dict) -> dict:
+    """Weighted pick of a defect class honoring the dataset's real prior."""
+    # Skip 'ok_front' when sampling a defect (its presence is controlled by p_any_defect).
+    defect_classes = [c for c in ds["classes"] if c.get("type") != "ok_front"]
+    weights = [c.get("prior", 1.0) for c in defect_classes]
+    total = sum(weights) or 1.0
+    r = random.random() * total
+    acc = 0.0
+    for c, w in zip(defect_classes, weights):
+        acc += w
+        if r <= acc:
+            return dict(c)
+    return dict(defect_classes[-1])
+
+
+# ══════════════════════════════════════════════════
 # Layer 1: 感知层 (SAM3 + SAM-Audio 模拟)
 # ══════════════════════════════════════════════════
 
 class PerceptionLayer:
     """模拟SAM3视觉检测 + SAM-Audio声纹分析"""
 
+    # Legacy list kept for external importers; real data now comes from DATASETS.
     DEFECT_TYPES = [
-        {"type": "scratch", "label": "划痕", "severity": "medium", "area_px": 128},
-        {"type": "bubble", "label": "气泡", "severity": "low", "area_px": 64},
-        {"type": "foreign_object", "label": "异物", "severity": "high", "area_px": 256},
-        {"type": "coating_uneven", "label": "涂布不均", "severity": "medium", "area_px": 512},
-        {"type": "wrinkle", "label": "极片褶皱", "severity": "high", "area_px": 384},
+        {"type": c["type"], "label": c["label"], "severity": c["severity"], "area_px": c["area_px"]}
+        for c in DATASETS["severstal"]["classes"]
     ]
 
     AUDIO_ANOMALIES = [
@@ -42,26 +143,78 @@ class PerceptionLayer:
     ]
 
     @staticmethod
-    def detect_visual(image_path: str = None, text_prompt: str = "defect") -> dict:
-        """模拟SAM3文本提示检测"""
-        num_defects = random.choices([0, 1, 2, 3, 4], weights=[30, 35, 20, 10, 5])[0]
+    def detect_visual(image_path: str = None, text_prompt: str = "defect",
+                      dataset: str = None) -> dict:
+        """Simulate SAM3 text-prompt detection on a real Kaggle dataset.
+
+        The dataset argument selects a registered source (severstal / neu / casting).
+        Defect class is drawn from the dataset's real class prior, and the image
+        resolution / sample filename mirror the public metadata.
+        """
+        ds = _dataset(dataset)
+        W, H = ds["resolution"]
+        p_any = ds.get("p_any_defect", 0.4)
+
+        if random.random() < p_any:
+            # Dataset-specific defect count distribution — Severstal allows multi-class
+            # frames, NEU is single-defect, casting is binary.
+            if ds["id"] == "severstal":
+                num_defects = random.choices([1, 2, 3], weights=[70, 22, 8])[0]
+            elif ds["id"] == "neu":
+                num_defects = 1
+            else:  # casting
+                num_defects = 1
+        else:
+            num_defects = 0
+
         detections = []
         for _ in range(num_defects):
-            d = random.choice(PerceptionLayer.DEFECT_TYPES).copy()
-            d["bbox"] = [random.randint(50, 1800), random.randint(50, 1000),
-                         d["area_px"], d["area_px"]]
-            d["confidence"] = round(random.uniform(0.75, 0.99), 3)
-            d["prompt"] = text_prompt
-            detections.append(d)
+            c = _sample_class(ds)
+            area = c["area_px"] or 128
+            # Keep bbox inside the real image frame
+            bw = min(max(int(area * random.uniform(0.6, 1.4)), 20), max(30, W // 4))
+            bh = min(max(int(area * random.uniform(0.6, 1.4)), 20), max(30, H // 2))
+            x = random.randint(0, max(1, W - bw))
+            y = random.randint(0, max(1, H - bh))
+            detections.append({
+                "type": c["type"],
+                "label": c["label"],
+                "severity": c["severity"],
+                "area_px": area,
+                "bbox": [x, y, bw, bh],
+                "confidence": round(random.uniform(0.75, 0.99), 3),
+                "prompt": text_prompt,
+            })
+
+        # Sample filename drawn from the dataset's naming convention
+        if image_path is None:
+            if ds["id"] == "severstal":
+                image_path = f"severstal/{random.randrange(1, ds['total_images']):04x}.jpg"
+            elif ds["id"] == "neu":
+                cls = detections[0]["type"] if detections else random.choice(ds["classes"])["type"]
+                image_path = f"neu-det/{cls}_{random.randint(1, 300)}.jpg"
+            else:
+                folder = "def_front" if detections else "ok_front"
+                image_path = f"casting/{folder}/cast_{folder}_{random.randint(1, 3758):04d}.jpeg"
 
         return {
             "model": "SAM3",
-            "image": image_path or "simulated_frame.jpg",
-            "resolution": [1920, 1080],
+            "image": image_path,
+            "resolution": [W, H],
             "text_prompt": text_prompt,
             "num_detections": len(detections),
             "detections": detections,
             "inference_ms": round(random.uniform(25, 45), 1),
+            "dataset": {
+                "id": ds["id"],
+                "name": ds["name"],
+                "source": ds["source"],
+                "url": ds["url"],
+                "total_images": ds["total_images"],
+                "classes": [{"type": c["type"], "label": c["label"],
+                             "count": c.get("count"), "prior": c.get("prior")}
+                            for c in ds["classes"]],
+            },
             "timestamp": datetime.now().isoformat(),
         }
 
@@ -382,18 +535,22 @@ class DiagnosisLayer:
 # 完整管线
 # ══════════════════════════════════════════════════
 
-def run_pipeline(use_llm: bool = False, verbose: bool = True) -> dict:
+def run_pipeline(use_llm: bool = False, verbose: bool = True,
+                 dataset: str = None) -> dict:
     """运行完整的 感知→预测→归因 管线"""
 
+    ds = _dataset(dataset)
     if verbose:
         print(f"\n{'='*60}")
         print(f"  工业AI全链路管线：感知 → 预测 → 归因")
+        print(f"  数据集: {ds['name']} ({ds['total_images']:,} imgs)")
         print(f"  模式: {'LLM归因' if use_llm else '规则归因(离线)'}")
         print(f"{'='*60}\n")
 
     # Layer 1: 感知
     if verbose: print("  [Layer 1] 感知层...")
-    visual = PerceptionLayer.detect_visual(text_prompt="defect on battery cell")
+    visual = PerceptionLayer.detect_visual(text_prompt="defect on surface",
+                                           dataset=ds["id"])
     audio = PerceptionLayer.detect_audio()
     if verbose:
         print(f"    SAM3: 检测到 {visual['num_detections']} 个缺陷 ({visual['inference_ms']}ms)")
@@ -437,6 +594,7 @@ def run_pipeline(use_llm: bool = False, verbose: bool = True) -> dict:
     # 综合报告
     report = {
         "pipeline": "industrial-ai-v1",
+        "dataset": visual.get("dataset"),
         "perception": {"visual": visual, "audio": audio},
         "prediction": {"yield": yield_pred, "rul": rul},
         "ontology": ontology,

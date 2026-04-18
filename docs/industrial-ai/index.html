@@ -42,16 +42,28 @@
       <span data-en="Industrial AI Pipeline" data-zh="工业AI全链路管线"></span>
       <span class="text-sm font-normal text-gray-400 ml-3">SAM3 + SAM-Audio + TimesFM + LLM</span>
     </h1>
-    <p class="text-gray-400 mt-2" data-en="Perceive → Predict → Diagnose. Real-time analysis of production line data." data-zh="感知 → 预测 → 归因。生产线数据的实时分析管线。"></p>
+    <p class="text-gray-400 mt-2" data-en="Perceive → Predict → Diagnose. Sampling from real Kaggle defect datasets." data-zh="感知 → 预测 → 归因。缺陷数据按 Kaggle 公开数据集的真实类别先验采样。"></p>
   </div>
 
   <div class="card rounded-xl p-4 mb-6 flex flex-wrap gap-3 items-center">
+    <label class="text-xs text-gray-400 flex items-center gap-2">
+      <span data-en="Dataset" data-zh="数据集"></span>
+      <select id="dataset-select" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-gray-200">
+        <option value="severstal">Severstal · Steel coil (18,074 imgs)</option>
+        <option value="neu">NEU-DET · Steel strip (1,800 imgs, 6 classes)</option>
+        <option value="casting">Casting · Pump impeller (7,348 imgs)</option>
+      </select>
+    </label>
     <button id="btn-detect" class="btn-primary px-4 py-2 rounded-lg font-bold text-white text-sm">&#128269; <span data-en="Run Perception" data-zh="运行感知层"></span></button>
     <button id="btn-predict" class="btn-primary px-4 py-2 rounded-lg font-bold text-white text-sm">&#128200; <span data-en="Run Prediction" data-zh="运行预测层"></span></button>
     <button id="btn-diagnose" class="btn-primary px-4 py-2 rounded-lg font-bold text-white text-sm">&#129504; <span data-en="Run Diagnosis" data-zh="运行归因层"></span></button>
     <button id="btn-run-all" class="px-4 py-2 rounded-lg font-bold text-white text-sm bg-gradient-to-r from-pink-600 to-orange-500 hover:opacity-90">&#9889; <span data-en="Full Pipeline" data-zh="全链路运行"></span></button>
     <div class="flex-1"></div>
     <span id="status" class="text-sm text-gray-400" data-en="Idle" data-zh="就绪"></span>
+  </div>
+
+  <div id="dataset-banner" class="card rounded-xl p-4 mb-6 text-xs text-gray-300">
+    <!-- populated by JS -->
   </div>
 
   <div class="grid lg:grid-cols-3 gap-6">
@@ -318,10 +330,107 @@ function drawPrediction(yield_forecast, rul) {
   }
 }
 
-async function apiGet(path) { const r = await fetch(path); return r.json(); }
+function currentDataset() {
+  const el = document.getElementById('dataset-select');
+  return el ? el.value : 'severstal';
+}
+function withDataset(path) {
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}dataset=${encodeURIComponent(currentDataset())}`;
+}
+async function apiGet(path) { const r = await fetch(withDataset(path)); return r.json(); }
 async function apiPost(path, body = {}) {
-  const r = await fetch(path, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+  body = { dataset: currentDataset(), ...body };
+  const r = await fetch(withDataset(path), { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
   return r.json();
+}
+
+function renderDatasetBanner(ds) {
+  if (!ds) return;
+  const el = document.getElementById('dataset-banner');
+  if (!el) return;
+  const classes = (ds.classes || []).map(c => {
+    const pct = c.prior != null ? ` ${(c.prior * 100).toFixed(1)}%` : '';
+    const cnt = c.count != null ? ` · n=${c.count.toLocaleString()}` : '';
+    return `<span class="tag bg-slate-800 text-slate-300 mr-1 mb-1 inline-block">${c.label || c.type}${pct}${cnt}</span>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="flex items-start gap-4 flex-wrap">
+      <div class="flex-1 min-w-[250px]">
+        <div class="text-slate-200 font-bold text-sm mb-1">
+          &#128202; ${ds.name}
+          <a href="${ds.url}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300 text-xs ml-2">Kaggle &#8599;</a>
+        </div>
+        <div class="text-slate-400 text-[11px] mb-2">${ds.source}</div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
+          <span><span data-en="Images" data-zh="图像数">Images</span>: <span class="text-slate-200 font-mono">${ds.total_images.toLocaleString()}</span></span>
+          ${ds.total_objects ? `<span><span data-en="Objects" data-zh="目标数">Objects</span>: <span class="text-slate-200 font-mono">${ds.total_objects.toLocaleString()}</span></span>` : ''}
+        </div>
+      </div>
+      <div class="flex-[2] min-w-[300px]">
+        <div class="text-[11px] text-slate-500 mb-1" data-en="Class distribution (real priors)" data-zh="类别分布（真实先验）">Class distribution (real priors)</div>
+        <div>${classes}</div>
+      </div>
+    </div>`;
+}
+
+// Mirrors api/_pipeline.py :: DATASETS — used as a client-side fallback
+// when the serverless API is not reachable (e.g. static GitHub Pages preview).
+const DATASETS_FALLBACK = [
+  {
+    id: 'severstal', name: 'Severstal Steel Defect Detection',
+    source: 'Kaggle competition (Severstal, 2019)',
+    url: 'https://www.kaggle.com/c/severstal-steel-defect-detection',
+    total_images: 18074, total_objects: 19958,
+    classes: [
+      { type: 'defect_1', label: 'Class 1 · pitting',          count: 3082,  prior: 0.154 },
+      { type: 'defect_2', label: 'Class 2 · inclusion',        count: 321,   prior: 0.016 },
+      { type: 'defect_3', label: 'Class 3 · scale (majority)', count: 14648, prior: 0.734 },
+      { type: 'defect_4', label: 'Class 4 · large patch',      count: 1907,  prior: 0.095 },
+    ],
+  },
+  {
+    id: 'neu', name: 'NEU-DET Surface Defect Database',
+    source: 'Northeastern University (Song & Yan, 2013)',
+    url: 'https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database',
+    total_images: 1800, total_objects: 1800,
+    classes: [
+      { type: 'crazing',         label: 'Crazing (cr)',         count: 300, prior: 1/6 },
+      { type: 'inclusion',       label: 'Inclusion (in)',       count: 300, prior: 1/6 },
+      { type: 'patches',         label: 'Patches (pa)',         count: 300, prior: 1/6 },
+      { type: 'pitted_surface',  label: 'Pitted surface (ps)',  count: 300, prior: 1/6 },
+      { type: 'rolled_in_scale', label: 'Rolled-in scale (rs)', count: 300, prior: 1/6 },
+      { type: 'scratches',       label: 'Scratches (sc)',       count: 300, prior: 1/6 },
+    ],
+  },
+  {
+    id: 'casting', name: 'Casting Product — Submersible Pump Impeller',
+    source: 'Kaggle / Pilot Technocast (Ravirajsinh Dabhi, 2020)',
+    url: 'https://www.kaggle.com/datasets/ravirajsinh45/real-life-industrial-dataset-of-casting-product',
+    total_images: 7348,
+    classes: [
+      { type: 'def_front', label: 'Defective (blow-hole / burr / shrink)', count: 4211, prior: 0.573 },
+      { type: 'ok_front',  label: 'OK',                                    count: 3137, prior: 0.427 },
+    ],
+  },
+];
+
+async function loadDatasetInfo() {
+  window.__DATASETS__ = DATASETS_FALLBACK;
+  // Render immediately from the fallback so the banner is never blank.
+  const initial = DATASETS_FALLBACK.find(d => d.id === currentDataset());
+  if (initial) renderDatasetBanner(initial);
+  // Try to upgrade to live data from the API (adds live fields when available).
+  try {
+    const data = await fetch('/api/industrial?action=datasets').then(r => r.json());
+    if (data && data.datasets && data.datasets.length) {
+      window.__DATASETS__ = data.datasets;
+      const found = data.datasets.find(d => d.id === currentDataset());
+      if (found) renderDatasetBanner(found);
+    }
+  } catch (e) {
+    // keep fallback
+  }
 }
 
 async function runDetect() {
@@ -331,8 +440,11 @@ async function runDetect() {
   await delay(800);
   try {
     const data = await apiGet('/api/industrial?action=detect');
+    if (data.visual?.dataset) renderDatasetBanner(data.visual.dataset);
     const visuals = data.visual?.detections || [];
     const audios = data.audio?.anomalies || [];
+    const res = data.visual?.resolution;
+    if (res) log(`  source: ${data.visual.image} · ${res[0]}×${res[1]}px`, 'output');
     log(`  visual: ${visuals.length} defects found`, 'output');
     log(`  audio: ${audios.length} anomalies detected`, 'output');
     drawBBoxes(visuals);
@@ -469,9 +581,15 @@ $('#btn-detect').addEventListener('click', runDetect);
 $('#btn-predict').addEventListener('click', runPredict);
 $('#btn-diagnose').addEventListener('click', runDiagnose);
 $('#btn-run-all').addEventListener('click', runAll);
+$('#dataset-select').addEventListener('change', () => {
+  const found = (window.__DATASETS__ || []).find(d => d.id === currentDataset());
+  if (found) renderDatasetBanner(found);
+  log(`<span class="highlight">&#128193; dataset → ${currentDataset()}</span>`, 'highlight');
+});
 
 drawSpectrogram([{type:'bg', freq_hz: 500, confidence: 0.0}]);
 drawPrediction({values: Array.from({length: 72}, (_, i) => 0.96 - i * 0.0005 + (Math.random() - 0.5) * 0.003), trend: '-0.05%/day'}, null);
+loadDatasetInfo();
 </script>
 </body>
 </html>

@@ -385,9 +385,20 @@ const App = (() => {
       if (logEl) logEl.scrollTop = logEl.scrollHeight;
     }
 
+    // Simulated clock — 4 rounds × 5 hours mapped to Day1/Day2 AM/PM working hours.
+    // Round 1→D1 09:00, R2→D1 14:00, R3→D2 09:00, R4→D2 14:00 (each round spans 5h).
+    let simClock = { day: 1, hour: 9 };
+    function setSimClock(round, hourOffset = 0) {
+      const day = round <= 2 ? 1 : 2;
+      const startHour = round % 2 === 1 ? 9 : 14;
+      simClock = { day, hour: startHour + hourOffset };
+    }
+    function fmtSimTime() {
+      const hh = String(simClock.hour).padStart(2, '0');
+      return `[D${simClock.day} ${hh}:00]`;
+    }
     function log(msg, type = 'info') {
-      const t = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      simLog.push({ time: `[${t}]`, msg, type });
+      simLog.push({ time: fmtSimTime(), msg, type });
     }
 
     function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -400,6 +411,7 @@ const App = (() => {
       const baseProgress = ((round - 1) / TOTAL_ROUNDS) * 100;
 
       // ── Standup phase ──
+      setSimClock(round, 0);
       renderSimUI(round, `Standup — ${roundNames[rIdx]}`, '填写各玩家的进展汇报...', baseProgress);
       log(`── 回合 ${round} (${roundNames[rIdx]}) 开始 ──`, 'info');
       await delay(1800);
@@ -422,6 +434,7 @@ const App = (() => {
           const actionData = script.actions[rIdx]?.[pi]?.[h];
           if (!actionData) continue;
 
+          setSimClock(round, h);
           const stepProgress = baseProgress + ((pi * HOURS_PER_ROUND + h) / (state.players.length * HOURS_PER_ROUND)) * (100 / TOTAL_ROUNDS);
           state.rounds[rKey][pi][h].playerAction = actionData.playerAction;
 
@@ -452,6 +465,7 @@ const App = (() => {
         }
       }
 
+      setSimClock(round, HOURS_PER_ROUND - 1);
       log(`回合 ${round} 完成 ✓`, 'success');
       saveState();
       await delay(1800);

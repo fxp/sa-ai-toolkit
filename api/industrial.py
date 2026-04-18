@@ -14,7 +14,16 @@ from _pipeline import (
     OntologyLayer,
     DiagnosisLayer,
     run_pipeline,
+    DATASETS,
+    DEFAULT_DATASET,
 )
+
+
+def _dataset_param(params, body=None):
+    ds = (params.get("dataset") or [""])[0] if params else ""
+    if not ds and body:
+        ds = body.get("dataset") or ""
+    return ds if ds in DATASETS else DEFAULT_DATASET
 
 
 class handler(BaseHTTPRequestHandler):
@@ -22,10 +31,11 @@ class handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         params = urllib.parse.parse_qs(parsed.query)
         action = (params.get("action") or [""])[0]
+        ds_id = _dataset_param(params)
         try:
             if action == "detect":
                 result = {
-                    "visual": PerceptionLayer.detect_visual(),
+                    "visual": PerceptionLayer.detect_visual(dataset=ds_id),
                     "audio": PerceptionLayer.detect_audio(),
                 }
                 self._json(200, result)
@@ -36,17 +46,28 @@ class handler(BaseHTTPRequestHandler):
                 }
                 self._json(200, result)
             elif action == "run":
-                self._json(200, run_pipeline(use_llm=False, verbose=False))
+                self._json(200, run_pipeline(use_llm=False, verbose=False, dataset=ds_id))
+            elif action == "datasets":
+                # Expose the full real-data registry (minus any internal-only keys).
+                self._json(200, {
+                    "default": DEFAULT_DATASET,
+                    "datasets": [
+                        {k: v for k, v in d.items()}
+                        for d in DATASETS.values()
+                    ],
+                })
             elif action == "health":
                 self._json(200, {
                     "status": "ok",
                     "pipeline": "industrial-ai-v1",
                     "layers": ["SAM3", "SAM-Audio", "TimesFM", "LLM"],
+                    "datasets": list(DATASETS.keys()),
                     "deployment": "vercel-serverless",
                 })
             else:
                 self._json(400, {"error": "unknown action",
-                                 "available": ["detect", "predict", "run", "diagnose", "health"]})
+                                 "available": ["detect", "predict", "run", "diagnose",
+                                               "datasets", "health"]})
         except Exception as e:
             self._json(500, {"error": str(e)})
 
@@ -60,17 +81,20 @@ class handler(BaseHTTPRequestHandler):
             self._json(400, {"error": "invalid JSON"})
             return
         action = (params.get("action") or [""])[0] or body.get("action") or ""
+        ds_id = _dataset_param(params, body)
         try:
             if action == "diagnose":
-                vis = body.get("visual", PerceptionLayer.detect_visual())
+                vis = body.get("visual", PerceptionLayer.detect_visual(dataset=ds_id))
                 aud = body.get("audio", PerceptionLayer.detect_audio())
                 pred = body.get("prediction", PredictionLayer.predict_equipment_rul())
-                ont = body.get("ontology", OntologyLayer.trace_root_cause("defect"))
+                defect_seed = (vis.get("detections") or [{}])[0].get("label", "defect")
+                ont = body.get("ontology", OntologyLayer.trace_root_cause(defect_seed))
                 diag = DiagnosisLayer.diagnose(vis, pred, ont, aud, body.get("use_llm", False))
+                diag["dataset"] = vis.get("dataset")
                 self._json(200, diag)
             elif action == "run":
                 use_llm = body.get("use_llm", False)
-                self._json(200, run_pipeline(use_llm=use_llm, verbose=False))
+                self._json(200, run_pipeline(use_llm=use_llm, verbose=False, dataset=ds_id))
             else:
                 self._json(400, {"error": "unknown action",
                                  "available": ["diagnose", "run"]})

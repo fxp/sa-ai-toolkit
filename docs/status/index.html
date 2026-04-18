@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Status — SA AI Toolkit</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', sans-serif; color: #e2e8f0; }
+  .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-ok { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+  .dot-slow { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.6); }
+  .dot-down { background: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,0.8); }
+  .dot-unknown { background: #64748b; }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .spark { height: 6px; border-radius: 3px; overflow: hidden; display: flex; gap: 1px; }
+  .spark > div { flex: 1; transition: all 0.3s; }
+</style>
+</head>
+<body>
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span><span id="lang-label">EN</span>
+  </button>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 py-6">
+
+  <div class="mb-6 flex items-start justify-between gap-4 flex-wrap">
+    <div>
+      <a href="/" class="text-blue-400 hover:text-blue-300 text-sm" data-en="&#8592; Back to home" data-zh="&#8592; 返回首页"></a>
+      <h1 class="text-3xl font-bold text-white mt-2"><span data-en="System Status" data-zh="系统状态"></span></h1>
+      <p class="text-gray-400 mt-1 text-sm">
+        <span class="pulse inline-block">•</span>
+        <span data-en="Auto-refresh every 30s · 12 demos monitored" data-zh="每 30 秒自动刷新 · 监控 12 个 Demo"></span>
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <select id="refresh-interval" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">
+        <option value="10000">10s</option>
+        <option value="30000" selected>30s</option>
+        <option value="60000">1 min</option>
+        <option value="300000">5 min</option>
+        <option value="0">Paused</option>
+      </select>
+      <button id="refresh-btn" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:opacity-90">
+        &#128260; <span data-en="Check now" data-zh="立即检查"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="card rounded-xl p-6 mb-6">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-4">
+        <span id="overall-dot" class="dot dot-unknown" style="width:18px;height:18px"></span>
+        <div>
+          <div id="overall-text" class="text-2xl font-bold text-white">Loading…</div>
+          <div id="overall-sub" class="text-sm text-gray-400 mt-0.5">Checking all services…</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-6 text-right">
+        <div>
+          <div class="text-xs text-gray-400" data-en="Healthy" data-zh="健康"></div>
+          <div id="count-ok" class="text-2xl font-bold text-green-400">—</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400" data-en="Slow" data-zh="变慢"></div>
+          <div id="count-slow" class="text-2xl font-bold text-yellow-400">—</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400" data-en="Down" data-zh="宕机"></div>
+          <div id="count-down" class="text-2xl font-bold text-red-400">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center gap-3 text-xs text-gray-500">
+      <span><span data-en="Last check:" data-zh="上次检查："></span> <span id="last-check">—</span></span>
+      <span>·</span>
+      <span><span data-en="Total time:" data-zh="总耗时："></span> <span id="total-ms">—</span></span>
+      <span>·</span>
+      <span><span data-en="Next check in" data-zh="下次检查"></span> <span id="countdown">—</span>s</span>
+    </div>
+  </div>
+
+  <!-- Service cards -->
+  <div id="demos-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+  <!-- Error banner -->
+  <div id="err-banner" class="hidden mt-4 p-3 rounded-lg bg-red-900/40 border border-red-700 text-red-200 text-sm"></div>
+
+  <!-- Raw JSON -->
+  <details class="card rounded-xl mt-6">
+    <summary class="p-4 flex items-center justify-between text-sm">
+      <span class="text-gray-300" data-en="Raw response" data-zh="原始响应"></span>
+      <span class="text-xs text-gray-500" data-en="click to expand" data-zh="点击展开"></span>
+    </summary>
+    <pre id="raw" class="border-t border-gray-700 p-4 text-xs font-mono text-gray-400 overflow-auto max-h-96"></pre>
+  </details>
+
+  <footer class="text-center text-xs text-gray-500 py-6 mt-6 border-t border-gray-800">
+    <span data-en="Status endpoint: " data-zh="状态端点：">Status endpoint: </span>
+    <code class="bg-gray-800 px-2 py-1 rounded">GET /api/status</code>
+    <span class="ml-2" data-en="· Cached 15s server-side" data-zh="· 服务端缓存 15 秒"></span>
+  </footer>
+</div>
+
+<script>
+(function() {
+  const KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function apply(l) {
+    lang = l; localStorage.setItem(KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
+    });
+    const lab = document.getElementById('lang-label');
+    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => { apply(lang === 'en' ? 'zh' : 'en'); });
+  apply(lang);
+})();
+
+// ─── Demo metadata: human label + link ───
+const DEMOS = {
+  'industrial-ai':  { en: 'Industrial AI Pipeline', zh: '工业AI管线',   url: '/industrial-ai/' },
+  'ceo-agent':      { en: 'CEO Dashboard',          zh: 'CEO 驾驶舱',    url: '/ceo-dashboard/' },
+  'autoresearch':   { en: 'AutoResearch',           zh: 'AutoResearch', url: '/autoresearch/' },
+  'enterprise-gen': { en: 'Enterprise Gen',         zh: '企业方案生成',   url: '/enterprise-gen/' },
+  'gstack':         { en: 'GStack Toolkit',         zh: 'GStack 工具集',  url: '/gstack/' },
+  'hypothesis':     { en: 'Hypothesis Annotator',   zh: 'Hypothesis 标注', url: '/hypothesis/' },
+  'karpathy-kb':    { en: 'Karpathy KB',            zh: 'Karpathy 知识库', url: '/karpathy-kb/' },
+  'maestro':        { en: 'Maestro Mobile Test',    zh: 'Maestro 移动测试', url: '/maestro/' },
+  'org-uplift':     { en: 'Org-Uplift Game',        zh: 'Org-Uplift 推演', url: '/org-uplift/' },
+  'playwright':     { en: 'Playwright E2E',         zh: 'Playwright 测试', url: '/playwright/' },
+  'ppt-gen':        { en: 'Brand PPT Gen',          zh: '品牌 PPT 生成',  url: '/ppt-gen/' },
+  'sa-toolkit':     { en: 'SA AI Toolkit',          zh: 'SA 销售工具包',  url: '/sa-toolkit/' },
+};
+
+// ─── History: keep last 20 latencies per demo for sparkline ───
+const HISTORY_KEY = 'status-history';
+const HISTORY_SIZE = 20;
+let history = {};
+try { history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}'); } catch {}
+
+function pushHistory(name, status, ms) {
+  if (!history[name]) history[name] = [];
+  history[name].push({ t: Date.now(), status, ms });
+  if (history[name].length > HISTORY_SIZE) history[name].shift();
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
+}
+
+function sparkHtml(name) {
+  const h = history[name] || [];
+  const cells = Array.from({ length: HISTORY_SIZE }, (_, i) => {
+    const v = h[h.length - HISTORY_SIZE + i];
+    if (!v) return '<div class="bg-gray-800"></div>';
+    const cls = v.status === 'ok' ? 'bg-green-500' : v.status === 'slow' ? 'bg-yellow-500' : 'bg-red-500';
+    const title = `${new Date(v.t).toLocaleTimeString()} · ${v.ms}ms · ${v.status}`;
+    return `<div class="${cls}" title="${title}"></div>`;
+  });
+  return `<div class="spark">${cells.join('')}</div>`;
+}
+
+// ─── Render ───
+function renderDemo(d) {
+  const meta = DEMOS[d.name] || { en: d.name, zh: d.name, url: '#' };
+  const lang = localStorage.getItem('sa-toolkit-lang') || 'en';
+  const label = meta[lang] || meta.en;
+  const cls = `dot-${d.status}`;
+  const statusLabel = d.status === 'ok' ? (lang === 'zh' ? '正常' : 'Healthy')
+                   : d.status === 'slow' ? (lang === 'zh' ? '变慢' : 'Slow')
+                   : (lang === 'zh' ? '失败' : 'Down');
+  const statusColor = d.status === 'ok' ? 'text-green-400'
+                    : d.status === 'slow' ? 'text-yellow-400' : 'text-red-400';
+  const details = d.details ? Object.entries(d.details).map(([k, v]) => `${k}: <span class="text-gray-300">${JSON.stringify(v)}</span>`).join(' · ') : '';
+  const errMsg = d.error ? `<div class="text-xs text-red-400 mt-1 break-all">${d.error}</div>` : '';
+  return `
+    <a href="${meta.url}" class="card rounded-lg p-4 hover:border-blue-500/50 transition no-underline">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span class="dot ${cls}"></span>
+          <span class="font-bold text-white text-sm">${label}</span>
+        </div>
+        <span class="text-xs ${statusColor} font-bold">${statusLabel}</span>
+      </div>
+      <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+        <code class="bg-gray-800/70 rounded px-2 py-0.5">${d.endpoint}</code>
+        <span class="${statusColor} font-mono">${d.latency_ms}ms</span>
+      </div>
+      ${sparkHtml(d.name)}
+      <div class="text-[11px] text-gray-500 mt-2 truncate">${details}</div>
+      ${errMsg}
+    </a>
+  `;
+}
+
+function renderAll(data) {
+  document.getElementById('overall-dot').className = `dot dot-${data.overall}`;
+  document.getElementById('overall-dot').style.width = '18px';
+  document.getElementById('overall-dot').style.height = '18px';
+  const lang = localStorage.getItem('sa-toolkit-lang') || 'en';
+  const map = { ok: { en: 'All systems operational', zh: '所有服务正常' },
+                degraded: { en: 'Degraded performance', zh: '部分服务降级' },
+                down: { en: 'Outage detected', zh: '检测到宕机' } };
+  document.getElementById('overall-text').textContent = (map[data.overall] || map.ok)[lang];
+  document.getElementById('overall-sub').textContent = lang === 'zh'
+    ? `检查 ${data.total_demos} 个 Demo · 耗时 ${data.total_check_ms}ms · ${data.cached ? '缓存 ' + data.cache_age_s + 's' : '实时'}`
+    : `Checked ${data.total_demos} demos in ${data.total_check_ms}ms · ${data.cached ? 'cached ' + data.cache_age_s + 's' : 'live'}`;
+  document.getElementById('count-ok').textContent = data.healthy;
+  document.getElementById('count-slow').textContent = data.slow;
+  document.getElementById('count-down').textContent = data.down;
+  document.getElementById('last-check').textContent = new Date(data.timestamp).toLocaleTimeString();
+  document.getElementById('total-ms').textContent = data.total_check_ms + 'ms';
+
+  data.demos.forEach(d => pushHistory(d.name, d.status, d.latency_ms));
+
+  document.getElementById('demos-grid').innerHTML = data.demos.map(renderDemo).join('');
+  document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+}
+
+function showError(msg) {
+  const b = document.getElementById('err-banner');
+  b.textContent = msg;
+  b.classList.remove('hidden');
+}
+
+async function fetchStatus(fresh = false) {
+  try {
+    const res = await fetch(`/api/status${fresh ? '?fresh=true' : ''}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    document.getElementById('err-banner').classList.add('hidden');
+    renderAll(data);
+  } catch (e) {
+    showError(`Failed to fetch /api/status: ${e.message}`);
+  }
+}
+
+// ─── Polling ───
+let intervalMs = 30000;
+let timerId = null;
+let countdownId = null;
+let nextFire = 0;
+
+function schedule() {
+  if (timerId) clearTimeout(timerId);
+  if (countdownId) clearInterval(countdownId);
+  if (!intervalMs) {
+    document.getElementById('countdown').textContent = '--';
+    return;
+  }
+  nextFire = Date.now() + intervalMs;
+  timerId = setTimeout(() => { fetchStatus(); schedule(); }, intervalMs);
+  countdownId = setInterval(() => {
+    const s = Math.max(0, Math.ceil((nextFire - Date.now()) / 1000));
+    document.getElementById('countdown').textContent = s;
+  }, 1000);
+}
+
+document.getElementById('refresh-interval').addEventListener('change', e => {
+  intervalMs = parseInt(e.target.value, 10) || 0;
+  schedule();
+});
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  fetchStatus(true);
+  schedule();
+});
+
+// First load
+fetchStatus();
+schedule();
+</script>
+</body>
+</html>

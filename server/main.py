@@ -71,12 +71,12 @@ async def industrial_post(action: str = "run", body: dict = Body(default={})):
 async def ceo(action: str = "all", company: str = "NewCo Inc", lang: str = "en", idx: int = 0):
     CEOAgent = cores["ceo-agent"].CEOAgent
     agent = CEOAgent(company=company)
-    if action == "brief": return agent.morning_brief(brief_idx=idx, lang=lang)
+    if action == "brief": return {"company": company, "idx": idx, "lang": lang, "brief": agent.morning_brief(brief_idx=idx, lang=lang)}
     if action == "metrics": return agent.metrics(lang=lang)
-    if action == "decisions": return agent.decisions(lang=lang)
+    if action == "decisions": return {"decisions": agent.decisions(lang=lang)}
     if action == "mood": return agent.mood_heatmap(lang=lang)
-    if action == "competitors": return agent.competitor_feed(lang=lang)
-    if action == "actions": return agent.action_queue(lang=lang)
+    if action == "competitors": return {"feed": agent.competitor_feed(lang=lang)}
+    if action == "actions": return {"actions": agent.action_queue(lang=lang)}
     if action == "all": return agent.all(brief_idx=idx, lang=lang)
     raise HTTPException(400, f"unknown action {action}")
 
@@ -92,15 +92,15 @@ async def research_post(action: str = "stage", body: dict = Body(default={})):
         stage_idx = int(body.get("stage_idx", 0))
         prev = body.get("prev_results") or []
         result = c.run_stage(topic, stage_idx, prev_results=prev)
-        # If this is the final stage, attach the report
         try:
             total = len(c.STAGES) if hasattr(c, "STAGES") else 23
         except Exception:
             total = 23
+        resp = {"stage": result, "num_stages": total}
         if stage_idx == total - 1:
             all_results = prev + [result]
-            result["report"] = c.build_report(topic, all_results, lang=body.get("lang", "en"))
-        return result
+            resp["report"] = c.build_report(topic, all_results, lang=body.get("lang", "en"))
+        return resp
     raise HTTPException(400, f"unknown action {action}")
 
 @app.get("/api/research")
@@ -265,6 +265,135 @@ async def sa_toolkit(action: str = "gen", body: dict = Body(default={})):
 
 
 # ==========================
+# Status / health dashboard
+# ==========================
+# /api/status runs each demo's fast-path core function in-process, times it,
+# and returns structured health info. Frontend polls this every 30s.
+
+import time
+import traceback
+
+# Each entry: (display_name, fast-path callable returning any, endpoint_hint)
+def _status_checks():
+    ia = cores["industrial-ai"]
+    ca = cores["ceo-agent"]
+    ar = cores["autoresearch"]
+    eg = cores["enterprise-gen"]
+    gs = cores["gstack"]
+    hy = cores["hypothesis"]
+    kb = cores["karpathy-kb"]
+    ms = cores["maestro"]
+    ou = cores["org-uplift"]
+    pw = cores["playwright"]
+    pg = cores["ppt-gen"]
+    sa = cores["sa-toolkit"]
+
+    sample_profile = {
+        "company": "Acme Inc", "industry": "banking-finance",
+        "pain_points": ["A", "D"], "audience": "executives",
+        "minutes": 90, "size": "1000-10000",
+    }
+    sample_yaml = "appId: com.test\n---\n- launchApp\n- assertVisible: \"Home\"\n"
+    sample_text = "The market grew to $2.1T in 2024. However, consolidation is accelerating. We should focus on platform plays."
+
+    return [
+        ("industrial-ai", "/api/industrial?action=detect",
+         lambda: {"detections": len(ia.PerceptionLayer.detect_visual().get("detections", []))}),
+        ("ceo-agent", "/api/ceo?action=metrics",
+         lambda: {"metrics_keys": len(ca.CEOAgent(company="NewCo Inc").metrics())}),
+        ("autoresearch", "/api/research?action=stage",
+         lambda: {"stage": ar.run_stage("AI agents 2026", 0, prev_results=[]).get("name", "?")}),
+        ("enterprise-gen", "/api/enterprise?action=score",
+         lambda: {"scored": len(eg.score_demos(sample_profile))}),
+        ("gstack", "/api/gstack?command=office-hours",
+         lambda: {"steps": len(gs.run_command("office-hours"))}),
+        ("hypothesis", "/api/hypothesis",
+         lambda: {"annotations": len(hy.classify_sentences(sample_text))}),
+        ("karpathy-kb", "/api/karpathy?action=extract",
+         lambda: {"concepts": len(kb.extract_concepts(sample_text, n=3))}),
+        ("maestro", "/api/maestro?action=parse",
+         lambda: {"steps": len((ms.parse_yaml(sample_yaml) or {}).get("steps") or [])}),
+        ("org-uplift", "/api/org_uplift?action=execute",
+         lambda: {"dice_success": ou.execute_task(
+             task_description="write a spec",
+             context="sprint planning",
+             player="Alice",
+             scenario="startup",
+         ).get("dice", {}).get("success")}),
+        ("playwright", "/api/playwright?scenario=bing",
+         lambda: {"trace_steps": len(pw.simulate_run("bing"))}),
+        ("ppt-gen", "/api/ppt",
+         lambda: {"bytes": len(pg.generate_pptx(
+             title="Smoke", subtitle="Check",
+             slides=[{"template": "cover", "fields": {"title": "x"}}],
+             theme="blue-orange",
+         ))}),
+        ("sa-toolkit", "/api/sa_toolkit?action=gen",
+         lambda: {"fields": list((sa.search_company("Tencent") or {}).keys())}),
+    ]
+
+
+_STATUS_CACHE: dict[str, Any] = {"ts": 0, "payload": None}
+_CACHE_TTL = 15  # seconds
+
+
+def _compute_status() -> dict:
+    demos = []
+    fail = 0
+    slow = 0
+    total_ms = 0
+    for name, endpoint, fn in _status_checks():
+        t0 = time.perf_counter()
+        entry: dict[str, Any] = {"name": name, "endpoint": endpoint}
+        try:
+            details = fn()
+            ms = round((time.perf_counter() - t0) * 1000, 1)
+            entry["status"] = "ok" if ms < 1500 else "slow"
+            entry["latency_ms"] = ms
+            entry["details"] = details
+            if entry["status"] == "slow":
+                slow += 1
+            total_ms += ms
+        except Exception as e:
+            ms = round((time.perf_counter() - t0) * 1000, 1)
+            entry["status"] = "down"
+            entry["latency_ms"] = ms
+            entry["error"] = f"{type(e).__name__}: {e}"
+            entry["traceback"] = traceback.format_exc().splitlines()[-3:]
+            fail += 1
+        demos.append(entry)
+
+    if fail > 0:
+        overall = "down" if fail >= 3 else "degraded"
+    elif slow > 0:
+        overall = "degraded"
+    else:
+        overall = "ok"
+
+    return {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "overall": overall,
+        "total_demos": len(demos),
+        "healthy": len(demos) - fail - slow,
+        "slow": slow,
+        "down": fail,
+        "total_check_ms": round(total_ms, 1),
+        "demos": demos,
+    }
+
+
+@app.get("/api/status")
+async def api_status(fresh: bool = False):
+    now = time.time()
+    if not fresh and _STATUS_CACHE["payload"] and now - _STATUS_CACHE["ts"] < _CACHE_TTL:
+        return {**_STATUS_CACHE["payload"], "cached": True, "cache_age_s": round(now - _STATUS_CACHE["ts"], 1)}
+    payload = _compute_status()
+    _STATUS_CACHE["ts"] = now
+    _STATUS_CACHE["payload"] = payload
+    return {**payload, "cached": False}
+
+
+# ==========================
 # Static file hosting
 # ==========================
 # Every /<demo>/ URL maps to docs/<demo>/index.html; /<demo>/<file> serves the file.
@@ -278,7 +407,11 @@ _DEMO_PATHS = [
     "org-uplift", "ceo-dashboard", "autoresearch", "industrial-ai",
     "karpathy-kb", "gstack", "hypothesis", "ppt-gen",
     "maestro", "playwright", "enterprise-gen", "sa-toolkit",
+    "xinglian-office-hour",  # static-only demo
+    "status",                # live status dashboard
 ]
+# Mount only directories that actually exist on disk
+_DEMO_PATHS = [p for p in _DEMO_PATHS if (DOCS / p).is_dir()]
 for demo in _DEMO_PATHS:
     app.mount(f"/{demo}", StaticFiles(directory=str(DOCS / demo), html=True), name=demo)
 

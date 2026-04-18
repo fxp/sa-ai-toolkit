@@ -303,12 +303,12 @@ async function loadAll() {
   const l = getLang();
   try {
     const [brief, metrics, decisions, mood, competitors, actions] = await Promise.all([
-      fetchJson(`/api/ceo?action=brief?company=${c}&idx=${briefIdx}&lang=${l}`),
-      fetchJson(`/api/ceo?action=metrics?company=${c}&lang=${l}`),
-      fetchJson(`/api/ceo?action=decisions?company=${c}&lang=${l}`),
-      fetchJson(`/api/ceo?action=mood?company=${c}&lang=${l}`),
-      fetchJson(`/api/ceo?action=competitors?company=${c}&lang=${l}`),
-      fetchJson(`/api/ceo?action=actions?company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=brief&company=${c}&idx=${briefIdx}&lang=${l}`),
+      fetchJson(`/api/ceo?action=metrics&company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=decisions&company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=mood&company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=competitors&company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=actions&company=${c}&lang=${l}`),
     ]);
     renderBrief(brief.brief);
     renderMetrics(metrics);
@@ -329,7 +329,7 @@ document.getElementById('refresh-brief').addEventListener('click', async () => {
   try {
     const c = encodeURIComponent(currentCompany());
     const l = getLang();
-    const brief = await fetchJson(`/api/ceo?action=brief?company=${c}&idx=${briefIdx}&lang=${l}`);
+    const brief = await fetchJson(`/api/ceo?action=brief&company=${c}&idx=${briefIdx}&lang=${l}`);
     renderBrief(brief.brief);
     badge.textContent = 'Ready'; badge.className = 'tag bg-green-900/50 text-green-300';
   } catch (e) {
