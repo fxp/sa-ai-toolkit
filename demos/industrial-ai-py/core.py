@@ -23,6 +23,8 @@ from _pipeline import (  # noqa: E402  (re-exports)
     DiagnosisLayer,
     run_pipeline,
     generate_test_data,
+    DATASETS,
+    DEFAULT_DATASET,
 )
 
 __all__ = [
@@ -32,4 +34,6 @@ __all__ = [
     "DiagnosisLayer",
     "run_pipeline",
     "generate_test_data",
+    "DATASETS",
+    "DEFAULT_DATASET",
 ]
