@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Karpathy KB — Interactive Knowledge Base</title>
+<title>Karpathy LLM-Wiki — Concepts + Contradictions</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
@@ -11,77 +11,218 @@
   .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   #lang-toggle { cursor: pointer; transition: all 0.2s; }
   #lang-toggle:hover { background: rgba(100,150,255,0.2); }
-  .concept-card { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 14px; transition: all 0.2s; }
-  .concept-card:hover { background: rgba(59,130,246,0.15); transform: translateY(-2px); }
-  .link-badge { display: inline-block; background: rgba(167,139,250,0.15); color: #c4b5fd; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin: 2px 2px 0 0; border: 1px solid rgba(167,139,250,0.3); }
+  .concept-card { background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.28); border-radius: 10px; padding: 14px; transition: all 0.2s; }
+  .concept-card:hover { background: rgba(59,130,246,0.12); transform: translateY(-1px); }
+  .type-entity  { background: rgba(59,130,246,0.18); color: #93c5fd; border: 1px solid rgba(59,130,246,0.35); }
+  .type-metric  { background: rgba(16,185,129,0.18); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.35); }
+  .type-opinion { background: rgba(245,158,11,0.18); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
+  .type-claim   { background: rgba(167,139,250,0.18); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.35); }
+  .type-event   { background: rgba(236,72,153,0.18); color: #f9a8d4; border: 1px solid rgba(236,72,153,0.35); }
+  .type-pill { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .link-badge { display: inline-block; background: rgba(167,139,250,0.15); color: #c4b5fd; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin: 2px 2px 0 0; border: 1px solid rgba(167,139,250,0.3); cursor: pointer; transition: all .15s; }
+  .link-badge:hover { background: rgba(167,139,250,0.3); }
+  .attr-row { display: flex; gap: 8px; align-items: baseline; font-size: 11px; padding: 2px 0; border-top: 1px dashed rgba(148,163,184,0.12); }
+  .attr-row:first-child { border-top: none; }
+  .attr-key { color: #94a3b8; white-space: nowrap; font-family: ui-monospace, monospace; }
+  .attr-val { color: #e2e8f0; font-weight: 500; }
+  .evidence-quote { font-size: 11px; color: #94a3b8; padding: 6px 10px; border-left: 2px solid rgba(59,130,246,0.4); background: rgba(15,23,42,0.5); border-radius: 0 6px 6px 0; margin-top: 6px; font-style: italic; }
   .spinner { border: 2px solid rgba(255,255,255,0.1); border-top-color: #60a5fa; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  textarea { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); }
+  textarea { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); font-family: ui-monospace, 'Menlo', monospace; font-size: 12.5px; line-height: 1.65; }
   textarea:focus { outline: none; border-color: #60a5fa; }
-  .btn { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.2s; }
+  .btn { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.2s; cursor: pointer; border: none; }
   .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-secondary { background: rgba(100,100,150,0.2); border: 1px solid rgba(100,100,150,0.3); }
-  .lint-row { padding: 8px 12px; border-radius: 6px; background: rgba(20,20,30,0.5); margin-bottom: 6px; }
+  .lint-row { padding: 8px 12px; border-radius: 6px; background: rgba(20,20,30,0.5); margin-bottom: 6px; font-size: 13px; }
   .lint-ok { color: #4ade80; } .lint-warn { color: #facc15; } .lint-err { color: #f87171; }
+  .contradiction-card { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.4); border-radius: 8px; padding: 10px; margin-top: 6px; }
+  .example-pill { background: rgba(100,100,150,0.18); border: 1px solid rgba(100,100,150,0.3); padding: 3px 10px; border-radius: 999px; font-size: 11px; cursor: pointer; transition: all .15s; color: #cbd5e1; }
+  .example-pill:hover { background: rgba(100,100,150,0.35); border-color: rgba(150,150,200,0.5); }
+  .example-pill.active { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.6); color: #dbeafe; }
+  .confidence-bar { height: 3px; border-radius: 2px; background: rgba(148,163,184,0.15); overflow: hidden; margin-top: 8px; }
+  .confidence-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #60a5fa, #8b5cf6); transition: width .4s; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
 </style>
 </head>
 <body class="min-h-screen">
 
 <div class="fixed top-4 right-4 z-50">
   <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
-    <span>🌐</span><span id="lang-label">中文</span>
+    <span>&#127760;</span><span id="lang-label">中文</span>
   </button>
 </div>
 
 <div class="max-w-7xl mx-auto px-6 py-8">
-  <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
-  <h1 class="text-3xl font-bold mt-3 gradient-text" data-en="Karpathy Knowledge Base" data-zh="Karpathy 知识库">Karpathy Knowledge Base</h1>
-  <p class="text-gray-400 mt-1" data-en="Paste raw notes → Python backend extracts concepts (yake) and lints the KB." data-zh="粘贴原始笔记 → Python 后端（yake）提取概念并检查知识库。">Paste raw notes → Python backend extracts concepts (yake) and lints the KB.</p>
+  <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="&#8592; Back to home" data-zh="&#8592; 返回首页">← Back to home</a>
+  <h1 class="text-3xl font-bold mt-3 gradient-text"
+      data-en="Karpathy LLM-Wiki"
+      data-zh="Karpathy LLM-Wiki 知识库">Karpathy LLM-Wiki</h1>
+  <p class="text-gray-400 mt-1"
+     data-en="raw → wiki → outputs. Paste any text and the backend extracts entities with source-attributed evidence, numeric attributes, cross-links, and flags contradictions."
+     data-zh="raw → wiki → outputs 三段式。输入任意文本，后端会按 Karpathy 方法抽出实体概念、带源处引用的证据、数值属性与交叉链接，并标出矛盾数据。"></p>
 
-  <div class="flex gap-2 mt-4 flex-wrap">
-    <button id="extract-btn" class="btn" data-en="Extract Concepts" data-zh="提取概念">Extract Concepts</button>
-    <button id="lint-btn" class="btn btn-secondary" data-en="Lint" data-zh="一致性检查">Lint</button>
-    <button id="clear-btn" class="btn btn-secondary" data-en="Clear" data-zh="清空">Clear</button>
+  <!-- Example picker -->
+  <div class="mt-5 flex gap-2 flex-wrap items-center">
+    <span class="text-xs text-gray-500" data-en="Examples:" data-zh="示例：">Examples:</span>
+    <span class="example-pill" data-example="cn-llm" data-en="CN LLM Landscape 2024-25" data-zh="中国大模型格局 2024-25"></span>
+    <span class="example-pill" data-example="cn-ev" data-en="CN EV Market Report" data-zh="中国新能源车市场报告"></span>
+    <span class="example-pill" data-example="en-ai-cs" data-en="AI Customer Service (EN)" data-zh="AI 客服赛道（英文）"></span>
+    <span class="example-pill" data-example="mixed" data-en="Mixed CN+EN" data-zh="中英混合"></span>
+  </div>
+
+  <div class="flex gap-2 mt-4 flex-wrap items-center">
+    <button id="extract-btn" class="btn" data-en="Extract Concepts" data-zh="提取概念"></button>
+    <button id="lint-btn" class="btn btn-secondary" data-en="Lint" data-zh="一致性检查"></button>
+    <button id="clear-btn" class="btn btn-secondary" data-en="Reset" data-zh="重置"></button>
     <label class="text-sm text-gray-400 ml-2 flex items-center gap-1">N:
-      <input id="n-input" type="number" value="5" min="2" max="12" class="w-14 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm" />
+      <input id="n-input" type="number" value="8" min="3" max="15" class="w-14 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm" />
     </label>
     <span id="status" class="flex items-center gap-2 ml-3 text-sm text-gray-400"></span>
   </div>
 
   <div id="lint-results" class="mt-4 hidden"></div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-6">
-    <div class="card p-5">
-      <h2 class="font-semibold text-blue-300 mb-3" data-en="Raw Notes" data-zh="原始笔记">Raw Notes</h2>
-      <textarea id="raw" rows="22" class="w-full p-3 rounded text-sm"></textarea>
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 mt-6">
+    <div class="card p-5 lg:col-span-2">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-semibold text-blue-300" data-en="raw/ — source notes" data-zh="raw/ — 原始笔记"></h2>
+        <span id="raw-stats" class="text-xs text-gray-500"></span>
+      </div>
+      <textarea id="raw" rows="24" class="w-full p-3 rounded"></textarea>
     </div>
-    <div class="card p-5">
-      <h2 class="font-semibold text-purple-300 mb-3" data-en="Wiki (Concepts)" data-zh="Wiki（概念）">Wiki (Concepts)</h2>
-      <div id="wiki" class="space-y-3 text-sm"><p class="text-gray-500 italic" data-en="No concepts extracted yet." data-zh="还没有提取概念。">No concepts extracted yet.</p></div>
-    </div>
-    <div class="card p-5">
-      <h2 class="font-semibold text-pink-300 mb-3" data-en="Lint Report" data-zh="检查报告">Lint Report</h2>
-      <pre id="output" class="text-xs text-gray-400 whitespace-pre-wrap font-mono">(Run Lint after extracting concepts.)</pre>
+    <div class="card p-5 lg:col-span-3">
+      <h2 class="font-semibold text-purple-300 mb-3" data-en="wiki/ — extracted concepts" data-zh="wiki/ — 提取的概念"></h2>
+      <div id="wiki" class="space-y-3"><p class="text-gray-500 italic" data-en="Click Extract Concepts to populate." data-zh="点击「提取概念」生成。"></p></div>
     </div>
   </div>
+
+  <details class="card mt-6 p-5">
+    <summary class="font-semibold text-gray-300"><span data-en="How this follows Karpathy's LLM-Wiki method" data-zh="为什么这套方法沿用了 Karpathy 的 LLM-Wiki 思路"></span></summary>
+    <div class="mt-3 text-sm text-gray-400 leading-relaxed space-y-2">
+      <p data-en="Karpathy's 'brain maintenance' workflow keeps three folders: raw/ (immutable source capture), wiki/ (concept articles cross-linked with [[name]]), outputs/ (derived briefs). The LLM's job is (1) idempotent extraction raw → wiki and (2) compilation wiki → outputs, always with source attribution." data-zh="Karpathy 的「大脑维护」流程有三个文件夹：raw/ 原始素材不可变，wiki/ 概念文章用 [[名字]] 相互交叉链接，outputs/ 是派生的简报。大模型的职责是 (1) 确定性地从 raw → wiki 提取，(2) 从 wiki → outputs 编译，且每个观点必须链回 raw。"></p>
+      <p data-en="Our backend models this deterministically (no LLM call): entity extraction via regex + dictionary + multi-word merging; per-concept source evidence (para_idx + sentence_idx); numeric attributes aggregated at paragraph level so contradictions surface even when the second sentence omits the subject (common in Chinese)." data-zh="我们的后端纯确定性（不依赖 LLM 调用）：正则+词典+多词合并做实体抽取；每个概念都带回源处坐标 (para_idx+sentence_idx)；数值属性按段落聚合，所以中文里「第二句省略主语」的情形也能检测矛盾。"></p>
+      <p data-en="Lint catches: orphaned concepts (no cross-links), unsourced (no evidence), numeric contradictions (same entity+metric, different values), negation conflicts (assertion vs its negation), and duplicates." data-zh="Lint 会检查：孤立概念（无交叉链接）、无源引用、数值矛盾（同一实体同一指标出现多个不同值）、肯定/否定矛盾、重复命名。"></p>
+    </div>
+  </details>
 </div>
 
 <script>
-const DEFAULT_RAW = `The AI customer service market is exploding. In 2026, Gartner estimates over 60% of enterprise customer support will be handled by AI agents. However, many deployments have failed because companies underestimated the integration cost.
+const EXAMPLES = {
+  'cn-llm': `# 中国大模型格局 2024-2025
 
-OpenAI and Anthropic dominate the foundation model layer. But verticalized players like Sierra and Decagon are winning by focusing narrowly on customer service workflows. Sierra raised $175M at a $4.5B valuation in 2024.
+DeepSeek 在 2024 年底发布 V3 模型，参数规模 671B，MoE 架构，训练成本据官方公布约 557 万美元。然而第三方复现估算训练成本接近 1200 万美元，两个数字存在较大差异。
 
-The key insight is that generic chatbots lose. Companies want outcome-based pricing: pay per resolved ticket, not per API call.
+智谱 AI 于 2024 年底完成新一轮融资，估值 200 亿人民币，由中关村投资领投，旗下 GLM-4 Plus 模型在中文推理任务上得分 76.4 分。
 
-Contrarian view: Some argue that fully autonomous agents are still 2-3 years away. Human-in-the-loop systems remain safer for regulated industries like healthcare and finance.
+字节跳动的豆包（Doubao）模型在 2025 年初将推理成本下调到每百万 token 0.0008 美元，远低于 GPT-4o 的 2.5 美元水平，这一价格战被视为行业里程碑。
 
-Knowledge base quality is the real bottleneck. Most enterprises have fragmented, outdated docs. Before deploying any agent, companies must invest in cleaning and structuring their KB.`;
+阿里巴巴的通义千问 Qwen2.5 系列开源权重，72B 模型在 Hugging Face 下载量超过 200 万次，成为 2024 年下载量最高的中文开源模型之一。
+
+月之暗面 Kimi 在 2024 年 Q3 融资 10 亿美元，估值 33 亿美元，但 2025 年 Q1 流量大幅下滑，日活从 130 万降到 80 万。部分分析师认为 Kimi 估值被高估。
+
+百川智能聚焦医疗场景，Baichuan-M1 医疗大模型通过国家医师资格考试模拟题，官方得分 93 分。然而独立评测机构 CMExam 给出的分数是 87 分，相差 6 分。
+
+反方观点：多位业内人士指出，中国大模型估值泡沫严重，除了字节和阿里，其他公司在 2025 年面临融资困难。应专注商业化落地而非参数竞赛。
+
+关键洞察：开源 + 低价 + 垂直场景成为差异化策略。通用大模型的头部效应正在向少数几家集中。`,
+
+  'cn-ev': `# 2024 中国新能源车市场速览
+
+比亚迪 2024 全年销量 427 万台，全球新能源车销量第一。其中纯电车型 176 万台，插混 251 万台。毛利率从 2023 年的 21.6% 上升到 22.8%。
+
+然而反方观点：第三方研究机构乘联会给出的比亚迪 2024 销量是 425 万台，与官方数字差 2 万台。可能是统计口径不同（工厂出货 vs 终端交付）。
+
+理想汽车 2024 交付量 50.05 万台，同比增长 33.1%，毛利率 20.5%。L9 单车型售价区间 42.98-52.98 万元，平均售价 47 万元。
+
+蔚来 2024 交付 22.2 万台，毛利率 9.9%，仍处于亏损。2024 年净亏损约 207 亿元。然而另一份财报披露净亏损接近 220 亿元，差 13 亿元。
+
+小鹏 2024 交付 19 万台，MONA M03 单月销量突破 2 万台，P7+ 上市后订单超 3 万。
+
+小米 SU7 自 3 月上市至年底交付 13.68 万台，估值 5000 亿港元。产能瓶颈导致订单积压到 2025 年下半年。
+
+特斯拉 2024 中国区销量 66 万台，同比下滑 3.1%。Model Y 依然是单一车型销量冠军。
+
+反方观点：价格战已经持续三年，2025 年利润率进一步承压。预计有 2-3 家新势力会被并购或退出。
+
+关键趋势：增程+纯电并行、智驾成为核心卖点、出海加速、供应链国产化。`,
+
+  'en-ai-cs': `# AI customer service landscape — 2026
+
+The AI customer service market is exploding. In 2026, Gartner estimates over 60% of enterprise customer support will be handled by AI agents. However, many deployments have failed because companies underestimated the integration cost.
+
+OpenAI and Anthropic dominate the foundation model layer. But verticalized players like Sierra and Decagon are winning by focusing narrowly on customer service workflows.
+
+Sierra raised 175M at a 4.5B valuation in 2024. However, SEC filings suggest the post-money valuation is closer to 4.2B — a 300M gap.
+
+Decagon reports 120 enterprise customers including Airbnb, Bilt, and Classpass. Their ARR is estimated at 30M per industry analysts, but founder interviews suggest 45M.
+
+The key insight: generic chatbots lose. Companies want outcome-based pricing — pay per resolved ticket, not per API call.
+
+Contrarian view: some argue fully autonomous agents are still 2-3 years away. Human-in-the-loop systems remain safer for regulated industries like healthcare and finance.
+
+Knowledge base quality is the real bottleneck. Most enterprises have fragmented outdated docs. Before deploying any agent, companies must invest in cleaning and structuring their KB.`,
+
+  'mixed': `# AI Infra 观察 · 2025 Q1
+
+NVIDIA 在 2025 Q1 数据中心收入 362 亿美元，同比增长 93%。Blackwell 架构 B200 GPU 供不应求，主要客户是 Microsoft、Meta、AWS、Oracle。
+
+然而分析师 TrendForce 估算 B200 实际交付量仅占订单的 60%，产能受限于 CoWoS 封装。
+
+AMD MI300X 市场份额在 2025 Q1 从 4% 上升到 8%，主要得益于 Meta 的大规模采购。Meta 订单量据官方披露为 40 亿美元，但供应链消息源透露订单接近 55 亿美元。
+
+国内 GPU 厂商：华为昇腾 910B 在 2025 Q1 出货量 30 万卡，壁仞 BR100 约 5 万卡。
+
+Inference cost for GPT-4-class models dropped from 10 USD / 1M tokens in 2023 to 0.5 USD / 1M tokens in early 2025 — a 20x reduction. DeepSeek V3 claims 0.27 USD / 1M tokens, lowest in the industry.
+
+反方观点：H20 出口限制对中国 AI 影响有限，国产替代速度超预期。但架构生态（CUDA）仍是最大护城河。`,
+};
 
 const $ = id => document.getElementById(id);
 let concepts = [];
+let lastLint = null;
 
-$('raw').value = DEFAULT_RAW;
+function loadExample(key) {
+  const text = EXAMPLES[key] || EXAMPLES['cn-llm'];
+  $('raw').value = text;
+  updateRawStats();
+  document.querySelectorAll('.example-pill').forEach(p => p.classList.toggle('active', p.dataset.example === key));
+  concepts = []; renderConcepts([]); $('lint-results').classList.add('hidden');
+}
+
+function updateRawStats() {
+  const t = $('raw').value;
+  const paras = t.split(/\n\s*\n/).filter(p => p.trim()).length;
+  const zh = (t.match(/[\u4e00-\u9fff]/g) || []).length;
+  const en = (t.match(/[A-Za-z]+/g) || []).length;
+  $('raw-stats').textContent = `${paras} para · ${t.length} chars · zh/en=${zh}/${en}`;
+}
+
+function typePill(type) {
+  const labels = { entity: 'entity', metric: 'metric', opinion: 'opinion', claim: 'claim', event: 'event' };
+  const lbl = labels[type] || 'concept';
+  return `<span class="type-pill type-${type || 'claim'}">${lbl}</span>`;
+}
+
+function renderAttributes(attrs) {
+  if (!attrs || !Object.keys(attrs).length) return '';
+  return '<div class="mt-2">' + Object.entries(attrs).map(([k, v]) => {
+    const isConflict = String(v).includes(' / ');
+    const valClass = isConflict ? 'text-red-300 font-semibold' : 'attr-val';
+    const warn = isConflict ? '<span title="contradiction" class="text-red-400 ml-1">⚠</span>' : '';
+    return `<div class="attr-row"><span class="attr-key">${k}</span><span class="${valClass}">${v}</span>${warn}</div>`;
+  }).join('') + '</div>';
+}
+
+function renderEvidence(ev) {
+  if (!ev || !ev.length) return '';
+  return '<details class="mt-2"><summary class="text-xs text-gray-500 hover:text-gray-300">' +
+         `<span class="inline-block transition-transform">&#9656;</span> ` +
+         `<span>source evidence (${ev.length})</span></summary>` +
+         ev.map(e => `<div class="evidence-quote">“${e.quote}” <span class="text-gray-600 ml-1">[p${e.para_idx}·s${e.sentence_idx}]</span></div>`).join('') +
+         '</details>';
+}
 
 function renderConcepts(list) {
   const wiki = $('wiki');
@@ -89,23 +230,43 @@ function renderConcepts(list) {
     wiki.innerHTML = '<p class="text-gray-500 italic">No concepts extracted yet.</p>';
     return;
   }
-  wiki.innerHTML = list.map(c => `
-    <div class="concept-card">
-      <div class="font-semibold text-blue-200">${c.name}</div>
-      <div class="text-gray-300 text-xs mt-1 leading-relaxed">${c.summary}</div>
-      <div class="mt-2">${(c.cross_links || []).map(l => `<span class="link-badge">[[${l}]]</span>`).join('') || '<span class="text-gray-500 text-xs italic">no cross-links</span>'}</div>
-    </div>`).join('');
+  wiki.innerHTML = list.map(c => {
+    const conf = c.confidence != null ? Math.round(c.confidence * 100) : 0;
+    return `
+    <div class="concept-card" data-name="${c.name}">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-semibold text-blue-200">${c.name}</span>
+          ${typePill(c.type)}
+        </div>
+        <span class="text-[10px] text-gray-500 font-mono">conf ${conf}%</span>
+      </div>
+      <div class="confidence-bar mt-1"><span style="width:${conf}%"></span></div>
+      <div class="text-gray-300 text-[12.5px] mt-2 leading-relaxed">${c.summary || ''}</div>
+      ${renderAttributes(c.attributes)}
+      <div class="mt-2">${(c.cross_links || []).map(l => `<span class="link-badge" data-link="${l}">[[${l}]]</span>`).join('') || '<span class="text-gray-500 text-xs italic">no cross-links</span>'}</div>
+      ${renderEvidence(c.evidence)}
+    </div>`;
+  }).join('');
+
+  // click [[link]] → scroll to that concept card
+  wiki.querySelectorAll('[data-link]').forEach(el => {
+    el.addEventListener('click', () => {
+      const target = wiki.querySelector(`[data-name="${el.dataset.link}"]`);
+      if (target) { target.scrollIntoView({behavior:'smooth', block:'center'}); target.classList.add('ring-2','ring-purple-400'); setTimeout(()=>target.classList.remove('ring-2','ring-purple-400'), 1200); }
+    });
+  });
 }
 
 $('extract-btn').addEventListener('click', async () => {
   const btn = $('extract-btn');
   btn.disabled = true;
-  $('status').innerHTML = '<span class="spinner"></span><span>Thinking…</span>';
+  $('status').innerHTML = '<span class="spinner"></span><span>Extracting…</span>';
   try {
     const res = await fetch('/api/karpathy?action=extract', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: $('raw').value, n: +$('n-input').value || 5 })
+      body: JSON.stringify({ text: $('raw').value, n: +$('n-input').value || 8 })
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -117,13 +278,15 @@ $('extract-btn').addEventListener('click', async () => {
     const data = await res.json();
     concepts = data.concepts || [];
     renderConcepts(concepts);
-    $('status').textContent = `Extracted ${concepts.length} concepts.`;
+    const contras = concepts.filter(c => Object.values(c.attributes||{}).some(v=>String(v).includes(' / ')));
+    $('status').innerHTML = `Extracted <b>${concepts.length}</b> concepts` +
+      (contras.length ? ` · <span class="text-red-400">${contras.length} with conflicting values</span>` : '');
   } catch (e) {
     $('status').textContent = '✗ network error';
     $('wiki').innerHTML = `<div class="text-red-400">Network error: ${e.message}.</div>`;
   }
   btn.disabled = false;
-  setTimeout(() => $('status').textContent = '', 4000);
+  setTimeout(() => $('status').innerHTML = '', 6000);
 });
 
 $('lint-btn').addEventListener('click', async () => {
@@ -146,28 +309,54 @@ $('lint-btn').addEventListener('click', async () => {
       return;
     }
     const r = await res.json();
-    const pill = (ok, text) => `<span class="${ok?'lint-ok':'lint-warn'}">${ok?'✓':'⚠️'} ${text}</span>`;
+    lastLint = r;
+    const pill = (ok, text) => `<span class="${ok?'lint-ok':'lint-warn'}">${ok?'✓':'⚠'} ${text}</span>`;
+    const healthColor = r.health_score >= 80 ? 'lint-ok' : r.health_score >= 50 ? 'lint-warn' : 'lint-err';
+    const contraBlock = (r.numeric_contradictions && r.numeric_contradictions.length) ? `
+      <div class="mt-2">
+        <div class="text-sm font-semibold text-red-400 mb-1">⚠ Numeric contradictions (${r.numeric_contradictions.length})</div>
+        ${r.numeric_contradictions.map(c => `
+          <div class="contradiction-card">
+            <div class="text-red-200 font-semibold text-sm">${c.concept} · ${c.metric}</div>
+            <div class="text-xs text-gray-400 mt-0.5">conflicting values: <span class="text-red-300 font-mono">${c.values.join(' / ')}</span></div>
+          </div>`).join('')}
+      </div>` : '';
+    const negBlock = (r.negation_contradictions && r.negation_contradictions.length) ? `
+      <div class="mt-2">
+        <div class="text-sm font-semibold text-amber-400 mb-1">⚠ Negation conflicts (${r.negation_contradictions.length})</div>
+        ${r.negation_contradictions.map(c => `
+          <div class="contradiction-card" style="border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)">
+            <div class="text-amber-200 font-semibold text-sm">${c.concept}</div>
+            ${c.claims.map(q => `<div class="text-xs text-gray-400 mt-1">• ${q}</div>`).join('')}
+          </div>`).join('')}
+      </div>` : '';
     results.innerHTML = `
       <div class="card p-4">
-        <h3 class="font-semibold mb-2 text-blue-300">Lint Results — ${r.total_issues} issue(s)</h3>
-        <div class="lint-row">${pill(r.orphaned.length===0, `Orphaned concepts: ${r.orphaned.length ? r.orphaned.join(', ') : 'none'}`)}</div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-blue-300">Lint — ${r.total_issues} issue(s)</h3>
+          <span class="${healthColor} font-mono text-sm">health ${r.health_score}/100</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-400 mb-2">
+          <div>avg attrs / concept: <b class="text-gray-200">${r.avg_attributes_per_concept}</b></div>
+          <div>avg evidence / concept: <b class="text-gray-200">${r.avg_evidence_per_concept}</b></div>
+        </div>
+        <div class="lint-row">${pill(r.orphaned.length===0, `Orphaned: ${r.orphaned.length ? r.orphaned.join(', ') : 'none'}`)}</div>
         <div class="lint-row">${pill(r.short_summaries.length===0, `Short summaries: ${r.short_summaries.length ? r.short_summaries.join(', ') : 'none'}`)}</div>
-        <div class="lint-row">${pill(r.duplicates.length===0, `Duplicates: ${r.duplicates.length ? r.duplicates.map(p=>p.join(' ~ ')).join('; ') : 'none'}`)}</div>
+        <div class="lint-row">${pill(r.duplicates.length===0, `Duplicate names: ${r.duplicates.length ? r.duplicates.map(p=>p.join(' ~ ')).join('; ') : 'none'}`)}</div>
+        <div class="lint-row">${pill(r.unsourced.length===0, `Unsourced: ${r.unsourced.length ? r.unsourced.join(', ') : 'none'}`)}</div>
+        ${contraBlock}
+        ${negBlock}
       </div>`;
-    $('output').textContent = JSON.stringify(r, null, 2);
   } catch (e) {
     results.innerHTML = `<div class="card p-4 text-red-400">Network error: ${e.message}</div>`;
   }
 });
 
-$('clear-btn').addEventListener('click', () => {
-  $('raw').value = DEFAULT_RAW;
-  concepts = [];
-  renderConcepts([]);
-  $('output').textContent = '(Run Lint after extracting concepts.)';
-  $('lint-results').classList.add('hidden');
-});
+$('clear-btn').addEventListener('click', () => loadExample('cn-llm'));
+$('raw').addEventListener('input', updateRawStats);
+document.querySelectorAll('.example-pill').forEach(p => p.addEventListener('click', () => loadExample(p.dataset.example)));
 
+loadExample('cn-llm');
 renderConcepts([]);
 
 (function() {
@@ -178,9 +367,6 @@ renderConcepts([]);
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
       const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
-    });
-    document.querySelectorAll('[data-en-placeholder][data-zh-placeholder]').forEach(el => {
-      el.placeholder = el.getAttribute(`data-${l}-placeholder`);
     });
     const lab = document.getElementById('lang-label');
     if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
