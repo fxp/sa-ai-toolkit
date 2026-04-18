@@ -18,8 +18,10 @@ DOCS = ROOT / "docs"
 # ── Load each demo's core.py as a uniquely-named module (avoid clash on `core`) ──
 def _load(demo: str):
     path = DEMOS / f"{demo}-py" / "core.py"
-    spec = importlib.util.spec_from_file_location(f"demo_{demo.replace('-', '_')}", path)
+    mod_name = f"demo_{demo.replace('-', '_')}"
+    spec = importlib.util.spec_from_file_location(mod_name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[mod_name] = mod  # register BEFORE exec so @dataclass can resolve the module
     spec.loader.exec_module(mod)
     return mod
 
