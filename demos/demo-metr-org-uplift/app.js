@@ -801,9 +801,9 @@ const App = (() => {
     updateRoundStats();
   }
 
-  function updateRoundStats() {
+  async function updateRoundStats() {
     const roundTasks = state.allTasks.filter(t => t.round === state.round);
-    const stats = Engine.computeStats(roundTasks);
+    const stats = await Engine.computeStats(roundTasks);
     const el = (id, val) => { const e = $(id); if (e) e.textContent = val; };
     el('#stat-tasks', stats.totalTasks);
     el('#stat-success', stats.totalTasks ? stats.successRate + '%' : '-');
@@ -828,9 +828,9 @@ const App = (() => {
   // ══════════════════════════════════════
   // PHASE: Round Summary
   // ══════════════════════════════════════
-  function renderRoundSummary() {
+  async function renderRoundSummary() {
     const roundTasks = state.allTasks.filter(t => t.round === state.round);
-    const stats = Engine.computeStats(roundTasks);
+    const stats = await Engine.computeStats(roundTasks);
 
     const main = $('#main-content');
     main.innerHTML = `
@@ -917,17 +917,18 @@ const App = (() => {
   // ══════════════════════════════════════
   // PHASE: Final Report
   // ══════════════════════════════════════
-  function renderFinalReport() {
-    const stats = Engine.computeStats(state.allTasks);
+  async function renderFinalReport() {
+    const stats = await Engine.computeStats(state.allTasks);
     const bottleneckEntries = Object.entries(stats.bottleneckCounts)
       .filter(([k]) => k !== 'none')
       .sort((a, b) => b[1] - a[1]);
 
     // Per-player stats
-    const playerStats = state.players.map((p, i) => {
+    const playerStats = await Promise.all(state.players.map(async (p, i) => {
       const tasks = state.allTasks.filter(t => t.player === i);
-      return { ...p, ...Engine.computeStats(tasks), taskCount: tasks.length };
-    });
+      const s = await Engine.computeStats(tasks);
+      return { ...p, ...s, taskCount: tasks.length };
+    }));
 
     const main = $('#main-content');
     main.innerHTML = `
