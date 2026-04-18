@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 # Import the demo's core. When containerised, /app/demo is on sys.path.
 from core import (
     PerceptionLayer, PredictionLayer, OntologyLayer, DiagnosisLayer,
-    run_pipeline,
+    run_pipeline, DATASETS, DEFAULT_DATASET,
 )
 
 STATIC = pathlib.Path("/app/static")
@@ -28,14 +28,23 @@ async def health():
 
 
 # ── API ──
+def _resolve_dataset(name: str | None) -> str:
+    return name if name in DATASETS else DEFAULT_DATASET
+
+
 @app.get("/api/industrial")
 async def industrial_get(action: str = "health", dataset: str | None = None):
     if action == "health":
         return {"status": "ok", "pipeline": "industrial-ai-v1",
-                "layers": ["SAM3", "SAM-Audio", "TimesFM", "LLM"]}
+                "layers": ["SAM3", "SAM-Audio", "TimesFM", "LLM"],
+                "datasets": list(DATASETS.keys())}
+    if action == "datasets":
+        return {"default": DEFAULT_DATASET,
+                "datasets": [dict(d) for d in DATASETS.values()]}
+    ds_id = _resolve_dataset(dataset)
     if action == "detect":
         return {
-            "visual": PerceptionLayer.detect_visual(dataset=dataset) if "dataset" in PerceptionLayer.detect_visual.__code__.co_varnames else PerceptionLayer.detect_visual(),
+            "visual": PerceptionLayer.detect_visual(dataset=ds_id),
             "audio": PerceptionLayer.detect_audio(),
         }
     if action == "predict":
@@ -44,20 +53,25 @@ async def industrial_get(action: str = "health", dataset: str | None = None):
             "rul": PredictionLayer.predict_equipment_rul(),
         }
     if action == "run":
-        return run_pipeline(use_llm=False, verbose=False)
+        return run_pipeline(use_llm=False, verbose=False, dataset=ds_id)
     raise HTTPException(400, f"unknown action {action}")
 
 
 @app.post("/api/industrial")
-async def industrial_post(action: str = "run", body: dict = Body(default={})):
+async def industrial_post(action: str = "run", dataset: str | None = None,
+                          body: dict = Body(default={})):
+    ds_id = _resolve_dataset(dataset or body.get("dataset"))
     if action == "run":
-        return run_pipeline(use_llm=body.get("use_llm", False), verbose=False)
+        return run_pipeline(use_llm=body.get("use_llm", False), verbose=False, dataset=ds_id)
     if action == "diagnose":
-        vis = body.get("visual") or PerceptionLayer.detect_visual()
+        vis = body.get("visual") or PerceptionLayer.detect_visual(dataset=ds_id)
         aud = body.get("audio") or PerceptionLayer.detect_audio()
         pred = body.get("prediction") or PredictionLayer.predict_equipment_rul()
-        ont = body.get("ontology") or OntologyLayer.trace_root_cause("defect")
-        return DiagnosisLayer.diagnose(vis, pred, ont, aud, body.get("use_llm", False))
+        seed = (vis.get("detections") or [{}])[0].get("label", "defect")
+        ont = body.get("ontology") or OntologyLayer.trace_root_cause(seed)
+        diag = DiagnosisLayer.diagnose(vis, pred, ont, aud, body.get("use_llm", False))
+        diag["dataset"] = vis.get("dataset")
+        return diag
     raise HTTPException(400, f"unknown action {action}")
 
 
