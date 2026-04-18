@@ -10,7 +10,7 @@
   .card { background: rgba(30,30,50,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(100,100,150,0.2); border-radius: 12px; }
   .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   #lang-toggle { cursor: pointer; } #lang-toggle:hover { background: rgba(100,150,255,0.2); }
-  .terminal { background: #09090f; border: 1px solid #1e293b; border-radius: 10px; font-family: 'JetBrains Mono','Fira Code','Menlo',monospace; font-size: 13px; line-height: 1.6; padding: 18px; min-height: 480px; max-height: 640px; overflow-y: auto; white-space: pre-wrap; }
+  .terminal { background: #09090f; border: 1px solid #1e293b; border-radius: 10px; font-family: 'JetBrains Mono','Fira Code','Menlo',monospace; font-size: 13px; line-height: 1.6; padding: 18px; min-height: 420px; max-height: 540px; overflow-y: auto; white-space: pre-wrap; }
   .prompt { color: #60a5fa; }
   .output { color: #e2e8f0; }
   .highlight { color: #e0e7ff; font-weight: 500; }
@@ -18,46 +18,95 @@
   .err { color: #ef4444; }
   .ok { color: #22c55e; }
   .dim { color: #64748b; }
+  .user { color: #93c5fd; }
   select, textarea, button, input { font-family: inherit; }
   select { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); padding: 6px 12px; border-radius: 8px; }
-  textarea { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); border-radius: 8px; padding: 10px; width: 100%; }
-  .btn { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 500; }
-  .btn:disabled { opacity: 0.5; }
+  input, textarea { background: #0b1220; color: #e2e8f0; border: 1px solid rgba(100,100,150,0.3); border-radius: 8px; padding: 10px; }
+  input:focus, textarea:focus { outline: none; border-color: #60a5fa; }
+  .btn { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 10px 18px; border-radius: 8px; font-weight: 500; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-sec { background: rgba(100,100,150,0.2); border: 1px solid rgba(100,100,150,0.3); padding: 8px 16px; border-radius: 8px; color: #e2e8f0; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
 </style>
 </head>
 <body class="min-h-screen">
 
 <div class="fixed top-4 right-4 z-50">
   <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
-    <span>🌐</span><span id="lang-label">中文</span>
+    <span>🌐</span><span id="lang-label">EN</span>
   </button>
 </div>
 
 <div class="max-w-5xl mx-auto px-6 py-8">
   <a href="/" class="text-sm text-blue-400 hover:text-blue-300" data-en="← Back to home" data-zh="← 返回首页">← Back to home</a>
   <h1 class="text-3xl font-bold mt-3 gradient-text" data-en="gstack Terminal" data-zh="gstack 终端">gstack Terminal</h1>
-  <p class="text-gray-400 mt-1" data-en="Try gstack slash commands — rendered from the Python backend." data-zh="体验 gstack 斜杠命令 —— 由 Python 后端生成脚本。">Try gstack slash commands — rendered from the Python backend.</p>
+  <p class="text-gray-400 mt-1 text-sm"
+     data-en="Multi-turn chat. /office-hours asks 6 questions one by one — you answer between turns."
+     data-zh="多轮对话。/office-hours 会逐个问 6 个问题 —— 每轮你都可以回答。">
+    Multi-turn chat. /office-hours asks 6 questions one by one — you answer between turns.
+  </p>
 
+  <!-- Command picker -->
   <div class="card p-4 mt-5 flex items-center gap-3 flex-wrap">
     <label class="text-sm text-gray-400" data-en="Command:" data-zh="命令：">Command:</label>
     <select id="cmd">
-      <option value="office-hours">/office-hours</option>
-      <option value="autoplan">/autoplan</option>
-      <option value="qa">/qa</option>
-      <option value="ship">/ship</option>
+      <option value="office-hours">/office-hours <span>· 6 questions, interactive</span></option>
+      <option value="autoplan">/autoplan · single run</option>
+      <option value="qa">/qa · single run</option>
+      <option value="ship">/ship · single run</option>
     </select>
-    <input id="user-input" class="px-2 py-1 rounded bg-gray-900 border border-gray-700 text-sm w-64" data-en-placeholder="Optional idea for /office-hours" data-zh-placeholder="可选：向 /office-hours 传入一句话" />
-    <button id="run" class="btn" data-en="Run" data-zh="运行">Run</button>
-    <button id="clear" class="btn-sec" data-en="Clear" data-zh="清空">Clear</button>
+    <span id="session-pill" class="pill bg-gray-700 text-gray-300 hidden">
+      <span class="dot" style="background:#64748b"></span><span id="session-state">idle</span>
+    </span>
+    <span id="turn-counter" class="text-xs text-gray-500 ml-1"></span>
+    <div class="flex-1"></div>
+    <button id="reset" class="btn-sec text-sm" data-en="New session" data-zh="新会话">New session</button>
   </div>
 
+  <!-- Terminal output -->
   <div id="term" class="terminal mt-4"></div>
+
+  <!-- Input row -->
+  <div class="card p-4 mt-3 flex items-end gap-2">
+    <div class="flex-1">
+      <label class="text-xs text-gray-500 block mb-1" id="input-label"
+             data-en="Press Start to begin. When a question is shown, type your answer below."
+             data-zh="点"开始"启动会话。出现问题后，在下方输入答案。">
+        Press Start to begin.
+      </label>
+      <input id="user-input" class="w-full text-sm" autocomplete="off"
+        data-en-placeholder="Your answer or idea…"
+        data-zh-placeholder="输入你的回答或想法…" />
+    </div>
+    <button id="run" class="btn" data-en="Start" data-zh="开始">Start</button>
+  </div>
+  <div class="text-xs text-gray-500 mt-2">
+    <span data-en="Press Enter to send · Esc to reset" data-zh="Enter 发送 · Esc 重置">Press Enter to send · Esc to reset</span>
+    <span id="err-msg" class="text-red-400 ml-3"></span>
+  </div>
 </div>
 
 <script>
 const term = document.getElementById('term');
-let running = false;
+const btnRun = document.getElementById('run');
+const btnReset = document.getElementById('reset');
+const userInput = document.getElementById('user-input');
+const cmdSel = document.getElementById('cmd');
+const errMsg = document.getElementById('err-msg');
+const pill = document.getElementById('session-pill');
+const pillState = document.getElementById('session-state');
+const turnCounter = document.getElementById('turn-counter');
+
+/** Session state:
+ *   command   currently-running command (null = not started)
+ *   turn      0-based turn number to send next
+ *   total     total turns expected (null until first response)
+ *   history   [{role: "user"|"agent", text}, ...]
+ *   done      true when server signals end
+ */
+let S = { command: null, turn: 0, total: null, history: [], done: false };
+let busy = false;
 
 function appendLine(text, cls) {
   const span = document.createElement('span');
@@ -68,47 +117,122 @@ function appendLine(text, cls) {
   term.scrollTop = term.scrollHeight;
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function clearTerm() { term.innerHTML = ''; }
+function sleep(ms) { return new Promise(r => setTimeout(r, Math.max(10, ms))); }
 
-async function runCommand() {
-  if (running) return;
-  running = true;
-  const btn = document.getElementById('run');
-  btn.disabled = true;
-  const cmd = document.getElementById('cmd').value;
-  const input = document.getElementById('user-input').value;
-  appendLine(`$ gstack /${cmd}`, 'prompt');
-
-  try {
-    const url = new URL('/api/gstack', window.location.origin);
-    url.searchParams.set('command', cmd);
-    if (input) url.searchParams.set('input', input);
-    const res = await fetch(url);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      appendLine('error: ' + (err.error || res.status), 'err');
-      running = false; btn.disabled = false; return;
-    }
-    const data = await res.json();
-    const script = data.script || [];
-    for (const item of script) {
-      await sleep(item.delay_ms || 100);
-      appendLine(item.text, item.class || 'output');
-    }
-    appendLine('', '');
-  } catch (e) {
-    appendLine('network error: ' + e.message, 'err');
-    appendLine('(Backend /api/gstack is required. No JS fallback.)', 'dim');
+function updatePill() {
+  if (!S.command) { pill.classList.add('hidden'); turnCounter.textContent = ''; return; }
+  pill.classList.remove('hidden');
+  if (S.done) {
+    pill.firstElementChild.style.background = '#22c55e';
+    pillState.textContent = 'done';
+  } else if (busy) {
+    pill.firstElementChild.style.background = '#60a5fa';
+    pillState.textContent = 'thinking';
+  } else {
+    pill.firstElementChild.style.background = '#f59e0b';
+    pillState.textContent = 'awaiting input';
   }
-  running = false;
-  btn.disabled = false;
+  turnCounter.textContent = S.total ? `turn ${S.turn}/${S.total - 1}` : `turn ${S.turn}`;
 }
 
-document.getElementById('run').addEventListener('click', runCommand);
-document.getElementById('clear').addEventListener('click', () => { term.innerHTML = ''; });
+function setBtnLabel(label) {
+  const lang = localStorage.getItem('sa-toolkit-lang') || 'en';
+  btnRun.textContent = label[lang] || label.en;
+}
 
-appendLine('gstack v1.4.2 — pick a command and hit Run. Script streams from /api/gstack.', 'prompt');
-appendLine('', '');
+function syncBtn() {
+  if (!S.command) setBtnLabel({ en: 'Start', zh: '开始' });
+  else if (S.done) setBtnLabel({ en: 'Run again', zh: '重新运行' });
+  else setBtnLabel({ en: 'Send', zh: '发送' });
+}
+
+async function sendTurn() {
+  if (busy) return;
+  errMsg.textContent = '';
+  const input = userInput.value.trim();
+
+  // Starting a new session?
+  if (!S.command || S.done) {
+    S = { command: cmdSel.value, turn: 0, total: null, history: [], done: false };
+    clearTerm();
+    appendLine(`$ gstack /${S.command}`, 'prompt');
+  } else {
+    // Continuing — echo user line first
+    if (input) appendLine(`› ${input}`, 'user');
+    S.history.push({ role: 'user', text: input });
+  }
+
+  busy = true; btnRun.disabled = true; updatePill();
+
+  try {
+    const res = await fetch('/api/gstack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        command: S.command,
+        turn: S.turn,
+        input: input,
+        history: S.history,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      appendLine('error: ' + (err.error || err.detail || res.status), 'err');
+      errMsg.textContent = 'Backend error: ' + (err.error || err.detail || res.status);
+      busy = false; btnRun.disabled = false; updatePill(); syncBtn();
+      return;
+    }
+    const data = await res.json();
+    if (data.total_turns != null) S.total = data.total_turns;
+
+    // Stream script items with their declared delays
+    for (const item of (data.script || [])) {
+      await sleep(item.delay_ms || 100);
+      appendLine(item.text, item.class || 'output');
+      if (item.text) S.history.push({ role: 'agent', text: item.text, class: item.class });
+    }
+
+    S.turn = (data.turn ?? S.turn) + 1;
+    S.done = !!data.done;
+
+    if (S.done) {
+      appendLine('', '');
+      appendLine('— session finished. Click "New session" or pick another command —', 'dim');
+    }
+    userInput.value = '';
+    userInput.focus();
+  } catch (e) {
+    appendLine('network error: ' + e.message, 'err');
+    errMsg.textContent = 'Network error — backend required.';
+  } finally {
+    busy = false;
+    btnRun.disabled = false;
+    updatePill(); syncBtn();
+  }
+}
+
+function resetSession() {
+  S = { command: null, turn: 0, total: null, history: [], done: false };
+  clearTerm();
+  appendLine('gstack v1.4.2 — pick a command, press Start, then type answers between turns.', 'prompt');
+  appendLine('', '');
+  userInput.value = '';
+  updatePill(); syncBtn();
+}
+
+btnRun.addEventListener('click', sendTurn);
+btnReset.addEventListener('click', resetSession);
+userInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); sendTurn(); }
+  else if (e.key === 'Escape') { resetSession(); }
+});
+cmdSel.addEventListener('change', () => {
+  // Changing command resets session
+  if (S.command && !S.done) resetSession();
+});
+
+resetSession();
 
 (function() {
   const STORAGE_KEY = 'sa-toolkit-lang';
@@ -124,6 +248,7 @@ appendLine('', '');
     });
     const lab = document.getElementById('lang-label');
     if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
+    syncBtn();
   }
   document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
   apply(lang);

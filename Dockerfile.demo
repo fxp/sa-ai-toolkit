@@ -1,0 +1,42 @@
+# Shared Dockerfile for per-demo Fly.io apps.
+# Usage: flyctl deploy --config demos/<name>-py/fly.toml --build-arg DEMO_NAME=<name>
+# Expects DEMO_NAME to match a folder: demos/<DEMO_NAME>-py/ + docs/<DEMO_NAME>/
+
+# syntax=docker/dockerfile:1
+ARG DEMO_NAME=industrial-ai
+ARG STATIC_NAME=${DEMO_NAME}
+
+FROM python:3.11-slim
+
+ARG DEMO_NAME
+ARG STATIC_NAME
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    DEMO_NAME=${DEMO_NAME} \
+    STATIC_NAME=${STATIC_NAME} \
+    PYTHONPATH=/app/demo:/app/api
+
+WORKDIR /app
+
+# Shared Python deps (fastapi + uvicorn + common libs used across demos)
+RUN pip install --no-cache-dir \
+    "fastapi>=0.115.0" \
+    "uvicorn[standard]>=0.30.0" \
+    "requests>=2.28.0" \
+    "PyYAML>=6.0" \
+    "Jinja2>=3.1.0"
+
+# Demo-specific deps (optional — not every demo has extras)
+COPY demos/${DEMO_NAME}-py/requirements.txt /tmp/demo-req.txt
+RUN pip install --no-cache-dir -r /tmp/demo-req.txt || true
+
+# Copy demo source + its static frontend
+COPY demos/${DEMO_NAME}-py /app/demo
+COPY docs/${STATIC_NAME} /app/static
+
+# Industrial AI references api/_pipeline.py — include if present
+COPY api /app/api
+
+EXPOSE 8080
+# PYTHONPATH=/app/demo makes server.py + core.py importable as top-level modules.
+CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT:-8080}"]

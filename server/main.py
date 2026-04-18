@@ -202,6 +202,18 @@ async def gstack(command: str = Query(...), input: str | None = None):
     return {"command": command, "script": c.run_command(command, user_input=input)}
 
 
+@app.post("/api/gstack")
+async def gstack_turn(body: dict = Body(default={})):
+    """Multi-turn endpoint — client passes {command, turn, input, history}."""
+    c = cores["gstack"]
+    return c.run_turn(
+        command=body.get("command") or "",
+        turn=int(body.get("turn") or 0),
+        user_input=body.get("input"),
+        history=body.get("history") or [],
+    )
+
+
 # ==========================
 # 6. Hypothesis
 # ==========================

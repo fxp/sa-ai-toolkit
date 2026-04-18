@@ -5,6 +5,15 @@ __pycache__/
 *.egg-info/
 .env
 
+# All backend APIs moved to per-demo Fly.io apps (sa-<demo>.fly.dev).
+# Vercel now only hosts the static landing page.
+api/
+server/
+status-aggregator/
+Dockerfile
+Dockerfile.demo
+fly.toml
+
 # Node
 node_modules/
 

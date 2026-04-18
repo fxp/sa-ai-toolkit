@@ -20,6 +20,10 @@
   .heat-cell:hover { transform: scale(1.1); z-index: 10; }
   .thinking { animation: thinkingPulse 1.5s ease-in-out infinite; }
   @keyframes thinkingPulse { 0%,100%{opacity:0.5}50%{opacity:1} }
+  details.llm-note > summary { list-style: none; cursor: pointer; }
+  details.llm-note > summary::-webkit-details-marker { display: none; }
+  details.llm-note > summary::before { content: '\25B8'; display: inline-block; transition: transform .15s; margin-right: 6px; color: #60a5fa; }
+  details.llm-note[open] > summary::before { transform: rotate(90deg); }
 </style>
 </head>
 <body>
@@ -53,6 +57,26 @@
 
   <div id="err-banner" class="hidden mb-4 p-3 rounded-lg bg-red-900/40 border border-red-700 text-red-200 text-sm"></div>
 
+  <!-- ============== Ask-Anything Agent (Meta-style) ============== -->
+  <div class="card rounded-xl p-5 mb-6 glow border-purple-700/40" style="border-color: rgba(147,51,234,0.35);">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <span>&#129302;</span>
+        <span data-en="Ask the CEO Agent — any team, any question" data-zh="问 CEO Agent — 任何团队，任何问题"></span>
+      </h2>
+      <span class="tag bg-purple-900/50 text-purple-300" data-en="Inspired by Meta's CEO Agent" data-zh="参考 Meta CEO Agent"></span>
+    </div>
+    <div class="flex gap-2 mb-3">
+      <input id="ask-input" class="flex-1 px-4 py-2.5 bg-gray-900/80 border border-gray-700 focus:border-purple-500 rounded-lg text-sm text-white outline-none" placeholder="Ask anything about the company…" />
+      <button id="ask-submit" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-sm font-bold hover:opacity-90 whitespace-nowrap">
+        &#9889; <span data-en="Ask" data-zh="提问"></span>
+      </button>
+    </div>
+    <div class="text-xs text-gray-500 mb-2" data-en="Try one of these ↓" data-zh="试试下面的示例 ↓"></div>
+    <div id="ask-chips" class="flex flex-wrap gap-2 mb-3"></div>
+    <div id="ask-result" class="hidden mt-2 border-t border-gray-800 pt-4"></div>
+  </div>
+
   <div class="card rounded-xl p-6 mb-6 glow border-blue-700/40">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-bold text-white flex items-center gap-2">
@@ -62,6 +86,12 @@
       <span id="brief-status" class="tag bg-green-900/50 text-green-300">Ready</span>
     </div>
     <div id="brief-content" class="space-y-3"></div>
+    <details class="llm-note mt-4">
+      <summary class="text-xs text-blue-400 hover:text-blue-300 select-none"><span data-en="How is this LLM-powered?" data-zh="这部分如何用大模型赋能？"></span></summary>
+      <div class="mt-2 p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg text-xs text-gray-300 leading-relaxed">
+        <span data-en="Overnight, an LLM ingests emails, Slack threads, CRM updates and financial feeds, clusters the signals, and writes 3 ranked briefs with source citations and a priority tag. Clicking Refresh re-runs the model with a new seed — note how the framing and ordering shift." data-zh="夜间大模型汇总邮件、Slack、CRM 与财务数据，对信号聚类后生成 3 条带来源引用与优先级的洞察。点击"刷新洞察"会用新随机种子重跑，观察叙述与排序如何变化。"></span>
+      </div>
+    </details>
   </div>
 
   <div id="metric-tiles" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
@@ -69,10 +99,12 @@
   <div class="grid lg:grid-cols-2 gap-4 mb-6">
     <div class="card rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-bold text-gray-300" data-en="ARR Growth (12 mo)" data-zh="年收入增长 (12个月)"></h3>
+        <h3 class="text-sm font-bold text-gray-300" data-en="ARR — actual + forecast with business events" data-zh="ARR —— 实际 + 预测（含业务事件）"></h3>
         <span class="text-xs text-gray-500" id="arr-target-label"></span>
       </div>
       <canvas id="arr-chart" height="120"></canvas>
+      <div id="arr-forecast-note" class="text-[10px] text-gray-500 mt-2"></div>
+      <div id="arr-event-legend" class="flex flex-wrap gap-1.5 mt-2"></div>
     </div>
     <div class="card rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
@@ -83,12 +115,50 @@
     </div>
   </div>
 
+  <!-- ============== Active Projects — macro + drill-down ============== -->
+  <div class="card rounded-xl p-5 mb-6">
+    <div class="flex items-center justify-between mb-4 gap-4 flex-wrap">
+      <h3 class="text-white font-bold flex items-center gap-2">
+        <span>&#128203;</span>
+        <span data-en="Active Projects — macro roll-up + drill-down" data-zh="进行中的项目 —— 宏观进度 + 钻取详情"></span>
+      </h3>
+      <div class="flex items-center gap-2">
+        <input id="proj-filter" class="px-3 py-1.5 bg-gray-900/80 border border-gray-700 focus:border-purple-500 rounded-lg text-xs text-white outline-none w-56" placeholder="Filter…" />
+        <div class="flex gap-1 text-[10px]">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-900/40 text-green-300 rounded-full"><span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span><span data-en="on track" data-zh="正常"></span></span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-900/40 text-yellow-300 rounded-full"><span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span><span data-en="at risk" data-zh="有风险"></span></span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-900/40 text-red-300 rounded-full"><span class="w-1.5 h-1.5 bg-red-400 rounded-full"></span><span data-en="blocked" data-zh="阻塞"></span></span>
+        </div>
+      </div>
+    </div>
+    <div id="projects-list" class="space-y-2"></div>
+    <details class="llm-note mt-4">
+      <summary class="text-xs text-blue-400 hover:text-blue-300 select-none"><span data-en="How is this LLM-powered?" data-zh="这部分如何用大模型赋能？"></span></summary>
+      <div class="mt-2 p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg text-xs text-gray-300 leading-relaxed">
+        <span data-en="The LLM rolls up project state nightly: it reads Linear / Jira milestones, GitHub PRs, Slack #project-* channels, Notion docs, and calendar events, then writes the one-line macro summary, color-codes status, and highlights the single most load-bearing blocker per project. Click any row to drill down into milestones, blockers, recent activity, and next actions — no need to ask 6 PMs." data-zh="大模型每晚汇总项目状态：读取 Linear / Jira 里程碑、GitHub PR、Slack 项目频道、Notion 文档与日历事件，生成一句话宏观摘要、按颜色标记状态、挑出每个项目最关键的单一阻塞。点击任意行可下钻到里程碑、阻塞、近期动态与下一步——无需再去问 6 位 PM。"></span>
+      </div>
+    </details>
+  </div>
+
+  <details class="llm-note mb-6">
+    <summary class="text-xs text-blue-400 hover:text-blue-300 select-none"><span data-en="How are metrics & charts LLM-powered?" data-zh="指标与图表如何用大模型赋能？"></span></summary>
+    <div class="mt-2 p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg text-xs text-gray-300 leading-relaxed">
+      <span data-en="Raw numbers come from BI/ERP — the LLM's role is the narrative layer: auto-generating delta captions (e.g. '+12% MoM'), flagging anomalies on the ARR curve, and drafting the weekly variance commentary an analyst would otherwise write by hand. Composite radar scores are produced by asking the model to weigh leading indicators per department." data-zh="原始数字来自 BI / ERP，大模型负责叙事层：自动生成环比标签（如"+12% MoM"）、识别 ARR 曲线上的异常点，起草原本需要分析师手写的周差异说明。雷达图的综合分由模型为各部门加权领先指标而来。"></span>
+    </div>
+  </details>
+
   <div class="card rounded-xl p-5 mb-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-white font-bold">&#9888; <span data-en="Decisions Awaiting Approval" data-zh="待审批的战略决策"></span></h3>
       <span class="tag bg-red-900/50 text-red-300">3 urgent</span>
     </div>
     <div id="decisions" class="space-y-3"></div>
+    <details class="llm-note mt-4">
+      <summary class="text-xs text-blue-400 hover:text-blue-300 select-none"><span data-en="How is this LLM-powered?" data-zh="这部分如何用大模型赋能？"></span></summary>
+      <div class="mt-2 p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg text-xs text-gray-300 leading-relaxed">
+        <span data-en="Each pending decision is passed to an LLM with the relevant context — financials, policy, precedent decisions. The model returns a risk tag, an impact estimate, and a one-line recommendation. The CEO's click ('Approve' / 'Discuss') is logged as feedback that fine-tunes future suggestions." data-zh="每项待审事项连同相关上下文（财务、政策、历史决策）送入大模型，输出风险级别、影响量级与一句话建议。CEO 的点击（批准 / 讨论）作为反馈记录，用以微调后续建议。"></span>
+      </div>
+    </details>
   </div>
 
   <div class="grid lg:grid-cols-2 gap-4 mb-6">
@@ -102,16 +172,34 @@
         </div>
         <span>High</span>
       </div>
+      <details class="llm-note mt-3">
+        <summary class="text-xs text-blue-400 hover:text-blue-300 select-none"><span data-en="How is this LLM-powered?" data-zh="这部分如何用大模型赋能？"></span></summary>
+        <div class="mt-2 p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg text-xs text-gray-300 leading-relaxed">
+          <span data-en="The LLM runs sentiment classification over anonymized Slack / email / pulse-survey signals, aggregated per department per day. Unlike keyword counts, the model handles sarcasm, gratitude, and frustration, and normalizes across team sizes so a 6-person team can be compared to a 400-person one." data-zh="大模型对匿名化的 Slack / 邮件 / 脉冲问卷做情绪分类，按部门逐日聚合。相较关键词计数，模型能理解反讽、感谢与挫败，并按团队规模归一化——6 人小组与 400 人团队可以直接对比。"></span>
+        </div>
+      </details>
     </div>
     <div class="card rounded-xl p-4">
       <h3 class="text-sm font-bold text-gray-300 mb-3">&#128266; <span data-en="Competitor Signals (7 days)" data-zh="竞品动态 (近7天)"></span></h3>
       <div id="competitor-feed" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+      <details class="llm-note mt-3">
+        <summary class="text-xs text-blue-400 hover:text-blue-300 select-none"><span data-en="How is this LLM-powered?" data-zh="这部分如何用大模型赋能？"></span></summary>
+        <div class="mt-2 p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg text-xs text-gray-300 leading-relaxed">
+          <span data-en="A long-running agent reads press releases, patent filings, job posts, and social chatter about named competitors. The LLM writes a one-line summary for each event and classifies it as threat / opportunity / neutral. You get the signal without reading 200 tabs." data-zh="后台 Agent 持续读取竞品的新闻稿、专利、招聘与社交讨论。大模型为每个事件生成一句话摘要并分类为威胁 / 机会 / 中性——无需打开 200 个标签页即可捕获信号。"></span>
+        </div>
+      </details>
     </div>
   </div>
 
   <div class="card rounded-xl p-5 mb-6">
     <h3 class="text-white font-bold mb-4">&#128293; <span data-en="Today's Top 5 Actions (AI-ranked)" data-zh="今日必做 TOP 5 (AI 排序)"></span></h3>
     <div id="actions" class="space-y-2"></div>
+    <details class="llm-note mt-4">
+      <summary class="text-xs text-blue-400 hover:text-blue-300 select-none"><span data-en="How is this LLM-powered?" data-zh="这部分如何用大模型赋能？"></span></summary>
+      <div class="mt-2 p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg text-xs text-gray-300 leading-relaxed">
+        <span data-en="The LLM pulls open items from CRM, calendar, and email threads, scores each on impact × urgency × reversibility, then ranks the top 5 for the day. The 'why' sub-line is the model's one-sentence justification — a reasoning trace made readable, so the CEO can challenge or override the ranking." data-zh="大模型从 CRM、日历与邮件线程抽取待办，按影响 × 紧迫 × 可逆性评分后排出今日 TOP 5。每项下方的"原因"是模型的一句话推理链——可读化的思考过程，CEO 可随时质疑或覆盖排序。"></span>
+      </div>
+    </details>
   </div>
 
   <footer class="text-center text-xs text-gray-500 py-6 border-t border-gray-800">
@@ -207,15 +295,83 @@ let arrChart, deptChart;
 function renderCharts(s) {
   const arrCtx = document.getElementById('arr-chart').getContext('2d');
   if (arrChart) arrChart.destroy();
+  const lang = getLang();
+  // Map event types → color + emoji for chart annotations
+  const evStyle = {
+    launch: { color: '#10b981', icon: '🚀' },
+    win:    { color: '#22d3ee', icon: '🏆' },
+    churn:  { color: '#f97316', icon: '📉' },
+    outage: { color: '#ef4444', icon: '⚠️' },
+  };
+  // Build a per-point event map for the historical line (point styling + tooltip footer)
+  const eventByIdx = {};
+  (s.events || []).forEach(ev => { eventByIdx[ev.month_idx] = ev; });
+  const pointBgColors = (s.arr || []).map((v, i) => eventByIdx[i] ? evStyle[eventByIdx[i].type].color : '#3b82f6');
+  const pointRadii = (s.arr || []).map((v, i) => eventByIdx[i] ? 7 : 3);
+  const forecastData = s.forecast || [];
+  const bandLow = s.forecast_low || [];
+  const bandHigh = s.forecast_high || [];
   arrChart = new Chart(arrCtx, {
     type: 'line',
     data: { labels: s.labels, datasets: [
-      { label: 'ARR ($M)', data: s.arr, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 },
-      { label: 'Target', data: s.target, borderColor: '#94a3b8', borderDash: [4, 4], fill: false, pointRadius: 0 },
+      // Forecast uncertainty band (high and low, filled between)
+      { label: lang === 'zh' ? '预测上限' : 'Forecast high', data: bandHigh,
+        borderColor: 'rgba(168,85,247,0.0)', backgroundColor: 'rgba(168,85,247,0.18)',
+        pointRadius: 0, fill: '+1', tension: 0.3 },
+      { label: lang === 'zh' ? '预测下限' : 'Forecast low', data: bandLow,
+        borderColor: 'rgba(168,85,247,0.0)', backgroundColor: 'transparent',
+        pointRadius: 0, fill: false, tension: 0.3 },
+      // Historical ARR — solid, event-colored points
+      { label: lang === 'zh' ? 'ARR 实际 ($M)' : 'ARR actual ($M)', data: s.arr,
+        borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)',
+        fill: true, tension: 0.3, pointBackgroundColor: pointBgColors,
+        pointBorderColor: pointBgColors, pointRadius: pointRadii, pointHoverRadius: 9 },
+      // Forecast — dashed
+      { label: lang === 'zh' ? 'ARR 预测' : 'ARR forecast', data: forecastData,
+        borderColor: '#a855f7', backgroundColor: 'transparent', borderDash: [6, 4],
+        fill: false, tension: 0.3, pointRadius: 0 },
+      // Target plan
+      { label: lang === 'zh' ? '目标' : 'Target', data: s.target,
+        borderColor: '#94a3b8', borderDash: [4, 4], fill: false, pointRadius: 0 },
     ] },
-    options: { plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12 } } },
-      scales: { x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } }, y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } } } }
+    options: {
+      plugins: {
+        legend: { labels: { color: '#94a3b8', boxWidth: 12, filter: it => !['Forecast high','Forecast low','预测上限','预测下限'].includes(it.text) } },
+        tooltip: {
+          callbacks: {
+            afterBody: (items) => {
+              const i = items[0]?.dataIndex;
+              const ev = eventByIdx[i];
+              if (!ev) return '';
+              const sign = ev.impact_pct >= 0 ? '+' : '';
+              const arrow = ev.impact_pct >= 0 ? '↑' : '↓';
+              return `${evStyle[ev.type].icon} ${ev.label}  (${sign}${ev.impact_pct}% ${arrow})`;
+            }
+          }
+        }
+      },
+      scales: { x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } }, y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } } }
+    }
   });
+  // Render event legend below the chart
+  const legendEl = document.getElementById('arr-event-legend');
+  if (legendEl) {
+    legendEl.innerHTML = (s.events || []).map(ev => {
+      const st = evStyle[ev.type] || {color: '#94a3b8', icon: '·'};
+      const sign = ev.impact_pct >= 0 ? '+' : '';
+      return `<span class="inline-flex items-center gap-1 bg-gray-900/60 border border-gray-800 rounded-full px-2 py-0.5 text-[10px] text-gray-300" title="${s.labels[ev.month_idx]} · ${sign}${ev.impact_pct}%">
+        <span style="color:${st.color}">${st.icon}</span>
+        <span class="text-gray-500">${s.labels[ev.month_idx]}</span>
+        <span>${ev.label}</span>
+      </span>`;
+    }).join('');
+    const forecastNote = document.getElementById('arr-forecast-note');
+    if (forecastNote) {
+      forecastNote.textContent = lang === 'zh'
+        ? `实际 ${s.labels[0]}–${s.labels[s.history_end_idx]} · 预测 ${s.labels[s.history_end_idx + 1]}–${s.labels[s.labels.length - 1]}（含不确定区间）`
+        : `Actual ${s.labels[0]}–${s.labels[s.history_end_idx]} · Forecast ${s.labels[s.history_end_idx + 1]}–${s.labels[s.labels.length - 1]} (band = uncertainty)`;
+    }
+  }
   const deptCtx = document.getElementById('dept-radar').getContext('2d');
   if (deptChart) deptChart.destroy();
   deptChart = new Chart(deptCtx, {
@@ -302,13 +458,14 @@ async function loadAll() {
   const c = encodeURIComponent(currentCompany());
   const l = getLang();
   try {
-    const [brief, metrics, decisions, mood, competitors, actions] = await Promise.all([
+    const [brief, metrics, decisions, mood, competitors, actions, projects] = await Promise.all([
       fetchJson(`/api/ceo?action=brief&company=${c}&idx=${briefIdx}&lang=${l}`),
       fetchJson(`/api/ceo?action=metrics&company=${c}&lang=${l}`),
       fetchJson(`/api/ceo?action=decisions&company=${c}&lang=${l}`),
       fetchJson(`/api/ceo?action=mood&company=${c}&lang=${l}`),
       fetchJson(`/api/ceo?action=competitors&company=${c}&lang=${l}`),
       fetchJson(`/api/ceo?action=actions&company=${c}&lang=${l}`),
+      fetchJson(`/api/ceo?action=projects&company=${c}&lang=${l}`),
     ]);
     renderBrief(brief.brief);
     renderMetrics(metrics);
@@ -316,6 +473,7 @@ async function loadAll() {
     renderMood(mood);
     renderCompetitors(competitors.feed);
     renderActions(actions.actions);
+    renderProjects(projects.projects);
   } catch (e) {
     showError(`API error: ${e.message}. Ensure /api/ceo_* handlers are deployed.`);
   }
@@ -339,6 +497,266 @@ document.getElementById('refresh-brief').addEventListener('click', async () => {
 });
 
 document.getElementById('company-input').addEventListener('change', loadAll);
+
+// ========= Active Projects =========
+let __projects = [];
+const statusStyle = {
+  green:  { bar: 'bg-green-500',  tag: 'bg-green-900/40 text-green-300',  dot: 'bg-green-400'  },
+  yellow: { bar: 'bg-yellow-500', tag: 'bg-yellow-900/40 text-yellow-300', dot: 'bg-yellow-400' },
+  red:    { bar: 'bg-red-500',    tag: 'bg-red-900/40 text-red-300',      dot: 'bg-red-400'    },
+};
+
+function renderProjects(projects) {
+  __projects = projects || [];
+  drawProjectList();
+}
+
+function drawProjectList() {
+  const lang = getLang();
+  const q = document.getElementById('proj-filter').value.trim().toLowerCase();
+  const list = __projects.filter(p => !q ||
+    p.name.toLowerCase().includes(q) || p.owner.toLowerCase().includes(q) ||
+    p.dept.toLowerCase().includes(q) || p.macro.toLowerCase().includes(q));
+  const el = document.getElementById('projects-list');
+  el.innerHTML = list.map(p => {
+    const s = statusStyle[p.status] || statusStyle.green;
+    const budget = `${p.budget.spent}${p.budget.unit} / ${p.budget.total}${p.budget.unit}`;
+    return `
+      <div class="proj-row bg-gray-900/50 border border-gray-800 hover:border-purple-700 rounded-lg transition" data-id="${escapeHtml(p.id)}">
+        <button class="w-full text-left p-3 flex items-center gap-3" data-toggle="${escapeHtml(p.id)}">
+          <span class="w-2 h-2 rounded-full ${s.dot} flex-shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-white font-medium text-sm truncate">${escapeHtml(p.name)}</span>
+              <span class="tag ${s.tag} text-[10px]">${p.progress}%</span>
+              <span class="text-[10px] text-gray-500">${escapeHtml(p.dept)} · ${escapeHtml(p.owner)}</span>
+            </div>
+            <div class="text-xs text-gray-400 mt-1 truncate">${escapeHtml(p.macro)}</div>
+            <div class="mt-1.5 h-1 rounded bg-gray-800 overflow-hidden"><div class="h-full ${s.bar}" style="width:${p.progress}%"></div></div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-[10px] text-gray-500">${lang === 'zh' ? '预计' : 'ETA'}</div>
+            <div class="text-xs text-gray-300">${escapeHtml(p.eta)}</div>
+            <div class="text-[10px] text-gray-600 mt-0.5">${budget}</div>
+          </div>
+          <span class="text-gray-500 text-xs flex-shrink-0 expand-caret">&#9656;</span>
+        </button>
+        <div class="proj-detail hidden border-t border-gray-800 p-4"></div>
+      </div>
+    `;
+  }).join('');
+  if (!list.length) {
+    el.innerHTML = `<div class="text-center text-xs text-gray-500 py-6">${lang === 'zh' ? '无匹配项目' : 'No matching projects'}</div>`;
+  }
+  document.querySelectorAll('#projects-list [data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => toggleProject(btn.getAttribute('data-toggle')));
+  });
+}
+
+async function toggleProject(id) {
+  const row = document.querySelector(`.proj-row[data-id="${CSS.escape(id)}"]`);
+  if (!row) return;
+  const panel = row.querySelector('.proj-detail');
+  const caret = row.querySelector('.expand-caret');
+  const open = !panel.classList.contains('hidden');
+  // Collapse others
+  document.querySelectorAll('#projects-list .proj-detail').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('#projects-list .expand-caret').forEach(c => c.innerHTML = '&#9656;');
+  if (open) return;
+  panel.classList.remove('hidden');
+  caret.innerHTML = '&#9662;';
+  panel.innerHTML = `<div class="text-xs text-gray-500 thinking">${getLang() === 'zh' ? '检索项目数据…' : 'Fetching project data…'}</div>`;
+  try {
+    const res = await fetch('/api/ceo?action=project', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ id, company: currentCompany(), lang: getLang() })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    panel.innerHTML = renderProjectDetail(d);
+  } catch (e) {
+    panel.innerHTML = `<div class="text-xs text-red-400">Failed to load: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderProjectDetail(d) {
+  const lang = getLang();
+  const mileIcon = { done: '&#9989;', in_progress: '&#128260;', pending: '&#9675;' };
+  const sevTag = { high: 'bg-red-900/50 text-red-300', medium: 'bg-yellow-900/40 text-yellow-300', low: 'bg-gray-800/60 text-gray-400' };
+  return `
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-2">${lang === 'zh' ? '里程碑' : 'Milestones'}</div>
+        <div class="space-y-1.5">
+          ${d.milestones.map(m => `
+            <div class="flex items-center gap-2 text-xs">
+              <span>${mileIcon[m.status] || '&#9675;'}</span>
+              <span class="flex-1 ${m.status === 'done' ? 'text-gray-500 line-through' : 'text-gray-200'}">${escapeHtml(m.title)}</span>
+              <span class="text-[10px] text-gray-500">${escapeHtml(m.date)}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="text-[10px] text-gray-500 uppercase tracking-wider mt-4 mb-2">${lang === 'zh' ? '关键指标' : 'Key metrics'}</div>
+        <div class="grid grid-cols-3 gap-2">
+          ${d.key_metrics.map(k => `
+            <div class="bg-gray-950/60 border border-gray-800 rounded p-2">
+              <div class="text-[10px] text-gray-500">${escapeHtml(k.label)}</div>
+              <div class="text-sm text-white font-bold">${escapeHtml(k.value)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-2">${lang === 'zh' ? '阻塞' : 'Blockers'}</div>
+        <div class="space-y-1.5">
+          ${d.blockers.map(b => `
+            <div class="flex items-start gap-2 text-xs">
+              <span class="tag ${sevTag[b.severity] || sevTag.low} flex-shrink-0 text-[10px]">${escapeHtml(b.severity)}</span>
+              <span class="flex-1 text-gray-300">${escapeHtml(b.text)}</span>
+            </div>
+          `).join('') || `<div class="text-xs text-gray-500 italic">${lang === 'zh' ? '无阻塞' : 'None'}</div>`}
+        </div>
+        <div class="text-[10px] text-gray-500 uppercase tracking-wider mt-4 mb-2">${lang === 'zh' ? '近期动态' : 'Recent activity'}</div>
+        <div class="space-y-1.5">
+          ${d.activity.map(a => `
+            <div class="flex items-start gap-2 text-xs">
+              <span class="text-gray-500 flex-shrink-0 w-20">${escapeHtml(a.when)}</span>
+              <div class="flex-1">
+                <div class="text-gray-300">${escapeHtml(a.what)}</div>
+                <div class="text-[10px] text-gray-600">${escapeHtml(a.source)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="text-[10px] text-gray-500 uppercase tracking-wider mt-4 mb-2">${lang === 'zh' ? '下一步' : 'Next actions'}</div>
+        <ul class="list-disc list-inside space-y-1 text-xs text-gray-300">
+          ${d.next_actions.map(n => `<li>${escapeHtml(n)}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('proj-filter').addEventListener('input', drawProjectList);
+
+// ========= Ask-Anything Agent =========
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function loadChips() {
+  const l = getLang();
+  const container = document.getElementById('ask-chips');
+  container.innerHTML = '';
+  try {
+    const { chips } = await fetchJson(`/api/ceo?action=chips&lang=${l}`);
+    chips.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'px-3 py-1.5 bg-gray-800/70 hover:bg-purple-900/50 border border-gray-700 hover:border-purple-600 rounded-full text-xs text-gray-300 transition text-left';
+      btn.innerHTML = `<span class="text-purple-400 mr-1.5">${ch.dept}</span>${ch.q}`;
+      btn.addEventListener('click', () => { document.getElementById('ask-input').value = ch.q; runAsk(ch.q); });
+      container.appendChild(btn);
+    });
+  } catch (e) { /* chips are optional */ }
+}
+
+function toolIcon(tool) {
+  const t = (tool || '').split('.')[0];
+  const map = { github: '&#128187;', jira: '&#128203;', slack: '&#128172;', lattice: '&#128100;', snowflake: '&#10052;',
+    gong: '&#127911;', zendesk: '&#127991;', datadog: '&#128200;', netsuite: '&#128181;', model: '&#129504;',
+    workday: '&#128188;', gem: '&#128302;', k8s: '&#9881;', billing: '&#128179;', pagerduty: '&#128276;',
+    embedding: '&#128290;', sentiment: '&#128151;', linear: '&#128279;', compliance: '&#9878;', product: '&#127942;',
+    docs: '&#128218;', linkedin: '&#128221;', email: '&#128231;', synthesize: '&#129504;' };
+  return map[t] || '&#128269;';
+}
+
+async function runAsk(query) {
+  const l = getLang();
+  const c = currentCompany();
+  const result = document.getElementById('ask-result');
+  result.classList.remove('hidden');
+  result.innerHTML = `
+    <div class="flex items-start gap-2 mb-3">
+      <span class="text-purple-400 mt-0.5">&#128100;</span>
+      <div class="flex-1 text-sm text-gray-200">${escapeHtml(query)}</div>
+    </div>
+    <div id="ask-plan" class="text-xs text-gray-400 italic mb-3 thinking"
+         ${l === 'zh' ? 'data-placeholder="思考中…"' : 'data-placeholder="Thinking…"'}>
+      ${l === 'zh' ? '思考中…' : 'Thinking…'}
+    </div>
+    <div id="ask-steps" class="space-y-2 mb-3"></div>
+    <div id="ask-answer" class="hidden bg-purple-950/30 border border-purple-800/50 rounded-lg p-3"></div>
+    <div id="ask-cites" class="hidden flex flex-wrap gap-1.5 mt-2"></div>
+  `;
+  let data;
+  try {
+    const res = await fetch('/api/ceo?action=ask', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ query, company: c, lang: l })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (e) {
+    document.getElementById('ask-plan').textContent = `Agent error: ${e.message}`;
+    return;
+  }
+
+  const planEl = document.getElementById('ask-plan');
+  planEl.classList.remove('thinking');
+  planEl.classList.add('not-italic');
+  planEl.textContent = (l === 'zh' ? '📋 计划：' : '📋 Plan: ') + data.plan;
+
+  const stepsEl = document.getElementById('ask-steps');
+  for (let i = 0; i < data.steps.length; i++) {
+    await sleep(450);
+    const s = data.steps[i];
+    const row = document.createElement('div');
+    row.className = 'flex items-start gap-2 text-xs bg-gray-900/60 border border-gray-800 rounded-lg p-2.5';
+    row.innerHTML = `
+      <span class="flex-shrink-0 mt-0.5">${toolIcon(s.tool)}</span>
+      <div class="flex-1 min-w-0">
+        <div class="font-mono text-blue-300 text-[11px] truncate">${escapeHtml(s.tool)}(${escapeHtml(JSON.stringify(s.args))})</div>
+        <div class="text-gray-300 mt-1">${escapeHtml(s.observation)}</div>
+      </div>
+    `;
+    row.style.opacity = '0';
+    row.style.transform = 'translateY(4px)';
+    row.style.transition = 'all .25s';
+    stepsEl.appendChild(row);
+    requestAnimationFrame(() => { row.style.opacity = '1'; row.style.transform = 'translateY(0)'; });
+  }
+
+  await sleep(300);
+  const ans = document.getElementById('ask-answer');
+  ans.classList.remove('hidden');
+  ans.innerHTML = `
+    <div class="flex items-start gap-2">
+      <span class="text-purple-400 flex-shrink-0 mt-0.5">&#129504;</span>
+      <div class="flex-1 text-sm text-gray-100 leading-relaxed">${escapeHtml(data.answer)}</div>
+    </div>
+    ${data.department ? `<div class="text-[10px] text-purple-400 mt-2 uppercase tracking-wider">${l === 'zh' ? '归口部门' : 'Dept'} · ${escapeHtml(data.department)}</div>` : ''}
+  `;
+  const cites = document.getElementById('ask-cites');
+  cites.classList.remove('hidden');
+  cites.innerHTML = data.citations.map(c => `
+    <span class="tag bg-gray-800/70 border border-gray-700 text-gray-400 text-[10px]">
+      ${escapeHtml(c.source)} <span class="text-gray-600">· ${escapeHtml(c.time)}</span>
+    </span>
+  `).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+document.getElementById('ask-submit').addEventListener('click', () => {
+  const q = document.getElementById('ask-input').value.trim();
+  if (q) runAsk(q);
+});
+document.getElementById('ask-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('ask-submit').click();
+});
+
+loadChips();
+document.getElementById('lang-toggle').addEventListener('click', () => loadChips());
 
 loadAll();
 </script>

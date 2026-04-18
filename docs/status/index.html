@@ -235,7 +235,9 @@ function showError(msg) {
 
 async function fetchStatus(fresh = false) {
   try {
-    const res = await fetch(`/api/status${fresh ? '?fresh=true' : ''}`);
+    // Central aggregator hosted on Fly.io (polls all 12 demo subdomains)
+    const AGG = 'https://sa-status.fly.dev';
+    const res = await fetch(`${AGG}/api/status${fresh ? '?fresh=true' : ''}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     document.getElementById('err-banner').classList.add('hidden');

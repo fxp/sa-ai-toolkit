@@ -123,7 +123,7 @@ COMMANDS = {
 
 
 def run_command(command: str, user_input: Optional[str] = None) -> List[ScriptItem]:
-    """Return the scripted output for a gstack command.
+    """Return the scripted output for a gstack command (full, one-shot).
 
     command: one of "office-hours", "autoplan", "qa", "ship".
     user_input: optional free-form user text (currently only used by office-hours).
@@ -136,3 +136,90 @@ def run_command(command: str, user_input: Optional[str] = None) -> List[ScriptIt
     if cmd == "office-hours":
         return _office_hours(user_input)
     return COMMANDS[cmd]()
+
+
+# ──────────────────────────────────────────────────────────────
+# Multi-turn chat protocol
+# ──────────────────────────────────────────────────────────────
+# Client tracks {command, turn, history}. Each POST/GET to the
+# backend replays one segment. Turn numbering:
+#
+#   office-hours: turn 0 opens the session (show idea + Q1),
+#                 turns 1..5 echo user's last answer + ask Qk+1,
+#                 turn 6 shows the Reframe Summary and ends.
+#   autoplan   : single turn (full plan output).
+#   qa         : single turn (full test run).
+#   ship       : single turn (full pipeline output).
+#
+# Shape returned by run_turn():
+#   {"script": [ScriptItem, ...],
+#    "prompt": <str|None>,      # next prompt to show inline (e.g. the current question)
+#    "done": <bool>,            # True = session ended, client should reset state
+#    "turn": <int>}             # echo back the turn just played
+
+_OFFICE_QUESTIONS = [
+    "Who, specifically, are your first 10 users? (Names, not personas.)",
+    "What does the status quo cost them today — in dollars or hours?",
+    "What is the narrowest wedge you can ship in 4 weeks?",
+    "Why you, why now? What unfair advantage do you have?",
+    "What observation from the real world sparked this idea?",
+    "In 3 years, what does the future look like if you succeed?",
+]
+
+
+def _office_hours_turn(turn: int, user_input: Optional[str],
+                       history: Optional[List[Dict]] = None) -> Dict:
+    """Play one turn of the office-hours dialogue."""
+    total = len(_OFFICE_QUESTIONS)
+    script: List[ScriptItem] = []
+
+    if turn == 0:
+        idea = (user_input or "(no idea provided)").strip()
+        script.append(_item("YC Office Hours — 6 forcing questions", "prompt", 150))
+        script.append(_item("──────────────────────────────────────", "dim", 60))
+        script.append(_item(f"Idea: {idea}", "highlight", 200))
+        script.append(_item(f"Q1/{total}. {_OFFICE_QUESTIONS[0]}", "output", 400))
+        return {"script": script, "prompt": _OFFICE_QUESTIONS[0],
+                "done": False, "turn": turn, "total_turns": total + 1}
+
+    if 1 <= turn <= total - 1:
+        ans = (user_input or "").strip() or "(no answer)"
+        script.append(_item(f"› {ans}", "dim", 60))
+        script.append(_item(f"Q{turn + 1}/{total}. {_OFFICE_QUESTIONS[turn]}", "output", 300))
+        return {"script": script, "prompt": _OFFICE_QUESTIONS[turn],
+                "done": False, "turn": turn, "total_turns": total + 1}
+
+    # turn == total (6) → collect last answer, print summary, end
+    ans = (user_input or "").strip() or "(no answer)"
+    script.append(_item(f"› {ans}", "dim", 60))
+    script.append(_item("── Reframe Summary ───────────────────", "prompt", 400))
+    # Roll up history into a deterministic "reframe"
+    if history:
+        first_user_idea = next((h.get("text") for h in history
+                                if h.get("role") == "user"), "(no idea)")
+        script.append(_item(f"Original idea: {first_user_idea[:80]}", "dim", 100))
+    script.append(_item("→ Biggest gap: desperate specificity on the first 10 users.", "warn", 300))
+    script.append(_item("→ Next action: 3 concrete user names by Friday.", "ok", 300))
+    script.append(_item("── Session ended ────────────────────", "dim", 100))
+    return {"script": script, "prompt": None, "done": True,
+            "turn": turn, "total_turns": total + 1}
+
+
+def run_turn(command: str, turn: int = 0,
+             user_input: Optional[str] = None,
+             history: Optional[List[Dict]] = None) -> Dict:
+    """Multi-turn version of run_command. Interactive for office-hours,
+    one-shot for others (returns full script with done=True on turn 0)."""
+    cmd = (command or "").strip().lstrip("/")
+    if cmd not in COMMANDS:
+        raise ValueError(f"Unknown command: {command!r}. Valid: {sorted(COMMANDS)}")
+
+    if cmd == "office-hours":
+        return _office_hours_turn(turn=int(turn), user_input=user_input, history=history)
+
+    # Non-interactive commands: return full script in one turn.
+    if turn > 0:
+        return {"script": [], "prompt": None, "done": True, "turn": turn,
+                "total_turns": 1}
+    return {"script": COMMANDS[cmd](), "prompt": None, "done": True,
+            "turn": 0, "total_turns": 1}
