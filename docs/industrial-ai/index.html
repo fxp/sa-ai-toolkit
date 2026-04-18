@@ -270,7 +270,10 @@ function drawPrediction(yield_forecast, rul) {
   ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = '#1e293b';
   for (let y = 40; y < H - 40; y += 40) { ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(W - 20, y); ctx.stroke(); }
-  const pts = (yield_forecast && yield_forecast.values) || Array.from({length: 72}, (_, i) => 0.96 - i * 0.0005 + (Math.random() - 0.5) * 0.003);
+  // Backend returns point_forecast (array of percent values 0-100);
+  // older mock used `values` (0-1 fractions). Normalize to 0-1 fractions.
+  let pts = (yield_forecast && (yield_forecast.point_forecast || yield_forecast.values)) || Array.from({length: 72}, (_, i) => 0.96 - i * 0.0005 + (Math.random() - 0.5) * 0.003);
+  if (pts.length && pts[0] > 2) pts = pts.map(v => v / 100);
   const minY = Math.min(...pts), maxY = Math.max(...pts);
   const range = (maxY - minY) || 0.01;
   ctx.strokeStyle = '#3b82f6';
@@ -308,10 +311,10 @@ function drawPrediction(yield_forecast, rul) {
     ctx.fillText('RUL', W - 130, 38);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 24px monospace';
-    ctx.fillText(`${rul.hours || 175}h`, W - 130, 62);
+    ctx.fillText(`${rul.rul_hours || rul.hours || 175}h`, W - 130, 62);
     ctx.fillStyle = '#fbbf24';
     ctx.font = '9px monospace';
-    ctx.fillText(rul.component || 'Blade#7', W - 130, 75);
+    ctx.fillText(rul.component || rul.maintenance_urgency || 'Blade#7', W - 130, 75);
   }
 }
 
@@ -364,15 +367,24 @@ async function runPredict() {
     const yf = data.yield_forecast || data.yield;
     const rul = data.rul;
     drawPrediction(yf, rul);
-    $('#predict-status').textContent = `RUL ${rul?.hours || 175}h`;
+    // Normalize field names: backend uses rul_hours (number), trend (number like -0.0512);
+    // format trend as percentage per day string
+    const rulHours = rul?.rul_hours ?? rul?.hours ?? 175;
+    const rulComp = rul?.component || rul?.maintenance_urgency || 'Blade#7';
+    const trendStr = (typeof yf?.trend === 'number')
+      ? `${yf.trend >= 0 ? '+' : ''}${yf.trend.toFixed(3)}%/day`
+      : (yf?.trend || '-0.05%/day');
+    const alertStr = yf?.alert_message || (yf?.alert ? 'threshold crossing alert' : null);
+    $('#predict-status').textContent = `RUL ${rulHours}h`;
     $('#predict-status').className = 'tag bg-orange-900/50 text-orange-300';
     $('#predict-result').innerHTML = `
-      <div class="flex justify-between"><span>Yield trend</span><span class="text-orange-400">${yf?.trend || '-0.05%/day'}</span></div>
-      <div class="flex justify-between"><span>Equipment RUL</span><span class="text-red-400">${rul?.hours || 175}h</span></div>
-      <div class="flex justify-between"><span>Component</span><span class="text-yellow-400">${rul?.component || 'Blade#7'}</span></div>
+      <div class="flex justify-between"><span>Yield trend</span><span class="text-orange-400">${trendStr}</span></div>
+      <div class="flex justify-between"><span>Equipment RUL</span><span class="text-red-400">${rulHours}h</span></div>
+      <div class="flex justify-between"><span>Status</span><span class="text-yellow-400">${rulComp}</span></div>
+      ${alertStr ? `<div class="text-red-400 text-[11px] mt-1">&#9888; ${alertStr}</div>` : ''}
     `;
-    log(`  yield forecast: ${yf?.trend || '-0.05%/day'}`, 'output');
-    log(`  RUL: ${rul?.hours || 175}h (${rul?.component || 'Blade#7'})`, 'output');
+    log(`  yield forecast: ${trendStr}`, 'output');
+    log(`  RUL: ${rulHours}h (${rulComp})`, 'output');
     setStatus('Prediction complete', 'text-green-400');
     log(`<span class="prompt">&check;</span> Prediction done`, 'highlight');
     return data;
@@ -393,24 +405,29 @@ async function runDiagnose() {
     $('#diag-status').textContent = 'Diagnosis complete';
     $('#diag-status').className = 'tag bg-purple-900/50 text-purple-300';
     const causes = data.root_causes || data.causes || [
-      { name: 'Blade#7 worn', probability: 0.9 },
-      { name: 'Slurry viscosity drift', probability: 0.6 },
+      { cause: 'Blade#7 worn', confidence: 0.9 },
+      { cause: 'Slurry viscosity drift', confidence: 0.6 },
     ];
+    // Backend uses {cause, confidence, action, evidence, priority};
+    // earlier mock used {name/label, probability, actions}. Support both.
+    const labelOf = c => c.cause || c.name || c.label || 'unknown';
+    const confOf = c => c.confidence ?? c.probability ?? 0.5;
     const mainCause = causes[0];
+    // Prefer backend "action" per-cause, fallback to top-level recommendations/actions
+    const recs = data.recommendations || data.actions
+      || (causes.map(c => c.action).filter(Boolean))
+      || ['Schedule blade replacement within 48h', 'Increase SAM3 sampling rate 2x', 'Inspect bearing@1200Hz source'];
     $('#diagnosis-output').innerHTML = `
       <div class="grid md:grid-cols-2 gap-4 mb-4">
         <div class="terminal p-3 text-xs">
           <div class="warn">&#9888; <span class="font-bold">Root Cause:</span></div>
-          <div class="highlight mt-2 text-sm">${mainCause.name || mainCause.label}</div>
-          <div class="output mt-1">Confidence: <span class="text-red-400 font-bold">${Math.round((mainCause.probability || 0.9) * 100)}%</span></div>
+          <div class="highlight mt-2 text-sm">${labelOf(mainCause)}</div>
+          <div class="output mt-1">Confidence: <span class="text-red-400 font-bold">${Math.round(confOf(mainCause) * 100)}%</span></div>
+          ${mainCause.evidence && mainCause.evidence.length ? `<div class="output mt-2 text-[11px] text-gray-500">Evidence: ${mainCause.evidence.join('; ')}</div>` : ''}
         </div>
         <div class="terminal p-3 text-xs">
           <div class="warn">&#128736; <span class="font-bold">Recommended Actions:</span></div>
-          ${(data.recommendations || data.actions || [
-            'Schedule blade replacement within 48h',
-            'Increase SAM3 sampling rate 2x',
-            'Inspect bearing@1200Hz source',
-          ]).map(a => `<div class="output mt-1">  • ${a}</div>`).join('')}
+          ${recs.map(a => `<div class="output mt-1">  • ${a}</div>`).join('')}
         </div>
       </div>
       ${causes.length > 1 ? `
@@ -418,15 +435,15 @@ async function runDiagnose() {
         <div class="space-y-1">
           ${causes.slice(1).map(c => `
             <div class="flex items-center gap-2 text-sm">
-              <div class="w-32 text-gray-400">${c.name || c.label}</div>
-              <div class="flex-1 bg-gray-900 rounded-full h-2"><div class="bg-orange-500 rounded-full h-2" style="width:${Math.round((c.probability || 0.5) * 100)}%"></div></div>
-              <span class="text-xs text-orange-300 w-12 text-right">${Math.round((c.probability || 0.5) * 100)}%</span>
+              <div class="w-32 text-gray-400">${labelOf(c)}</div>
+              <div class="flex-1 bg-gray-900 rounded-full h-2"><div class="bg-orange-500 rounded-full h-2" style="width:${Math.round(confOf(c) * 100)}%"></div></div>
+              <span class="text-xs text-orange-300 w-12 text-right">${Math.round(confOf(c) * 100)}%</span>
             </div>
           `).join('')}
         </div>
       ` : ''}
     `;
-    log(`  Root cause: ${mainCause.name || mainCause.label} [${Math.round((mainCause.probability || 0.9) * 100)}%]`, 'highlight');
+    log(`  Root cause: ${labelOf(mainCause)} [${Math.round(confOf(mainCause) * 100)}%]`, 'highlight');
     setStatus('Diagnosis complete', 'text-green-400');
     log(`<span class="prompt">&check;</span> Diagnosis done`, 'highlight');
     return data;
