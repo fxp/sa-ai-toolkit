@@ -1,4 +1,4 @@
-"""AutoResearch-for-Scheduling Vercel handler.
+"""AutoResearch-for-VRP Vercel handler.
 
 POST ?action=iterate  — run one solver variant {iter_idx, lang}
 POST ?action=full     — run all variants
@@ -11,8 +11,8 @@ import os
 import urllib.parse
 import importlib.util as _ilu
 
-_CORE_PATH = os.path.join(os.path.dirname(__file__), '..', 'demos', 'autoresearch-py', 'core.py')
-_spec = _ilu.spec_from_file_location("autoresearch_core", _CORE_PATH)
+_CORE_PATH = os.path.join(os.path.dirname(__file__), '..', 'demos', 'autoresearch-vrp-py', 'core.py')
+_spec = _ilu.spec_from_file_location("autoresearch_vrp_core", _CORE_PATH)
 _mod = _ilu.module_from_spec(_spec); _spec.loader.exec_module(_mod)
 
 
@@ -53,8 +53,7 @@ class handler(BaseHTTPRequestHandler):
         lang = body.get("lang") or "en"
         try:
             if action == "iterate":
-                iter_idx = int(body.get("iter_idx", 0))
-                self._json(200, _mod.run_iteration(iter_idx, lang=lang))
+                self._json(200, _mod.run_iteration(int(body.get("iter_idx", 0)), lang=lang))
             elif action == "full":
                 self._json(200, _mod.run_full(lang=lang))
             else:

@@ -1,266 +1,492 @@
 """
-AutoResearch core — 23-stage research pipeline.
+AutoResearch for Scheduling — autonomous algorithm-discovery loop applied to
+weighted-tardiness minimization on a fixed 20-order / 3-machine benchmark.
 
-Pure business logic: given a topic, run stages sequentially. A few stages
-call DuckDuckGo for real web sources; the rest simulate reasoning work.
+Mirrors the karpathy/autoresearch pattern:
+    - Fixed instance + fixed evaluator = the "benchmark harness" (ground truth).
+    - A sequence of solver variants = the agent's edits to solver.py over time.
+    - Each iteration runs real Python, gets a real metric, and is kept or reverted.
+
+No LLM is called during the demo. The 10 solver variants below are hand-authored
+to mirror what an autoresearch agent would propose (simple heuristics → local
+search → metaheuristics), including two deliberate dead-ends that get reverted.
 """
 from __future__ import annotations
 
-import re
-import time
-import urllib.parse
-import urllib.request
-from datetime import datetime
-from typing import Optional
-
-try:
-    from jinja2 import Template
-except ImportError:  # pragma: no cover
-    Template = None
+import inspect
+import math
+import random
+from dataclasses import dataclass
+from typing import Callable
 
 
 # ---------------------------------------------------------------------------
-# Stage definitions (23 stages; 4 do real search)
+# Instance & evaluator  (the "benchmark harness" — never edited by the agent)
 # ---------------------------------------------------------------------------
 
-STAGES: list[dict] = [
-    {"name": "Topic scoping",              "name_zh": "主题界定",        "uses_search": False, "search_query_template": None},
-    {"name": "Query decomposition",        "name_zh": "查询拆解",        "uses_search": False, "search_query_template": None},
-    {"name": "Literature search",          "name_zh": "文献检索",        "uses_search": True,  "search_query_template": "{topic}"},
-    {"name": "Source ranking",             "name_zh": "来源排序",        "uses_search": False, "search_query_template": None},
-    {"name": "Key claim extraction",       "name_zh": "关键论点抽取",    "uses_search": False, "search_query_template": None},
-    {"name": "Counter-argument search",    "name_zh": "反方观点检索",    "uses_search": True,  "search_query_template": "{topic} criticism limitations"},
-    {"name": "Evidence triangulation",     "name_zh": "证据三角校验",    "uses_search": False, "search_query_template": None},
-    {"name": "Domain expert lookup",       "name_zh": "领域专家查询",    "uses_search": True,  "search_query_template": "{topic} expert analysis 2025"},
-    {"name": "Data point extraction",      "name_zh": "数据点提取",      "uses_search": False, "search_query_template": None},
-    {"name": "Trend identification",       "name_zh": "趋势识别",        "uses_search": False, "search_query_template": None},
-    {"name": "Timeline construction",      "name_zh": "时间线构建",      "uses_search": False, "search_query_template": None},
-    {"name": "Case study search",          "name_zh": "案例检索",        "uses_search": True,  "search_query_template": "{topic} case study examples"},
-    {"name": "Quantitative synthesis",     "name_zh": "定量综合",        "uses_search": False, "search_query_template": None},
-    {"name": "Qualitative synthesis",      "name_zh": "定性综合",        "uses_search": False, "search_query_template": None},
-    {"name": "Hypothesis formulation",     "name_zh": "假设形成",        "uses_search": False, "search_query_template": None},
-    {"name": "Contradiction check",        "name_zh": "矛盾校验",        "uses_search": False, "search_query_template": None},
-    {"name": "Citation verification",      "name_zh": "引用核验",        "uses_search": False, "search_query_template": None},
-    {"name": "Narrative outlining",        "name_zh": "叙事大纲",        "uses_search": False, "search_query_template": None},
-    {"name": "Draft writing",              "name_zh": "草稿撰写",        "uses_search": False, "search_query_template": None},
-    {"name": "Peer review (multi-agent)",  "name_zh": "多 Agent 同行评审", "uses_search": False, "search_query_template": None},
-    {"name": "Iterative refinement",       "name_zh": "迭代打磨",        "uses_search": False, "search_query_template": None},
-    {"name": "Final formatting",           "name_zh": "最终排版",        "uses_search": False, "search_query_template": None},
-    {"name": "Report publication",         "name_zh": "报告发布",        "uses_search": False, "search_query_template": None},
-]
-
-NUM_STAGES = len(STAGES)
+@dataclass(frozen=True)
+class Order:
+    id: int
+    proc_time: int    # processing hours
+    due_date: int     # hours from t=0
+    weight: int       # 1 (low) — 5 (critical)
 
 
-# ---------------------------------------------------------------------------
-# DuckDuckGo search (HTML scrape, no API key)
-# ---------------------------------------------------------------------------
-
-def _search_duckduckgo(query: str, n: int = 5) -> list[dict]:
-    """Scrape DuckDuckGo HTML search results. Returns [] on failure."""
-    try:
-        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(query)}"
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                              "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-                "Accept": "text/html,application/xhtml+xml",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            html = resp.read().decode("utf-8", errors="ignore")
-        results: list[dict] = []
-        pattern = re.compile(
-            r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>.*?'
-            r'<a[^>]+class="result__snippet"[^>]*>(.*?)</a>',
-            re.DOTALL,
-        )
-        for m in pattern.finditer(html):
-            if len(results) >= n:
-                break
-            raw_url = m.group(1)
-            if "uddg=" in raw_url:
-                um = re.search(r"uddg=([^&]+)", raw_url)
-                real_url = urllib.parse.unquote(um.group(1)) if um else raw_url
-            else:
-                real_url = raw_url
-            title = re.sub(r"<[^>]+>", "", m.group(2)).strip()
-            snippet = re.sub(r"<[^>]+>", "", m.group(3)).strip()
-            results.append({"title": title, "url": real_url, "snippet": snippet})
-        return results
-    except Exception:
-        return []
+@dataclass(frozen=True)
+class Instance:
+    orders: tuple[Order, ...]
+    num_machines: int
 
 
-# ---------------------------------------------------------------------------
-# Stage runner
-# ---------------------------------------------------------------------------
+def build_benchmark(seed: int = 77) -> Instance:
+    """Deterministic 28-order / 3-machine instance.
+    Tight due dates (15-55h) versus ~208h of total work → guaranteed tardiness;
+    ATC + local search + SA beats every single-pass dispatch rule.
+    """
+    rng = random.Random(seed)
+    orders = []
+    for i in range(28):
+        p = rng.randint(3, 11)
+        d = rng.randint(15, 55)
+        w = rng.choices([1, 2, 3, 4, 5], weights=[3, 3, 3, 2, 1])[0]
+        orders.append(Order(id=i, proc_time=p, due_date=d, weight=w))
+    return Instance(orders=tuple(orders), num_machines=3)
 
-def run_stage(topic: str, stage_idx: int, prev_results: Optional[list] = None) -> dict:
-    """Run a single research stage and return a structured result."""
-    if stage_idx < 0 or stage_idx >= NUM_STAGES:
-        raise IndexError(f"stage_idx {stage_idx} out of range [0,{NUM_STAGES - 1}]")
 
-    stage = STAGES[stage_idx]
-    t0 = time.time()
-    log: list[str] = [f"[stage {stage_idx+1}/{NUM_STAGES}] {stage['name']}"]
-    search_results: list[dict] = []
+def _assemble_schedule(inst: Instance, order_sequence: list[Order]) -> list[dict]:
+    """List-schedule: each order goes to the earliest-available machine."""
+    avail = [0] * inst.num_machines
+    sched: list[dict] = []
+    for o in order_sequence:
+        m = min(range(inst.num_machines), key=lambda k: avail[k])
+        start = avail[m]
+        end = start + o.proc_time
+        avail[m] = end
+        sched.append({
+            "order_id": o.id, "machine": m,
+            "start": start, "end": end,
+            "weight": o.weight, "due_date": o.due_date, "proc_time": o.proc_time,
+            "tardy": max(0, end - o.due_date),
+        })
+    return sched
 
-    if stage["uses_search"]:
-        query = stage["search_query_template"].format(topic=topic)
-        log.append(f"search: {query}")
-        search_results = _search_duckduckgo(query, n=5)
-        log.append(f"← {len(search_results)} sources")
-    else:
-        # Simulated reasoning work — fixed short delay in core is fine for CLI
-        log.append("synthesizing…")
 
-    duration_ms = int((time.time() - t0) * 1000)
+def evaluate(inst: Instance, schedule: list[dict]) -> dict:
+    wt = sum(s["weight"] * s["tardy"] for s in schedule)
+    makespan = max(s["end"] for s in schedule) if schedule else 0
+    num_tardy = sum(1 for s in schedule if s["tardy"] > 0)
     return {
-        "stage_idx": stage_idx,
-        "name": stage["name"],
-        "name_zh": stage["name_zh"],
-        "uses_search": stage["uses_search"],
-        "status": "done",
-        "log": log,
-        "search_results": search_results,
-        "duration_ms": duration_ms,
+        "weighted_tardiness": wt,
+        "makespan": makespan,
+        "num_tardy": num_tardy,
+        "num_orders": len(schedule),
     }
 
 
 # ---------------------------------------------------------------------------
-# Report builder (Jinja2)
+# Solver variants  (the file "solver.py" — agent edits this across iterations)
 # ---------------------------------------------------------------------------
 
-_REPORT_TEMPLATE_EN = """# Research Report: {{ topic }}
-
-**Generated**: {{ date }}
-**Sources**: {{ sources|length }} unique sources
-**Pipeline**: AutoResearchClaw {{ num_stages }}-stage autonomous
-
----
-
-## Executive Summary
-
-This report provides a systematic analysis of "**{{ topic }}**" through literature search, key-claim extraction, counter-argument verification, and evidence triangulation. It synthesizes {{ sources|length }} independent sources to surface key trends and points of contention.
-
-## Key Findings
-
-{% for r in sources[:5] %}{{ loop.index }}. **{{ r.title }}** — {{ r.snippet }}
-
-{% endfor %}
-
-## Primary Evidence
-
-{% for r in sources[:8] %}- {{ r.snippet }}
-  *Source*: [{{ r.title }}]({{ r.url }})
-
-{% else %}- _(No search results — using built-in template)_
-{% endfor %}
-
-## Conclusions & Recommendations
-
-Based on the evidence gathered, the following conclusions are drawn about "{{ topic }}":
-
-1. **Mainstream view**: Based on synthesis of {{ sources|length }} sources, this field is undergoing rapid evolution.
-2. **Counter-perspective**: Watch for methodological limitations and representation biases in current discourse.
-3. **Next steps**: Recommend 1-2 specific sub-topics for deeper investigation to reach actionable conclusions.
-
-## References
-
-{% for r in sources %}{{ loop.index }}. [{{ r.title }}]({{ r.url }})
-{% else %}_(None)_
-{% endfor %}
-
----
-
-*Generated by AutoResearchClaw — {{ num_stages }}-stage pipeline, DuckDuckGo search-powered*
-"""
-
-_REPORT_TEMPLATE_ZH = """# 研究报告：{{ topic }}
-
-**生成日期**: {{ date }}
-**检索来源**: {{ sources|length }} 条独立来源
-**管线**: AutoResearchClaw {{ num_stages }} 阶段
-
----
-
-## 摘要
-
-本报告针对「**{{ topic }}**」展开系统性检索与综合分析，涵盖文献综述、关键论点抽取、反方观点校验、数据三角验证等阶段。共整合 {{ sources|length }} 条独立来源，识别出若干关键趋势与潜在争议点。
-
-## 关键发现
-
-{% for r in sources[:5] %}{{ loop.index }}. **{{ r.title }}** — {{ r.snippet }}
-
-{% endfor %}
-
-## 主要证据
-
-{% for r in sources[:8] %}- {{ r.snippet }}
-  *来源*: [{{ r.title }}]({{ r.url }})
-
-{% else %}- （无检索结果，使用内置模板）
-{% endfor %}
-
-## 结论与建议
-
-基于上述检索证据，对于「{{ topic }}」的关键判断如下：
-
-1. **主流观点**: 根据 {{ sources|length }} 条来源的综合分析，该领域正处于快速演化期。
-2. **反方视角**: 建议关注潜在的方法论局限与代表性偏差。
-3. **下一步**: 建议进一步深入 1-2 个具体子主题以获得可操作结论。
-
-## 引用来源
-
-{% for r in sources %}{{ loop.index }}. [{{ r.title }}]({{ r.url }})
-{% else %}_（无）_
-{% endfor %}
-
----
-
-*本报告由 AutoResearchClaw 自动生成 — {{ num_stages }} 阶段管线，DuckDuckGo 搜索驱动*
-"""
+def solver_random(inst: Instance) -> list[dict]:
+    """v0 — baseline: shuffle orders, list-schedule."""
+    rng = random.Random(0)
+    seq = list(inst.orders)
+    rng.shuffle(seq)
+    return _assemble_schedule(inst, seq)
 
 
-def _dedupe_sources(all_results: list[dict]) -> list[dict]:
-    seen: set[str] = set()
-    out: list[dict] = []
-    for stage_res in all_results:
-        for r in stage_res.get("search_results", []):
-            u = r.get("url")
-            if not u or u in seen:
-                continue
-            seen.add(u)
-            out.append(r)
+def solver_fifo(inst: Instance) -> list[dict]:
+    """v1 — order by order-id (arrival order)."""
+    return _assemble_schedule(inst, sorted(inst.orders, key=lambda o: o.id))
+
+
+def solver_lpt(inst: Instance) -> list[dict]:
+    """v2 — longest processing time first.
+    Hypothesis: do big jobs early so they don't block finishing.
+    (Usually worse for weighted tardiness — we expect to revert.)
+    """
+    return _assemble_schedule(inst, sorted(inst.orders, key=lambda o: -o.proc_time))
+
+
+def solver_edd(inst: Instance) -> list[dict]:
+    """v3 — earliest due date first."""
+    return _assemble_schedule(inst, sorted(inst.orders, key=lambda o: o.due_date))
+
+
+def solver_spt(inst: Instance) -> list[dict]:
+    """v4 — shortest processing time first.
+    Hypothesis: finish more jobs early, lower avg tardiness.
+    (Ignores due dates — usually worse than EDD.)
+    """
+    return _assemble_schedule(inst, sorted(inst.orders, key=lambda o: o.proc_time))
+
+
+def solver_wspt(inst: Instance) -> list[dict]:
+    """v5 — weighted shortest processing time: priority = proc_time / weight."""
+    return _assemble_schedule(inst, sorted(inst.orders, key=lambda o: o.proc_time / o.weight))
+
+
+def solver_atc(inst: Instance, K: float = 2.0) -> list[dict]:
+    """v6 — Apparent Tardiness Cost (Vepsalainen & Morton, 1987).
+    Dynamic priority that blends weight/proc_time with remaining slack.
+    """
+    pbar = sum(o.proc_time for o in inst.orders) / len(inst.orders)
+    remaining = list(inst.orders)
+    avail = [0] * inst.num_machines
+    sched: list[dict] = []
+    while remaining:
+        m = min(range(inst.num_machines), key=lambda k: avail[k])
+        t = avail[m]
+        def priority(o: Order) -> float:
+            slack = max(o.due_date - o.proc_time - t, 0)
+            return -(o.weight / o.proc_time) * math.exp(-slack / (K * pbar))
+        pick = min(remaining, key=priority)
+        start, end = t, t + pick.proc_time
+        avail[m] = end
+        sched.append({
+            "order_id": pick.id, "machine": m,
+            "start": start, "end": end,
+            "weight": pick.weight, "due_date": pick.due_date, "proc_time": pick.proc_time,
+            "tardy": max(0, end - pick.due_date),
+        })
+        remaining.remove(pick)
+    return sched
+
+
+def _reflow_machine(sched: list[dict], m: int, new_order: list[dict]) -> list[dict]:
+    """Rebuild schedule with `new_order` on machine m, other machines untouched."""
+    out = [s for s in sched if s["machine"] != m]
+    t = 0
+    for s in new_order:
+        ns = dict(s)
+        ns["start"] = t
+        ns["end"] = t + s["proc_time"]
+        ns["tardy"] = max(0, ns["end"] - s["due_date"])
+        t = ns["end"]
+        out.append(ns)
     return out
 
 
-def build_report(topic: str, all_results: list[dict], lang: str = "en") -> str:
-    """Render Markdown report from accumulated stage results."""
-    sources = _dedupe_sources(all_results)
-    template_str = _REPORT_TEMPLATE_ZH if lang == "zh" else _REPORT_TEMPLATE_EN
-    ctx = {
-        "topic": topic,
-        "date": datetime.now().strftime("%Y-%m-%d"),
-        "sources": sources,
-        "num_stages": NUM_STAGES,
+def solver_atc_swap(inst: Instance) -> list[dict]:
+    """v7 — ATC + adjacent-pair swap on each machine until no improvement."""
+    sched = solver_atc(inst)
+    best_wt = evaluate(inst, sched)["weighted_tardiness"]
+    improved = True
+    while improved:
+        improved = False
+        for m in range(inst.num_machines):
+            seq = sorted([s for s in sched if s["machine"] == m], key=lambda s: s["start"])
+            for i in range(len(seq) - 1):
+                trial = seq[:i] + [seq[i + 1], seq[i]] + seq[i + 2:]
+                new_sched = _reflow_machine(sched, m, trial)
+                new_wt = sum(s["weight"] * s["tardy"] for s in new_sched)
+                if new_wt < best_wt:
+                    sched = new_sched
+                    best_wt = new_wt
+                    improved = True
+                    break
+            if improved:
+                break
+    return sched
+
+
+def solver_atc_2opt(inst: Instance, trials: int = 120) -> list[dict]:
+    """v8 — ATC + random 2-opt: sample non-adjacent swaps on same machine."""
+    sched = solver_atc_swap(inst)
+    best_wt = evaluate(inst, sched)["weighted_tardiness"]
+    rng = random.Random(1)
+    for _ in range(trials):
+        m = rng.randrange(inst.num_machines)
+        seq = sorted([s for s in sched if s["machine"] == m], key=lambda s: s["start"])
+        if len(seq) < 3:
+            continue
+        i, j = sorted(rng.sample(range(len(seq)), 2))
+        trial = seq[:i] + seq[i:j + 1][::-1] + seq[j + 1:]
+        new_sched = _reflow_machine(sched, m, trial)
+        new_wt = sum(s["weight"] * s["tardy"] for s in new_sched)
+        if new_wt < best_wt:
+            sched, best_wt = new_sched, new_wt
+    return sched
+
+
+def solver_atc_sa(inst: Instance, iters: int = 400) -> list[dict]:
+    """v9 — ATC + simulated annealing: accept worse moves with prob exp(-ΔWT / T)."""
+    sched = solver_atc_2opt(inst)
+    best_wt = cur_wt = evaluate(inst, sched)["weighted_tardiness"]
+    best_sched = sched
+    rng = random.Random(2)
+    T0, Tmin = 8.0, 0.15
+    for k in range(iters):
+        T = T0 * (Tmin / T0) ** (k / max(1, iters - 1))
+        m = rng.randrange(inst.num_machines)
+        seq = sorted([s for s in sched if s["machine"] == m], key=lambda s: s["start"])
+        if len(seq) < 2:
+            continue
+        i = rng.randrange(len(seq) - 1)
+        trial = seq[:i] + [seq[i + 1], seq[i]] + seq[i + 2:]
+        new_sched = _reflow_machine(sched, m, trial)
+        new_wt = sum(s["weight"] * s["tardy"] for s in new_sched)
+        delta = new_wt - cur_wt
+        if delta < 0 or rng.random() < math.exp(-delta / max(T, 1e-6)):
+            sched, cur_wt = new_sched, new_wt
+            if new_wt < best_wt:
+                best_wt, best_sched = new_wt, new_sched
+    return best_sched
+
+
+# ---------------------------------------------------------------------------
+# Variant catalog  (the agent's research trajectory)
+# ---------------------------------------------------------------------------
+
+VARIANTS: list[dict] = [
+    {
+        "idx": 0, "name": "Random",
+        "name_zh": "随机基线",
+        "fn": solver_random,
+        "hypothesis": "Baseline — no ordering logic. Establishes a reference WT.",
+        "hypothesis_zh": "基线方案：无任何排序逻辑，只为建立参考值。",
+    },
+    {
+        "idx": 1, "name": "FIFO",
+        "name_zh": "FIFO 先进先出",
+        "fn": solver_fifo,
+        "hypothesis": "Order-id arrival sequence. Typical human/ERP default.",
+        "hypothesis_zh": "按订单ID先后顺序排程。是人工和普通ERP的默认做法。",
+    },
+    {
+        "idx": 2, "name": "LPT",
+        "name_zh": "LPT 最长优先",
+        "fn": solver_lpt,
+        "hypothesis": "Big jobs first so they don't block late in the horizon.",
+        "hypothesis_zh": "先做大订单，防止它们拖到后期变延误。",
+    },
+    {
+        "idx": 3, "name": "EDD",
+        "name_zh": "EDD 交期优先",
+        "fn": solver_edd,
+        "hypothesis": "Sort by due date — classic single-machine tardiness heuristic.",
+        "hypothesis_zh": "按交期排序——经典的单机延误启发式。",
+    },
+    {
+        "idx": 4, "name": "SPT",
+        "name_zh": "SPT 短单优先",
+        "fn": solver_spt,
+        "hypothesis": "Finish more jobs early to reduce average tardiness.",
+        "hypothesis_zh": "先做短单，让更多订单早完成以降低平均延误。",
+    },
+    {
+        "idx": 5, "name": "WSPT",
+        "name_zh": "WSPT 加权短单",
+        "fn": solver_wspt,
+        "hypothesis": "Weighted SPT: priority = proc_time / weight.",
+        "hypothesis_zh": "加权SPT：优先级 = 处理时长 / 权重。",
+    },
+    {
+        "idx": 6, "name": "ATC",
+        "name_zh": "ATC 动态紧迫度",
+        "fn": solver_atc,
+        "hypothesis": "Apparent Tardiness Cost — blends WSPT with remaining slack.",
+        "hypothesis_zh": "ATC动态规则：加权短单 × 剩余松弛度的指数衰减。",
+    },
+    {
+        "idx": 7, "name": "ATC + pair swap",
+        "name_zh": "ATC + 邻位交换",
+        "fn": solver_atc_swap,
+        "hypothesis": "Greedy 1-opt local search on top of ATC ordering.",
+        "hypothesis_zh": "在ATC之上贪心做相邻两单交换的1-opt局部搜索。",
+    },
+    {
+        "idx": 8, "name": "ATC + 2-opt",
+        "name_zh": "ATC + 2-opt",
+        "fn": solver_atc_2opt,
+        "hypothesis": "Random non-adjacent segment reversals, 120 trials.",
+        "hypothesis_zh": "在ATC基础上随机采样2-opt区段反转，120次试探。",
+    },
+    {
+        "idx": 9, "name": "ATC + SA",
+        "name_zh": "ATC + 模拟退火",
+        "fn": solver_atc_sa,
+        "hypothesis": "Simulated annealing — accept worse moves to escape local optima.",
+        "hypothesis_zh": "模拟退火：按温度概率接受变差的解，跳出局部最优。",
+    },
+]
+
+NUM_ITERATIONS = len(VARIANTS)
+
+
+# ---------------------------------------------------------------------------
+# Agent narration  (short "commit messages" per iteration, like results.tsv)
+# ---------------------------------------------------------------------------
+
+def _commentary(idx: int, metric: dict, prev_best: float | None, kept: bool, lang: str = "en") -> str:
+    v = VARIANTS[idx]
+    wt = metric["weighted_tardiness"]
+    if lang == "zh":
+        if idx == 0:
+            return f"基线WT={wt:.0f}，作为后续对比参照。"
+        delta = wt - prev_best if prev_best is not None else 0
+        if kept:
+            return f"WT={wt:.0f}，相比已知最优 ↓{-delta:.0f}（{-delta / max(prev_best, 1):.0%}）— 保留为新基线。"
+        return f"WT={wt:.0f}，比已知最优差 ↑{delta:.0f}（{delta / max(prev_best, 1):.0%}）— 回滚。假设不成立。"
+    if idx == 0:
+        return f"Baseline WT={wt:.0f}. Everything later is measured against this."
+    delta = wt - prev_best if prev_best is not None else 0
+    if kept:
+        return f"WT={wt:.0f}, down {-delta:.0f} ({-delta / max(prev_best, 1):.0%}) vs best — kept."
+    return f"WT={wt:.0f}, up {delta:.0f} ({delta / max(prev_best, 1):.0%}) vs best — reverted. Hypothesis rejected."
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def get_instance_payload(seed: int = 77) -> dict:
+    inst = build_benchmark(seed)
+    return {
+        "num_machines": inst.num_machines,
+        "num_orders": len(inst.orders),
+        "orders": [
+            {"id": o.id, "proc_time": o.proc_time, "due_date": o.due_date, "weight": o.weight}
+            for o in inst.orders
+        ],
+        "total_work": sum(o.proc_time for o in inst.orders),
+        "mean_due": sum(o.due_date for o in inst.orders) / len(inst.orders),
     }
-    if Template is not None:
-        return Template(template_str).render(**ctx)
-    # Minimal fallback if jinja2 missing — just format header + sources
-    lines = [f"# Research Report: {topic}", "",
-             f"**Generated**: {ctx['date']}", f"**Sources**: {len(sources)}", ""]
-    for i, r in enumerate(sources, 1):
-        lines.append(f"{i}. [{r['title']}]({r['url']}) — {r['snippet']}")
-    return "\n".join(lines)
 
 
-def run_full(topic: str, lang: str = "en") -> dict:
-    """Run all 23 stages sequentially and return {'results': [...], 'report': str}."""
+def get_program_md(lang: str = "en") -> str:
+    inst = build_benchmark()
+    n_orders = len(inst.orders)
+    n_machines = inst.num_machines
+    total_work = sum(o.proc_time for o in inst.orders)
+    if lang == "zh":
+        return (
+            "# program.md\n\n"
+            f"**目标**: 在 {n_orders} 订单 × {n_machines} 机器的固定基准上，"
+            "最小化加权延误 WT = Σ wᵢ · max(0, Cᵢ - dᵢ)。\n\n"
+            f"**基准**: `build_benchmark(seed=77)` — 不可修改（总工时 {total_work}h，交期普遍偏紧）。\n\n"
+            "**评估器**: `evaluate(inst, schedule)` — 不可修改。\n\n"
+            "**可编辑文件**: `solver.py` — 任意重写 `solve(inst) -> schedule`。\n\n"
+            f"**预算**: 每次运行 < 50ms。保留则更新基线，变差则回滚。\n\n"
+            f"**停止条件**: WT 连续 3 轮无改善，或已达 {NUM_ITERATIONS} 轮上限。"
+        )
+    return (
+        "# program.md\n\n"
+        f"**Goal**: minimize weighted tardiness "
+        f"WT = Σ wᵢ · max(0, Cᵢ - dᵢ) on a fixed {n_orders}-order / {n_machines}-machine benchmark.\n\n"
+        f"**Benchmark**: `build_benchmark(seed=77)` — frozen "
+        f"(total work {total_work}h, due dates tight).\n\n"
+        "**Evaluator**: `evaluate(inst, schedule)` — frozen.\n\n"
+        "**Editable file**: `solver.py` — rewrite `solve(inst) -> schedule` freely.\n\n"
+        "**Budget**: < 50 ms per run. Keep if WT improves, else revert.\n\n"
+        f"**Stop**: WT flat for 3 iterations, or {NUM_ITERATIONS}-iteration cap reached."
+    )
+
+
+def run_iteration(iter_idx: int, seed: int = 77, lang: str = "en") -> dict:
+    if iter_idx < 0 or iter_idx >= NUM_ITERATIONS:
+        raise IndexError(f"iter_idx {iter_idx} out of range [0, {NUM_ITERATIONS - 1}]")
+    inst = build_benchmark(seed)
+    # Re-run prior variants to establish prev_best (cheap — <50ms each).
+    prev_best = None
+    kept_sequence: list[int] = []
+    for j in range(iter_idx):
+        wt_j = evaluate(inst, VARIANTS[j]["fn"](inst))["weighted_tardiness"]
+        if prev_best is None or wt_j < prev_best:
+            prev_best = wt_j
+            kept_sequence.append(j)
+    v = VARIANTS[iter_idx]
+    schedule = v["fn"](inst)
+    metric = evaluate(inst, schedule)
+    wt = metric["weighted_tardiness"]
+    kept = prev_best is None or wt < prev_best
+    best_so_far = wt if kept else prev_best
+    source = inspect.getsource(v["fn"])
+    return {
+        "iter": iter_idx,
+        "name": v["name"],
+        "name_zh": v["name_zh"],
+        "hypothesis": v["hypothesis"],
+        "hypothesis_zh": v["hypothesis_zh"],
+        "code": source,
+        "metric": metric,
+        "schedule": schedule,
+        "kept": kept,
+        "prev_best": prev_best,
+        "best_so_far": best_so_far,
+        "commentary": _commentary(iter_idx, metric, prev_best, kept, lang),
+        "num_iterations": NUM_ITERATIONS,
+    }
+
+
+def run_full(seed: int = 77, lang: str = "en") -> dict:
+    inst = build_benchmark(seed)
     results = []
-    for i in range(NUM_STAGES):
-        results.append(run_stage(topic, i, results))
-    report = build_report(topic, results, lang=lang)
-    return {"topic": topic, "results": results, "report": report, "num_stages": NUM_STAGES}
+    prev_best = None
+    for i, v in enumerate(VARIANTS):
+        sched = v["fn"](inst)
+        metric = evaluate(inst, sched)
+        wt = metric["weighted_tardiness"]
+        kept = prev_best is None or wt < prev_best
+        results.append({
+            "iter": i, "name": v["name"], "name_zh": v["name_zh"],
+            "metric": metric, "kept": kept, "prev_best": prev_best,
+            "commentary": _commentary(i, metric, prev_best, kept, lang),
+        })
+        if kept:
+            prev_best = wt
+    return {
+        "num_iterations": NUM_ITERATIONS,
+        "results": results,
+        "best_wt": prev_best,
+        "instance": get_instance_payload(seed),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Back-compat shims (older callers imported run_stage / build_report / NUM_STAGES)
+# ---------------------------------------------------------------------------
+
+NUM_STAGES = NUM_ITERATIONS  # keep old name alive for anything still referencing it
+
+
+def run_stage(topic: str, stage_idx: int, prev_results=None) -> dict:
+    """Deprecated: maps to run_iteration. `topic` is ignored."""
+    res = run_iteration(stage_idx)
+    res["stage_idx"] = stage_idx
+    return res
+
+
+def build_report(topic: str, all_results: list[dict], lang: str = "en") -> str:
+    """Legacy report builder — renders trajectory summary as markdown."""
+    # Re-run full to get the authoritative trajectory, ignore `all_results`.
+    full = run_full(lang=lang)
+    lines_en = [
+        f"# AutoResearch trajectory — scheduling",
+        "",
+        f"**Instance**: 20 orders × 3 machines  ",
+        f"**Objective**: minimize Σ wᵢ · max(0, Cᵢ - dᵢ)  ",
+        f"**Iterations**: {full['num_iterations']}  ",
+        f"**Best WT**: **{full['best_wt']}**",
+        "",
+        "| iter | variant | WT | makespan | #tardy | kept |",
+        "|------|---------|----|---------:|-------:|:----:|",
+    ]
+    lines_zh = [
+        f"# AutoResearch 演进轨迹 — 排产",
+        "",
+        f"**基准**: 20 订单 × 3 机器  ",
+        f"**目标**: 最小化 Σ wᵢ · max(0, Cᵢ - dᵢ)  ",
+        f"**迭代数**: {full['num_iterations']}  ",
+        f"**最优 WT**: **{full['best_wt']}**",
+        "",
+        "| 轮次 | 方案 | WT | 总跨度 | 延误数 | 保留 |",
+        "|------|------|----|------:|-----:|:---:|",
+    ]
+    lines = lines_zh if lang == "zh" else lines_en
+    for r in full["results"]:
+        m = r["metric"]
+        name = r["name_zh"] if lang == "zh" else r["name"]
+        flag = "✓" if r["kept"] else "✗"
+        lines.append(f"| {r['iter']} | {name} | {m['weighted_tardiness']} | {m['makespan']} | {m['num_tardy']} | {flag} |")
+    return "\n".join(lines)

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoResearch Lab — Autonomous Algorithm Discovery</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+<style>
+  body { background: #0b1220; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', sans-serif; color: #e2e8f0; }
+  .card { background: rgba(20, 30, 50, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(100, 120, 180, 0.15); }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  pre[class*="language-"] { background: #0a0f1e !important; margin: 0; padding: 12px 14px; font-size: 11px; line-height: 1.55; max-height: 360px; overflow: auto; border-radius: 6px; }
+  code[class*="language-"] { font-family: 'JetBrains Mono','SF Mono','Monaco',monospace; }
+  .row-kept { background: rgba(16, 185, 129, 0.08); border-left: 2px solid #10b981; }
+  .row-revert { background: rgba(239, 68, 68, 0.08); border-left: 2px solid #ef4444; }
+  .row-active { background: rgba(59, 130, 246, 0.18); border-left: 2px solid #3b82f6; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.65; } }
+  .report h1, .report h2 { color: #fff; font-weight: bold; margin: 0.8em 0 0.4em; }
+  .report h1 { font-size: 1.5rem; }
+  .report h2 { font-size: 1.2rem; }
+  .report p, .report li { color: #94a3b8; }
+  .report table { border-collapse: collapse; width: 100%; font-size: 0.85em; margin: 1em 0; }
+  .report th, .report td { border: 1px solid #334155; padding: 4px 8px; }
+  .report th { background: #1e293b; }
+  .gantt-block { transition: all 0.3s ease; }
+  svg.map .route { stroke-linejoin: round; stroke-linecap: round; fill: none; transition: stroke-width 0.3s; }
+  svg.map .depot { fill: #fbbf24; stroke: #f59e0b; stroke-width: 2; }
+  svg.map .customer { fill: #64748b; stroke: #0b1220; stroke-width: 0.5; }
+  .exp-tab { transition: all 0.15s; }
+  .exp-tab.active { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: white; }
+  .exp-tab:not(.active):hover { background: rgba(100, 150, 255, 0.08); }
+  .exp-tab.disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span><span id="lang-label">EN</span>
+  </button>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+  <div class="mb-6">
+    <a href="/" class="text-blue-400 hover:text-blue-300 text-sm" data-en="&#8592; Back to home" data-zh="&#8592; 返回首页"></a>
+    <h1 class="text-3xl font-bold text-white mt-2">
+      <span data-en="AutoResearch Lab" data-zh="AutoResearch 实验台"></span>
+    </h1>
+    <p class="text-gray-400 mt-1 text-sm"
+       data-en="Autonomous algorithm-discovery loop on operations-research benchmarks. Inspired by karpathy/autoresearch — swap in a frozen harness, let the agent iterate."
+       data-zh="将 karpathy/autoresearch 的自主算法演进循环应用到运筹学问题。固定基准 × 真实 Python × 真实指标。"></p>
+  </div>
+
+  <!-- Experiment tabs -->
+  <div class="card rounded-xl p-2 mb-4 flex flex-wrap gap-2" id="exp-tabs"></div>
+
+  <!-- program.md + start button -->
+  <div class="card rounded-lg p-4 mb-4">
+    <div class="flex items-start justify-between gap-4 mb-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-mono bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded">program.md</span>
+        <span class="text-xs text-gray-500" data-en="— the agent's goal" data-zh="— Agent 的任务书"></span>
+        <span id="exp-subtitle" class="text-xs text-gray-400 ml-2"></span>
+      </div>
+      <button id="start-btn" class="flex-shrink-0 px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-bold hover:opacity-90 transition text-sm">
+        &#9658; <span data-en="Start autoresearch loop" data-zh="启动自动演进"></span>
+      </button>
+    </div>
+    <div id="program-md" class="text-xs text-gray-300 font-mono whitespace-pre-wrap leading-relaxed"></div>
+  </div>
+
+  <!-- Stats strip -->
+  <div id="stats-strip" class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4"></div>
+
+  <!-- Main split: solver code + results.tsv -->
+  <div class="grid md:grid-cols-2 gap-4 mb-4">
+    <div class="card rounded-lg">
+      <div class="px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded">solver.py</span>
+          <span id="solver-variant" class="text-sm text-white font-bold"><span data-en="(not started)" data-zh="（未开始）"></span></span>
+        </div>
+        <span id="solver-iter" class="text-xs text-gray-500">v—</span>
+      </div>
+      <pre class="!rounded-t-none !rounded-b-lg !m-0"><code id="solver-code" class="language-python"># Select an experiment and press ▶ Start.</code></pre>
+      <div id="solver-hyp" class="px-4 py-2 border-t border-gray-700 text-xs text-gray-400 italic"></div>
+    </div>
+
+    <div class="card rounded-lg">
+      <div class="px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+        <span class="text-xs font-mono bg-green-900/40 text-green-300 px-2 py-0.5 rounded">results.tsv</span>
+        <span id="progress-pct" class="text-xs text-gray-500 font-mono">0 / 10</span>
+      </div>
+      <div class="max-h-[360px] overflow-y-auto">
+        <table class="w-full text-xs font-mono">
+          <thead class="bg-gray-900/60 text-gray-400 text-[10px] uppercase tracking-wider sticky top-0">
+            <tr>
+              <th class="px-2 py-2 text-left">#</th>
+              <th class="px-2 py-2 text-left" data-en="variant" data-zh="变体"></th>
+              <th class="px-2 py-2 text-right" id="col-metric">—</th>
+              <th class="px-2 py-2 text-right" data-en="Δ" data-zh="Δ"></th>
+              <th class="px-2 py-2 text-right" id="col-aux">—</th>
+              <th class="px-2 py-2 text-center" data-en="kept" data-zh="保留"></th>
+            </tr>
+          </thead>
+          <tbody id="results-tbody">
+            <tr><td colspan="6" class="text-gray-600 text-center py-8 italic" data-en="(no runs yet)" data-zh="（尚无运行）"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="trajectory-msg" class="px-4 py-2 border-t border-gray-700 text-xs text-gray-400 italic min-h-[1.5em]"></div>
+    </div>
+  </div>
+
+  <!-- Solution visualization — renderer is experiment-specific -->
+  <div class="card rounded-lg p-4 mb-4">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-white font-bold text-sm" id="viz-title">—</h3>
+      <div id="viz-legend" class="flex flex-wrap items-center gap-3 text-[10px] text-gray-400"></div>
+    </div>
+    <div id="viz-body"></div>
+  </div>
+
+  <!-- Metric trajectory -->
+  <div class="card rounded-lg p-4 mb-4">
+    <h3 class="text-white font-bold text-sm mb-3" id="chart-title">—</h3>
+    <svg id="chart" viewBox="0 0 700 180" class="w-full" preserveAspectRatio="none"></svg>
+  </div>
+
+  <!-- Trajectory report -->
+  <div id="report-section" class="card rounded-lg p-5 hidden">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-white font-bold">&#128221; <span data-en="Trajectory report" data-zh="演进轨迹报告"></span></h3>
+      <button id="download-btn" class="px-3 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600">
+        &#11015; <span data-en="Download .md" data-zh="下载 .md"></span>
+      </button>
+    </div>
+    <div id="report-content" class="report"></div>
+  </div>
+
+  <footer class="mt-10 text-center text-xs text-gray-500 pb-6">
+    <span data-en="Inspired by karpathy/autoresearch · Real Python, real metrics, extensible to new experiments"
+          data-zh="灵感来自 karpathy/autoresearch · 真实 Python × 真实指标 × 可扩展到更多实验"></span>
+  </footer>
+</div>
+
+<script>
+(function() {
+  const K = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(K) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function apply(l) {
+    lang = l; localStorage.setItem(K, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const t = el.getAttribute(`data-${l}`);
+      if (t) el.textContent = t;
+    });
+    document.getElementById('lang-label').textContent = l === 'en' ? '中文' : 'EN';
+    // Re-render experiment-specific labels if an experiment is loaded
+    if (window._onLangChange) window._onLangChange();
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
+  apply(lang);
+})();
+function getLang() { return localStorage.getItem('sa-toolkit-lang') || 'en'; }
+const tMap = (en, zh) => getLang() === 'zh' ? zh : en;
+
+
+// ---------------------------------------------------------------------------
+// Experiment registry — add a new one by declaring its shape here.
+// ---------------------------------------------------------------------------
+
+const VEHICLE_COLORS = ['#60a5fa', '#34d399', '#f472b6', '#fb923c', '#a78bfa'];
+
+const EXPERIMENTS = {
+  scheduling: {
+    slug: 'scheduling',
+    label_en: 'Scheduling',
+    label_zh: '排产演进',
+    icon: '🏭',
+    subtitle_en: 'Minimize weighted tardiness on 28 orders × 3 machines',
+    subtitle_zh: '28 订单 × 3 机器，最小化加权延误',
+    api: '/api/research',
+    // How to pull the headline metric + auxiliary column from an iteration result
+    metric: {
+      value: (r) => r.metric.weighted_tardiness,
+      format: (v) => typeof v === 'number' ? v.toFixed(0) : v,
+      label_en: 'WT',
+      label_zh: 'WT',
+      aux: (r) => r.metric.num_tardy,
+      aux_label_en: 'late',
+      aux_label_zh: '延误',
+      chart_title_en: 'Weighted tardiness over iterations',
+      chart_title_zh: '加权延误随迭代变化',
+    },
+    // Stat strip cards drawn from instance payload
+    stats: (inst) => [
+      { label_en: 'Orders', label_zh: '订单数', value: inst.num_orders },
+      { label_en: 'Machines', label_zh: '机器数', value: inst.num_machines },
+      { label_en: 'Total work (h)', label_zh: '总工时(h)', value: inst.total_work },
+    ],
+    viz_title_en: '📅 Best schedule — Gantt chart',
+    viz_title_zh: '📅 当前最优排程 — 甘特图',
+    viz_legend: () => ([
+      {swatch: 'bg-emerald-500', label_en: 'on time', label_zh: '按期'},
+      {swatch: 'bg-red-500', label_en: 'late', label_zh: '延误'},
+      {swatch: 'bg-amber-500 border border-red-500', label_en: 'critical (w=5)', label_zh: '关键(权重5)'},
+    ]),
+    render: renderGantt,
+    iterationSolution: (r) => r.schedule,
+  },
+
+  vrp: {
+    slug: 'vrp',
+    label_en: 'VRP Routing',
+    label_zh: '配送路径',
+    icon: '🚚',
+    subtitle_en: 'Minimize total travel distance on 25 customers × 4 vehicles',
+    subtitle_zh: '25 客户 × 4 车辆，最小化总行驶距离',
+    api: '/api/vrp',
+    metric: {
+      value: (r) => r.metric.total_distance,
+      format: (v) => typeof v === 'number' ? v.toFixed(1) : v,
+      label_en: 'Distance',
+      label_zh: '里程',
+      aux: (r) => r.metric.over_capacity,
+      aux_label_en: 'over-cap',
+      aux_label_zh: '超容',
+      chart_title_en: 'Total distance over iterations',
+      chart_title_zh: '总里程随迭代变化',
+    },
+    stats: (inst) => [
+      { label_en: 'Customers', label_zh: '客户数', value: inst.num_customers },
+      { label_en: 'Vehicles', label_zh: '车辆数', value: inst.num_vehicles },
+      { label_en: 'Capacity', label_zh: '单车容量', value: inst.capacity },
+    ],
+    viz_title_en: '📍 Best route map',
+    viz_title_zh: '📍 当前最优路径图',
+    viz_legend: () => [],  // legend is dynamic — built inside renderMap from routes
+    render: renderMap,
+    iterationSolution: (r) => r.routes,
+  },
+
+  // To add another experiment, declare it here and the tab strip will pick it up.
+  // coming_soon: { slug:'foo', label_en:'Foo', disabled:true, ... }
+};
+
+
+// ---------------------------------------------------------------------------
+// State + rendering
+// ---------------------------------------------------------------------------
+
+const state = {
+  expId: null,           // 'scheduling' | 'vrp'
+  exp: null,             // EXPERIMENTS[expId]
+  numIterations: 10,
+  instance: null,
+  results: [],
+  bestMetric: null,      // running best headline metric value
+  bestSolution: null,    // schedule / routes for best iteration
+  running: false,
+};
+
+function $(id) { return document.getElementById(id); }
+
+function renderExperimentTabs() {
+  const lang = getLang();
+  const html = Object.values(EXPERIMENTS).map(e => {
+    const label = e[`label_${lang}`];
+    const cls = `exp-tab flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-700 text-sm font-medium cursor-pointer ${e.disabled ? 'disabled' : ''} ${e.slug === state.expId ? 'active' : ''}`;
+    return `<button class="${cls}" data-slug="${e.slug}" ${e.disabled ? 'disabled' : ''}>
+      <span>${e.icon}</span>
+      <span>${label}</span>
+    </button>`;
+  }).join('');
+  $('exp-tabs').innerHTML = html;
+  $('exp-tabs').querySelectorAll('[data-slug]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const slug = btn.getAttribute('data-slug');
+      if (slug !== state.expId) selectExperiment(slug);
+    });
+  });
+}
+
+function renderStatsStrip(inst) {
+  const lang = getLang();
+  const cards = state.exp.stats(inst);
+  const metricLabel = state.exp.metric[`label_${lang}`];
+  cards.push({ label_en: 'Current ' + state.exp.metric.label_en, label_zh: '当前' + state.exp.metric.label_zh, value: '—', tone: 'text-blue-400', id: 'stat-current' });
+  cards.push({ label_en: 'Best ' + state.exp.metric.label_en, label_zh: '最优' + state.exp.metric.label_zh, value: '—', tone: 'text-green-400', id: 'stat-best' });
+  $('stats-strip').innerHTML = cards.map(c => `
+    <div class="card rounded p-3 text-center">
+      <div class="text-xs text-gray-500">${c[`label_${lang}`]}</div>
+      <div class="text-xl font-bold ${c.tone || 'text-white'}" ${c.id ? `id="${c.id}"` : ''}>${c.value}</div>
+    </div>
+  `).join('');
+}
+
+function renderVizLegend() {
+  const legend = state.exp.viz_legend();
+  if (!legend || !legend.length) { $('viz-legend').innerHTML = ''; return; }
+  const lang = getLang();
+  $('viz-legend').innerHTML = legend.map(l =>
+    `<span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm ${l.swatch}"></span>${l[`label_${lang}`]}</span>`
+  ).join('');
+}
+
+function updateLabels() {
+  const lang = getLang();
+  if (state.exp) {
+    $('exp-subtitle').textContent = state.exp[`subtitle_${lang}`];
+    $('viz-title').textContent = state.exp[`viz_title_${lang}`];
+    $('chart-title').innerHTML = '📈 ' + state.exp.metric[`chart_title_${lang}`];
+    $('col-metric').textContent = state.exp.metric[`label_${lang}`];
+    $('col-aux').textContent = state.exp.metric[`aux_label_${lang}`];
+  }
+  renderExperimentTabs();
+  if (state.instance) renderStatsStrip(state.instance);
+  renderVizLegend();
+}
+window._onLangChange = updateLabels;
+
+
+// ---------------------------------------------------------------------------
+// API
+// ---------------------------------------------------------------------------
+
+async function apiGet(action) {
+  const r = await fetch(`${state.exp.api}?action=${action}&lang=${getLang()}`);
+  if (!r.ok) throw new Error(`GET ${action}: ${r.status}`);
+  return r.json();
+}
+
+async function apiPost(action, body) {
+  const r = await fetch(`${state.exp.api}?action=${action}`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({...body, lang: getLang()}),
+  });
+  if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+  return r.json();
+}
+
+
+// ---------------------------------------------------------------------------
+// Shared rendering (solver panel, results table, chart)
+// ---------------------------------------------------------------------------
+
+function renderSolverCode(res) {
+  const lang = getLang();
+  $('solver-variant').textContent = res[`name_${lang}`] || res.name;
+  $('solver-iter').textContent = `v${res.iter}`;
+  const codeEl = $('solver-code');
+  codeEl.textContent = res.code;
+  if (window.Prism) Prism.highlightElement(codeEl);
+  $('solver-hyp').textContent = '💡 ' + (res[`hypothesis_${lang}`] || res.hypothesis || '');
+}
+
+function appendResultsRow(res, active = false) {
+  const lang = getLang();
+  const tbody = $('results-tbody');
+  if (tbody.children.length === 1 && tbody.children[0].children.length === 1) tbody.innerHTML = '';
+  tbody.querySelectorAll('.row-active').forEach(r => r.classList.remove('row-active'));
+  const existing = document.getElementById(`row-${res.iter}`);
+  if (existing) existing.remove();
+
+  const m = state.exp.metric;
+  const v = typeof res.metric === 'object' ? m.value(res) : res.metric;
+  const aux = m.aux(res);
+  const delta = res.prev_best == null ? null : (v - res.prev_best);
+  const deltaStr = delta == null ? '—' : (delta > 0 ? `+${m.format(delta)}` : delta < 0 ? m.format(delta) : '0');
+  const deltaCls = delta == null ? '' : (delta < 0 ? 'text-emerald-400' : delta > 0 ? 'text-red-400' : 'text-gray-500');
+  const rowCls = active ? 'row-active' : (res.kept ? 'row-kept' : 'row-revert');
+  const flag = res.kept ? '<span class="text-emerald-400">✓</span>' : '<span class="text-red-400">✗</span>';
+  const auxCls = (state.exp.slug === 'vrp' && aux > 0) ? 'text-red-400' : 'text-gray-400';
+
+  const tr = document.createElement('tr');
+  tr.id = `row-${res.iter}`;
+  tr.className = rowCls;
+  tr.innerHTML = `
+    <td class="px-2 py-1.5 text-gray-400">v${res.iter}</td>
+    <td class="px-2 py-1.5 text-white">${res[`name_${lang}`] || res.name}</td>
+    <td class="px-2 py-1.5 text-right text-blue-300 font-bold">${m.format(v)}</td>
+    <td class="px-2 py-1.5 text-right ${deltaCls}">${deltaStr}</td>
+    <td class="px-2 py-1.5 text-right ${auxCls}">${aux}</td>
+    <td class="px-2 py-1.5 text-center">${flag}</td>
+  `;
+  tbody.appendChild(tr);
+  tbody.parentElement.scrollTop = tbody.parentElement.scrollHeight;
+
+  $('trajectory-msg').textContent = res.commentary || '';
+  $('progress-pct').textContent = `${res.iter + 1} / ${state.numIterations}`;
+  $('stat-current').textContent = m.format(v);
+  $('stat-best').textContent = m.format(res.best_so_far);
+}
+
+function renderChart() {
+  const svg = $('chart');
+  const pad = {l: 45, r: 20, t: 14, b: 22};
+  const W = 700, H = 180;
+  const data = state.results;
+  if (!data.length) { svg.innerHTML = ''; return; }
+  const m = state.exp.metric;
+  const values = data.map(r => m.value(r));
+  const vMax = Math.max(...values) * 1.05;
+  const xStep = (W - pad.l - pad.r) / Math.max(1, state.numIterations - 1);
+  const y = v => pad.t + (H - pad.t - pad.b) * (1 - v / vMax);
+  const x = i => pad.l + i * xStep;
+  let runningBest = Infinity;
+  const bestTrace = data.map(r => {
+    if (r.kept) runningBest = Math.min(runningBest, m.value(r));
+    return isFinite(runningBest) ? runningBest : m.value(r);
+  });
+  let bestLine = '', curLine = '', dots = '';
+  data.forEach((r, i) => {
+    const vv = m.value(r);
+    curLine += (i === 0 ? 'M' : 'L') + `${x(i)},${y(vv)} `;
+    bestLine += (i === 0 ? 'M' : 'L') + `${x(i)},${y(bestTrace[i])} `;
+    const color = r.kept ? '#10b981' : '#ef4444';
+    dots += `<circle cx="${x(i)}" cy="${y(vv)}" r="4" fill="${color}" stroke="#0b1220" stroke-width="1.5"/>`;
+  });
+  const xTicks = [];
+  for (let i = 0; i < state.numIterations; i++) {
+    xTicks.push(`<text x="${x(i)}" y="${H - 6}" text-anchor="middle" font-size="9" fill="#64748b">v${i}</text>`);
+  }
+  const yTicks = [0, 0.5, 1].map(t => {
+    const v = vMax * t;
+    return `<text x="${pad.l - 6}" y="${y(v) + 3}" text-anchor="end" font-size="9" fill="#64748b">${m.format(v)}</text>
+            <line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="#1e293b" stroke-dasharray="2,3"/>`;
+  }).join('');
+  svg.innerHTML = `
+    ${yTicks}
+    <path d="${bestLine}" stroke="#3b82f6" stroke-width="2" fill="none" stroke-dasharray="4,4" opacity="0.6"/>
+    <path d="${curLine}" stroke="#94a3b8" stroke-width="1.5" fill="none" opacity="0.5"/>
+    ${dots}
+    ${xTicks.join('')}
+    <text x="${pad.l}" y="10" font-size="10" fill="#3b82f6">— best-so-far</text>
+    <text x="${pad.l + 110}" y="10" font-size="10" fill="#94a3b8">— per-iter</text>
+  `;
+}
+
+
+// ---------------------------------------------------------------------------
+// Experiment-specific visualization renderers
+// ---------------------------------------------------------------------------
+
+function renderGantt(solution /* schedule */, inst) {
+  if (!solution || !solution.length) { $('viz-body').innerHTML = ''; return; }
+  const numMachines = inst.num_machines;
+  const maxT = Math.max(...solution.map(s => s.end));
+  const byM = {};
+  for (let m = 0; m < numMachines; m++) byM[m] = [];
+  for (const s of solution) byM[s.machine].push(s);
+  for (const m of Object.keys(byM)) byM[m].sort((a, b) => a.start - b.start);
+
+  let html = '<div class="space-y-1.5">';
+  for (let m = 0; m < numMachines; m++) {
+    html += `<div class="flex items-center gap-2">
+      <div class="text-xs text-gray-400 w-14 flex-shrink-0">${tMap(`M${m + 1}`, `机${m + 1}`)}</div>
+      <div class="relative flex-1 h-8 bg-gray-900/60 rounded border border-gray-800">`;
+    for (const s of byM[m]) {
+      const left = (s.start / maxT) * 100;
+      const width = ((s.end - s.start) / maxT) * 100;
+      const isLate = s.tardy > 0;
+      const isCritical = s.weight >= 5;
+      const bg = isLate ? 'rgba(239,68,68,0.85)' : 'rgba(16,185,129,0.85)';
+      const border = isCritical ? '2px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)';
+      const lbl = width > 3 ? `<span class="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-white/90 pointer-events-none">#${s.order_id}</span>` : '';
+      html += `<div class="gantt-block absolute top-0 bottom-0 rounded" style="left:${left}%; width:${width}%; background:${bg}; border:${border}; min-width:2px;" title="Order #${s.order_id}  p=${s.proc_time}h  due=${s.due_date}h  w=${s.weight}  ${isLate ? 'late +' + s.tardy + 'h' : 'on time'}">${lbl}</div>`;
+    }
+    html += `</div></div>`;
+  }
+  html += `<div class="flex items-center gap-2 pt-1">
+    <div class="w-14 flex-shrink-0"></div>
+    <div class="flex-1 flex justify-between text-[10px] text-gray-500 font-mono">
+      <span>0h</span><span>${Math.round(maxT / 2)}h</span><span>${maxT}h</span>
+    </div>
+  </div></div>`;
+  $('viz-body').innerHTML = html;
+}
+
+function renderMap(solution /* routes */, inst) {
+  const pad = 20;
+  const W = 600, H = 420;
+  const sx = x => pad + (x / 100) * (W - 2 * pad);
+  const sy = y => H - pad - (y / 100) * (H - 2 * pad);
+
+  let svgBody = '';
+  if (solution && solution.length) {
+    solution.forEach((r, v) => {
+      if (!r.customers || !r.customers.length) return;
+      const color = VEHICLE_COLORS[v % VEHICLE_COLORS.length];
+      const pts = r.path.map(cid => {
+        if (cid === 0) return [sx(inst.depot.x), sy(inst.depot.y)];
+        const c = inst.customers.find(k => k.id === cid);
+        return [sx(c.x), sy(c.y)];
+      });
+      const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      svgBody += `<path class="route" d="${d}" stroke="${color}" stroke-width="2" opacity="0.85"/>`;
+    });
+  }
+  for (const c of inst.customers) {
+    const rad = 3 + Math.sqrt(c.demand) * 0.7;
+    svgBody += `<circle class="customer" cx="${sx(c.x)}" cy="${sy(c.y)}" r="${rad.toFixed(1)}"><title>Customer #${c.id}  demand=${c.demand}</title></circle>`;
+    svgBody += `<text x="${sx(c.x)}" y="${sy(c.y) - rad - 2}" text-anchor="middle" font-size="8" fill="#94a3b8">${c.id}</text>`;
+  }
+  svgBody += `<rect class="depot" x="${sx(inst.depot.x) - 7}" y="${sy(inst.depot.y) - 7}" width="14" height="14" rx="2"/>`;
+  svgBody += `<text x="${sx(inst.depot.x)}" y="${sy(inst.depot.y) + 3}" text-anchor="middle" font-size="9" font-weight="bold" fill="#0b1220">D</text>`;
+
+  $('viz-body').innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="w-full map bg-gray-900/40 rounded" preserveAspectRatio="xMidYMid meet">${svgBody}</svg>`;
+
+  // Dynamic legend for VRP
+  if (solution && solution.length) {
+    $('viz-legend').innerHTML = solution.map((r, i) => {
+      if (!r.customers || !r.customers.length) return '';
+      const color = VEHICLE_COLORS[i % VEHICLE_COLORS.length];
+      const warn = r.over_capacity > 0 ? ' ⚠' : '';
+      return `<span class="flex items-center gap-1">
+        <span class="inline-block w-3 h-2 rounded" style="background:${color}"></span>
+        <span>V${i + 1}: ${r.distance.toFixed(1)} / ${r.load}${warn}</span>
+      </span>`;
+    }).join('');
+  } else {
+    $('viz-legend').innerHTML = `<span>${tMap('depot + customers visible — press Start', '仓库+客户点已就位，点击启动')}</span>`;
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Trajectory report (shared, uses experiment metric labels)
+// ---------------------------------------------------------------------------
+
+function renderReport(trajectory) {
+  const lang = getLang();
+  const m = state.exp.metric;
+  const zh = lang === 'zh';
+  const first = m.value(trajectory[0]);
+  const bestV = state.bestMetric;
+  const drop = Math.round((1 - bestV / first) * 100);
+  const header = zh ? '# AutoResearch 演进报告' : '# AutoResearch trajectory';
+  const label = state.exp[`label_${lang}`];
+  let md = `${header} — ${label}\n\n`;
+  md += zh
+    ? `**最优 ${m.label_zh}**: **${m.format(bestV)}** （从 ${m.format(first)} 降至 ${m.format(bestV)}，约 ${drop}% 改善）\n\n| 轮次 | 方案 | ${m.label_zh} | ${m.aux_label_zh} | 保留 | Agent 备注 |\n|:---:|:---|--:|--:|:---:|:---|\n`
+    : `**Best ${m.label_en}**: **${m.format(bestV)}** (from ${m.format(first)} down to ${m.format(bestV)}, ~${drop}% improvement)\n\n| iter | variant | ${m.label_en} | ${m.aux_label_en} | kept | agent note |\n|:---:|:---|--:|--:|:---:|:---|\n`;
+  for (const r of trajectory) {
+    const flag = r.kept ? '✓' : '✗';
+    md += `| v${r.iter} | ${r[`name_${lang}`] || r.name} | ${m.format(m.value(r))} | ${m.aux(r)} | ${flag} | ${r.commentary} |\n`;
+  }
+  $('report-content').innerHTML = marked.parse(md);
+  $('report-section').classList.remove('hidden');
+  $('download-btn').onclick = () => {
+    const blob = new Blob([md], {type: 'text/markdown'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `autoresearch-${state.exp.slug}-${Date.now()}.md`;
+    a.click();
+  };
+}
+
+
+// ---------------------------------------------------------------------------
+// Experiment lifecycle
+// ---------------------------------------------------------------------------
+
+async function selectExperiment(slug) {
+  if (state.running) return;  // don't switch mid-run
+  state.expId = slug;
+  state.exp = EXPERIMENTS[slug];
+  state.results = []; state.bestMetric = null; state.bestSolution = null;
+  $('results-tbody').innerHTML = `<tr><td colspan="6" class="text-gray-600 text-center py-8 italic">${tMap('(no runs yet)', '（尚无运行）')}</td></tr>`;
+  $('report-section').classList.add('hidden');
+  $('solver-code').textContent = tMap('# Press ▶ Start autoresearch loop', '# 点击上方 ▶ 启动自动演进');
+  if (window.Prism) Prism.highlightElement($('solver-code'));
+  $('solver-variant').textContent = tMap('(not started)', '（未开始）');
+  $('solver-iter').textContent = 'v—';
+  $('solver-hyp').textContent = '';
+  $('trajectory-msg').textContent = '';
+  $('chart').innerHTML = '';
+  $('viz-body').innerHTML = '';
+  try {
+    const r = await apiGet('instance');
+    state.instance = r.instance;
+    state.numIterations = r.num_iterations;
+    $('program-md').textContent = r.program_md;
+    $('progress-pct').textContent = `0 / ${state.numIterations}`;
+    updateLabels();
+    // Draw initial (empty) visualization with instance overlays
+    state.exp.render(null, state.instance);
+  } catch (err) {
+    $('program-md').textContent = `Error loading experiment "${slug}": ${err.message}`;
+  }
+  // Persist selection so reload reopens the same tab
+  localStorage.setItem('autoresearch-lab-exp', slug);
+  history.replaceState(null, '', `?exp=${slug}`);
+}
+
+async function runLoop() {
+  if (state.running || !state.exp) return;
+  state.running = true;
+  state.results = []; state.bestMetric = null; state.bestSolution = null;
+  $('results-tbody').innerHTML = '';
+  $('report-section').classList.add('hidden');
+  $('start-btn').disabled = true;
+  $('start-btn').classList.add('opacity-50');
+  try {
+    for (let i = 0; i < state.numIterations; i++) {
+      $('solver-iter').textContent = `v${i}`;
+      $('solver-variant').textContent = tMap('running…', '运行中…');
+      const placeholder = {
+        iter: i, name: 'running…', name_zh: '运行中…',
+        metric: {weighted_tardiness: '…', total_distance: '…', num_tardy: '…', over_capacity: 0},
+        kept: false, prev_best: state.bestMetric, best_so_far: state.bestMetric,
+        commentary: tMap(`Evaluating variant v${i} against the frozen benchmark…`,
+                         `正在用固定基准评估第 v${i} 号变体…`),
+      };
+      appendResultsRow(placeholder, true);
+
+      const res = await apiPost('iterate', {iter_idx: i});
+      state.results.push(res);
+      const mv = state.exp.metric.value(res);
+      if (res.kept) {
+        state.bestMetric = res.best_so_far;
+        state.bestSolution = state.exp.iterationSolution(res);
+      }
+      renderSolverCode(res);
+      appendResultsRow(res, false);
+      state.exp.render(state.bestSolution || state.exp.iterationSolution(res), state.instance);
+      renderChart();
+      await new Promise(r => setTimeout(r, 350));
+    }
+    renderReport(state.results);
+  } catch (err) {
+    $('trajectory-msg').innerHTML = `<span class="text-red-400">✗ ${err.message}</span>`;
+  } finally {
+    state.running = false;
+    $('start-btn').disabled = false;
+    $('start-btn').classList.remove('opacity-50');
+  }
+}
+
+$('start-btn').addEventListener('click', runLoop);
+
+// Initial selection: URL ?exp=..., then localStorage, then first experiment.
+const urlExp = new URLSearchParams(location.search).get('exp');
+const storedExp = localStorage.getItem('autoresearch-lab-exp');
+const initialExp = (urlExp && EXPERIMENTS[urlExp]) ? urlExp
+                 : (storedExp && EXPERIMENTS[storedExp]) ? storedExp
+                 : Object.keys(EXPERIMENTS)[0];
+selectExperiment(initialExp);
+</script>
+</body>
+</html>

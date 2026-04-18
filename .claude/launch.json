@@ -12,6 +12,18 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8770", "--directory", "docs/industrial-ai"],
       "port": 8770
+    },
+    {
+      "name": "ceo-only",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "uvicorn", "server.ceo_only:app", "--host", "127.0.0.1", "--port", "8781"],
+      "port": 8781
+    },
+    {
+      "name": "autoresearch",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "uvicorn", "server.autoresearch_only:app", "--host", "127.0.0.1", "--port", "8790"],
+      "port": 8790
     }
   ]
 }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AutoResearch for Scheduling — Autonomous Algorithm Discovery</title>
+<title>AutoResearch for VRP — Autonomous Algorithm Discovery</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -14,20 +14,22 @@
   .card { background: rgba(20, 30, 50, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(100, 120, 180, 0.15); }
   #lang-toggle { cursor: pointer; transition: all 0.2s; }
   #lang-toggle:hover { background: rgba(100,150,255,0.2); }
-  pre[class*="language-"] { background: #0a0f1e !important; margin: 0; padding: 12px 14px; font-size: 11px; line-height: 1.55; max-height: 340px; overflow: auto; border-radius: 6px; }
+  pre[class*="language-"] { background: #0a0f1e !important; margin: 0; padding: 12px 14px; font-size: 11px; line-height: 1.55; max-height: 360px; overflow: auto; border-radius: 6px; }
   code[class*="language-"] { font-family: 'JetBrains Mono','SF Mono','Monaco',monospace; }
   .row-kept { background: rgba(16, 185, 129, 0.08); border-left: 2px solid #10b981; }
   .row-revert { background: rgba(239, 68, 68, 0.08); border-left: 2px solid #ef4444; }
   .row-active { background: rgba(59, 130, 246, 0.18); border-left: 2px solid #3b82f6; animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.65; } }
-  .gantt-block { transition: all 0.3s ease; }
-  .report h1 { color: #fff; font-size: 1.6rem; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
-  .report h2 { color: #e2e8f0; font-size: 1.25rem; font-weight: bold; margin-top: 1em; }
-  .report p { color: #94a3b8; margin: 0.5em 0; }
+  .report h1, .report h2 { color: #fff; font-weight: bold; margin: 0.8em 0 0.4em; }
+  .report h1 { font-size: 1.5rem; }
+  .report h2 { font-size: 1.2rem; }
+  .report p, .report li { color: #94a3b8; }
   .report table { border-collapse: collapse; width: 100%; font-size: 0.85em; margin: 1em 0; }
   .report th, .report td { border: 1px solid #334155; padding: 4px 8px; }
   .report th { background: #1e293b; }
-  .report code { background: #1e293b; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+  svg.map .route { stroke-linejoin: round; stroke-linecap: round; fill: none; transition: stroke-width 0.3s; }
+  svg.map .depot { fill: #fbbf24; stroke: #f59e0b; stroke-width: 2; }
+  svg.map .customer { fill: #64748b; stroke: #0b1220; stroke-width: 0.5; }
 </style>
 </head>
 <body>
@@ -43,14 +45,16 @@
   <div class="mb-6">
     <a href="/" class="text-blue-400 hover:text-blue-300 text-sm" data-en="&#8592; Back to home" data-zh="&#8592; 返回首页"></a>
     <h1 class="text-3xl font-bold text-white mt-2">
-      <span data-en="AutoResearch for Scheduling" data-zh="AutoResearch · 排产算法自动演进"></span>
+      <span data-en="AutoResearch for VRP" data-zh="AutoResearch · 配送路径自动演进"></span>
     </h1>
     <p class="text-gray-400 mt-1 text-sm"
-       data-en="Autonomous algorithm discovery loop applied to weighted tardiness minimization. Inspired by karpathy/autoresearch."
-       data-zh="把 karpathy/autoresearch 的自主算法发现循环应用到加权延误最小化。无需LLM训练，真实代码、真实评估。"></p>
+       data-en="Same loop as the scheduling demo, applied to last-mile delivery. 10 solver variants, real Python, real distance metric."
+       data-zh="和排产 demo 同一个循环，搬到末端配送。10 个真实 Python 求解器 × 真实总里程评估。"></p>
+    <p class="text-xs text-gray-500 mt-2">
+      <a href="/autoresearch/" class="text-blue-400 hover:underline" data-en="← Switch to scheduling demo" data-zh="← 切换到排产 demo"></a>
+    </p>
   </div>
 
-  <!-- program.md -->
   <div class="card rounded-lg p-4 mb-4">
     <div class="flex items-center justify-between mb-2">
       <div class="flex items-center gap-2">
@@ -64,31 +68,29 @@
     <div id="program-md" class="text-xs text-gray-300 font-mono whitespace-pre-wrap leading-relaxed"></div>
   </div>
 
-  <!-- Benchmark summary strip -->
   <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
     <div class="card rounded p-3 text-center">
-      <div class="text-xs text-gray-500" data-en="Orders" data-zh="订单数"></div>
-      <div id="stat-orders" class="text-xl text-white font-bold">—</div>
+      <div class="text-xs text-gray-500" data-en="Customers" data-zh="客户数"></div>
+      <div id="stat-custs" class="text-xl text-white font-bold">—</div>
     </div>
     <div class="card rounded p-3 text-center">
-      <div class="text-xs text-gray-500" data-en="Machines" data-zh="机器数"></div>
-      <div id="stat-machines" class="text-xl text-white font-bold">—</div>
+      <div class="text-xs text-gray-500" data-en="Vehicles" data-zh="车辆数"></div>
+      <div id="stat-vehicles" class="text-xl text-white font-bold">—</div>
     </div>
     <div class="card rounded p-3 text-center">
-      <div class="text-xs text-gray-500" data-en="Total work (h)" data-zh="总工时(h)"></div>
-      <div id="stat-work" class="text-xl text-white font-bold">—</div>
+      <div class="text-xs text-gray-500" data-en="Capacity" data-zh="单车容量"></div>
+      <div id="stat-cap" class="text-xl text-white font-bold">—</div>
     </div>
     <div class="card rounded p-3 text-center">
-      <div class="text-xs text-gray-500" data-en="Current WT" data-zh="当前 WT"></div>
-      <div id="stat-wt" class="text-xl text-blue-400 font-bold">—</div>
+      <div class="text-xs text-gray-500" data-en="Current dist" data-zh="当前里程"></div>
+      <div id="stat-dist" class="text-xl text-blue-400 font-bold">—</div>
     </div>
     <div class="card rounded p-3 text-center">
-      <div class="text-xs text-gray-500" data-en="Best WT" data-zh="最优 WT"></div>
+      <div class="text-xs text-gray-500" data-en="Best dist" data-zh="最优里程"></div>
       <div id="stat-best" class="text-xl text-green-400 font-bold">—</div>
     </div>
   </div>
 
-  <!-- Main split: solver code (left) + results.tsv (right) -->
   <div class="grid md:grid-cols-2 gap-4 mb-4">
     <div class="card rounded-lg">
       <div class="px-4 py-2 border-b border-gray-700 flex items-center justify-between">
@@ -99,7 +101,7 @@
         <span id="solver-iter" class="text-xs text-gray-500">v—</span>
       </div>
       <pre class="!rounded-t-none !rounded-b-lg !m-0"><code id="solver-code" class="language-python"># Press ▶ Start autoresearch loop
-# The agent will iterate 10 solver variants.</code></pre>
+# The agent will iterate 10 VRP solver variants.</code></pre>
       <div id="solver-hyp" class="px-4 py-2 border-t border-gray-700 text-xs text-gray-400 italic"></div>
     </div>
 
@@ -108,15 +110,15 @@
         <span class="text-xs font-mono bg-green-900/40 text-green-300 px-2 py-0.5 rounded">results.tsv</span>
         <span id="progress-pct" class="text-xs text-gray-500 font-mono">0 / 10</span>
       </div>
-      <div class="max-h-[340px] overflow-y-auto">
+      <div class="max-h-[360px] overflow-y-auto">
         <table class="w-full text-xs font-mono">
           <thead class="bg-gray-900/60 text-gray-400 text-[10px] uppercase tracking-wider sticky top-0">
             <tr>
               <th class="px-2 py-2 text-left">#</th>
               <th class="px-2 py-2 text-left" data-en="variant" data-zh="变体"></th>
-              <th class="px-2 py-2 text-right">WT</th>
+              <th class="px-2 py-2 text-right" data-en="dist" data-zh="里程"></th>
               <th class="px-2 py-2 text-right" data-en="Δ" data-zh="Δ"></th>
-              <th class="px-2 py-2 text-right" data-en="late" data-zh="延误"></th>
+              <th class="px-2 py-2 text-right" data-en="over-cap" data-zh="超容"></th>
               <th class="px-2 py-2 text-center" data-en="kept" data-zh="保留"></th>
             </tr>
           </thead>
@@ -129,30 +131,19 @@
     </div>
   </div>
 
-  <!-- Gantt chart of best schedule -->
   <div class="card rounded-lg p-4 mb-4">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-white font-bold text-sm">
-        &#128197; <span data-en="Best schedule — Gantt chart" data-zh="当前最优排程 — 甘特图"></span>
-      </h3>
-      <div class="flex items-center gap-3 text-[10px] text-gray-400">
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm bg-emerald-500"></span><span data-en="on time" data-zh="按期"></span></span>
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm bg-red-500"></span><span data-en="late" data-zh="延误"></span></span>
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm bg-amber-500 border border-red-500"></span><span data-en="critical (w=5)" data-zh="关键(权重5)"></span></span>
-      </div>
+      <h3 class="text-white font-bold text-sm">&#128205; <span data-en="Best route map" data-zh="当前最优路径图"></span></h3>
+      <div id="route-legend" class="flex flex-wrap items-center gap-3 text-[10px] text-gray-400"></div>
     </div>
-    <div id="gantt" class="space-y-1.5"></div>
+    <svg id="map" viewBox="0 0 600 420" class="w-full map bg-gray-900/40 rounded" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 
-  <!-- Trajectory chart -->
   <div class="card rounded-lg p-4 mb-4">
-    <h3 class="text-white font-bold text-sm mb-3">
-      &#128200; <span data-en="WT over iterations" data-zh="WT 随迭代变化"></span>
-    </h3>
+    <h3 class="text-white font-bold text-sm mb-3">&#128200; <span data-en="Distance over iterations" data-zh="总里程随迭代变化"></span></h3>
     <svg id="chart" viewBox="0 0 700 180" class="w-full" preserveAspectRatio="none"></svg>
   </div>
 
-  <!-- Final report -->
   <div id="report-section" class="card rounded-lg p-5 hidden">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-white font-bold">&#128221; <span data-en="Trajectory report" data-zh="演进轨迹报告"></span></h3>
@@ -164,67 +155,51 @@
   </div>
 
   <footer class="mt-10 text-center text-xs text-gray-500 pb-6">
-    <span data-en="Inspired by karpathy/autoresearch · Real Python, real metric, real search"
-          data-zh="灵感来自 karpathy/autoresearch · 真实 Python、真实指标、真实搜索"></span>
+    <span data-en="Inspired by karpathy/autoresearch · Real Python solvers on a CVRP benchmark"
+          data-zh="灵感来自 karpathy/autoresearch · 真实 Python 求解器跑 CVRP 基准"></span>
   </footer>
 </div>
 
 <script>
 (function() {
-  const STORAGE_KEY = 'sa-toolkit-lang';
-  let lang = localStorage.getItem(STORAGE_KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  const K = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(K) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
   function apply(l) {
-    lang = l; localStorage.setItem(STORAGE_KEY, l);
+    lang = l; localStorage.setItem(K, l);
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
     document.querySelectorAll('[data-en][data-zh]').forEach(el => {
       const t = el.getAttribute(`data-${l}`);
       if (t) el.textContent = t;
     });
-    const lab = document.getElementById('lang-label');
-    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
+    document.getElementById('lang-label').textContent = l === 'en' ? '中文' : 'EN';
   }
   document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
   apply(lang);
 })();
-
 function getLang() { return localStorage.getItem('sa-toolkit-lang') || 'en'; }
 const tMap = (en, zh) => getLang() === 'zh' ? zh : en;
 
-// ---------- State ----------
-const state = {
-  numIterations: 10,
-  instance: null,
-  results: [],           // array of iteration responses
-  bestWT: null,
-  bestSchedule: null,
-  running: false,
-};
+const state = { numIterations: 10, instance: null, results: [], bestDist: null, bestRoutes: null, running: false };
 
-// ---------- API ----------
-async function apiGet(action) {
-  const r = await fetch(`/api/research?action=${action}&lang=${getLang()}`);
-  if (!r.ok) throw new Error(`GET ${action}: ${r.status}`);
-  return r.json();
-}
-async function apiPost(action, body) {
-  const r = await fetch(`/api/research?action=${action}`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({...body, lang: getLang()}),
+const VEHICLE_COLORS = ['#60a5fa', '#34d399', '#f472b6', '#fb923c', '#a78bfa'];
+
+async function apiGet(a) { const r = await fetch(`/api/vrp?action=${a}&lang=${getLang()}`); if (!r.ok) throw new Error(r.status); return r.json(); }
+async function apiPost(a, b) {
+  const r = await fetch(`/api/vrp?action=${a}`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({...b, lang: getLang()}),
   });
-  if (!r.ok) throw new Error(`POST ${action}: ${r.status} ${await r.text()}`);
+  if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json();
-}
-
-// ---------- Rendering ----------
-function renderProgram(md) {
-  document.getElementById('program-md').textContent = md;
 }
 
 function renderInstanceStats(inst) {
-  document.getElementById('stat-orders').textContent = inst.num_orders;
-  document.getElementById('stat-machines').textContent = inst.num_machines;
-  document.getElementById('stat-work').textContent = inst.total_work;
+  state.instance = inst;
+  document.getElementById('stat-custs').textContent = inst.num_customers;
+  document.getElementById('stat-vehicles').textContent = inst.num_vehicles;
+  document.getElementById('stat-cap').textContent = inst.capacity;
+  // Draw empty map with depot + customers
+  renderMap(null);
 }
 
 function renderSolverCode(res) {
@@ -240,23 +215,19 @@ function renderSolverCode(res) {
 
 function appendResultsRow(res, active = false) {
   const tbody = document.getElementById('results-tbody');
-  if (tbody.children.length === 1 && tbody.children[0].children.length === 1) {
-    tbody.innerHTML = '';
-  }
-  // Remove any prior .row-active
+  if (tbody.children.length === 1 && tbody.children[0].children.length === 1) tbody.innerHTML = '';
   tbody.querySelectorAll('.row-active').forEach(r => r.classList.remove('row-active'));
-
   const existing = document.getElementById(`row-${res.iter}`);
   if (existing) existing.remove();
-
   const nameKey = getLang() === 'zh' ? 'name_zh' : 'name';
-  const wt = res.metric.weighted_tardiness;
-  const delta = res.prev_best == null ? 0 : wt - res.prev_best;
-  const deltaStr = res.prev_best == null ? '—' : (delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : '0');
-  const deltaCls = delta < 0 ? 'text-emerald-400' : delta > 0 ? 'text-red-400' : 'text-gray-500';
-
+  const d = res.metric.total_distance;
+  const delta = res.prev_best == null ? null : Math.round((d - res.prev_best) * 10) / 10;
+  const deltaStr = delta == null ? '—' : (delta > 0 ? `+${delta.toFixed(1)}` : delta < 0 ? delta.toFixed(1) : '0');
+  const deltaCls = delta == null ? '' : (delta < 0 ? 'text-emerald-400' : delta > 0 ? 'text-red-400' : 'text-gray-500');
   const rowCls = active ? 'row-active' : (res.kept ? 'row-kept' : 'row-revert');
   const flag = res.kept ? '<span class="text-emerald-400">✓</span>' : '<span class="text-red-400">✗</span>';
+  const overCap = res.metric.over_capacity;
+  const overStr = overCap > 0 ? `<span class="text-red-400">${overCap}</span>` : '<span class="text-gray-500">0</span>';
 
   const tr = document.createElement('tr');
   tr.id = `row-${res.iter}`;
@@ -264,9 +235,9 @@ function appendResultsRow(res, active = false) {
   tr.innerHTML = `
     <td class="px-2 py-1.5 text-gray-400">v${res.iter}</td>
     <td class="px-2 py-1.5 text-white">${res[nameKey]}</td>
-    <td class="px-2 py-1.5 text-right text-blue-300 font-bold">${wt}</td>
+    <td class="px-2 py-1.5 text-right text-blue-300 font-bold">${typeof d === 'number' ? d.toFixed(1) : d}</td>
     <td class="px-2 py-1.5 text-right ${deltaCls}">${deltaStr}</td>
-    <td class="px-2 py-1.5 text-right text-gray-400">${res.metric.num_tardy}</td>
+    <td class="px-2 py-1.5 text-right">${overStr}</td>
     <td class="px-2 py-1.5 text-center">${flag}</td>
   `;
   tbody.appendChild(tr);
@@ -274,99 +245,98 @@ function appendResultsRow(res, active = false) {
 
   document.getElementById('trajectory-msg').textContent = res.commentary;
   document.getElementById('progress-pct').textContent = `${res.iter + 1} / ${state.numIterations}`;
-  document.getElementById('stat-wt').textContent = wt;
-  document.getElementById('stat-best').textContent = res.best_so_far;
+  document.getElementById('stat-dist').textContent = typeof d === 'number' ? d.toFixed(1) : d;
+  document.getElementById('stat-best').textContent = typeof res.best_so_far === 'number' ? res.best_so_far.toFixed(1) : res.best_so_far;
 }
 
-function renderGantt(schedule, numMachines) {
-  if (!schedule || !schedule.length) return;
-  const maxT = Math.max(...schedule.map(s => s.end));
-  const byM = {};
-  for (let m = 0; m < numMachines; m++) byM[m] = [];
-  for (const s of schedule) byM[s.machine].push(s);
-  for (const m of Object.keys(byM)) byM[m].sort((a, b) => a.start - b.start);
+function renderMap(routes) {
+  const svg = document.getElementById('map');
+  const inst = state.instance;
+  if (!inst) return;
+  const pad = 20;
+  const W = 600, H = 420;
+  // Map 0..100 coordinate space into SVG
+  const sx = x => pad + (x / 100) * (W - 2 * pad);
+  const sy = y => H - pad - (y / 100) * (H - 2 * pad);
 
-  const gantt = document.getElementById('gantt');
-  gantt.innerHTML = '';
-  for (let m = 0; m < numMachines; m++) {
-    const row = document.createElement('div');
-    row.className = 'flex items-center gap-2';
-    const label = document.createElement('div');
-    label.className = 'text-xs text-gray-400 w-14 flex-shrink-0';
-    label.textContent = tMap(`M${m + 1}`, `机${m + 1}`);
-    row.appendChild(label);
-
-    const track = document.createElement('div');
-    track.className = 'relative flex-1 h-8 bg-gray-900/60 rounded border border-gray-800';
-    for (const s of byM[m]) {
-      const blk = document.createElement('div');
-      const left = (s.start / maxT) * 100;
-      const width = ((s.end - s.start) / maxT) * 100;
-      const isLate = s.tardy > 0;
-      const isCritical = s.weight >= 5;
-      const bg = isLate ? 'rgba(239,68,68,0.85)' : 'rgba(16,185,129,0.85)';
-      const border = isCritical ? '2px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)';
-      blk.className = 'gantt-block absolute top-0 bottom-0 rounded';
-      blk.style.cssText = `left:${left}%; width:${width}%; background:${bg}; border:${border}; min-width:2px;`;
-      blk.title = `Order #${s.order_id}  p=${s.proc_time}h  due=${s.due_date}h  w=${s.weight}  ${isLate ? 'late +' + s.tardy + 'h' : 'on time'}`;
-      if (width > 3) {
-        const lbl = document.createElement('span');
-        lbl.className = 'absolute inset-0 flex items-center justify-center text-[9px] font-mono text-white/90 pointer-events-none';
-        lbl.textContent = `#${s.order_id}`;
-        blk.appendChild(lbl);
-      }
-      track.appendChild(blk);
+  let body = '';
+  if (routes && routes.length) {
+    for (let v = 0; v < routes.length; v++) {
+      const r = routes[v];
+      if (!r.customers || !r.customers.length) continue;
+      const color = VEHICLE_COLORS[v % VEHICLE_COLORS.length];
+      const path = r.path;
+      const pts = path.map(cid => {
+        if (cid === 0) return [sx(inst.depot.x), sy(inst.depot.y)];
+        const c = inst.customers.find(k => k.id === cid);
+        return [sx(c.x), sy(c.y)];
+      });
+      const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      body += `<path class="route" d="${d}" stroke="${color}" stroke-width="2" opacity="0.85"/>`;
     }
-    row.appendChild(track);
-    gantt.appendChild(row);
   }
-  // Axis
-  const axis = document.createElement('div');
-  axis.className = 'flex items-center gap-2 pt-1';
-  axis.innerHTML = `<div class="w-14 flex-shrink-0"></div><div class="flex-1 flex justify-between text-[10px] text-gray-500 font-mono">
-    <span>0h</span><span>${Math.round(maxT / 2)}h</span><span>${maxT}h</span>
-  </div>`;
-  gantt.appendChild(axis);
+  // Customers
+  for (const c of inst.customers) {
+    const rad = 3 + Math.sqrt(c.demand) * 0.7;
+    body += `<circle class="customer" cx="${sx(c.x)}" cy="${sy(c.y)}" r="${rad.toFixed(1)}">
+      <title>Customer #${c.id}  demand=${c.demand}</title>
+    </circle>`;
+    body += `<text x="${sx(c.x)}" y="${sy(c.y) - rad - 2}" text-anchor="middle" font-size="8" fill="#94a3b8">${c.id}</text>`;
+  }
+  // Depot
+  body += `<rect class="depot" x="${sx(inst.depot.x) - 7}" y="${sy(inst.depot.y) - 7}" width="14" height="14" rx="2"/>`;
+  body += `<text x="${sx(inst.depot.x)}" y="${sy(inst.depot.y) + 3}" text-anchor="middle" font-size="9" font-weight="bold" fill="#0b1220">D</text>`;
+
+  svg.innerHTML = body;
+
+  // Legend
+  const legend = document.getElementById('route-legend');
+  if (routes && routes.length) {
+    legend.innerHTML = routes.map((r, i) => {
+      if (!r.customers || !r.customers.length) return '';
+      const color = VEHICLE_COLORS[i % VEHICLE_COLORS.length];
+      return `<span class="flex items-center gap-1">
+        <span class="inline-block w-3 h-2 rounded" style="background:${color}"></span>
+        <span>V${i + 1}: ${r.distance.toFixed(1)} / ${r.load}${r.over_capacity > 0 ? ' ⚠' : ''}</span>
+      </span>`;
+    }).join('');
+  } else {
+    legend.innerHTML = `<span data-en="depot + customers visible — press Start" data-zh="仓库+客户点已就位，点击启动">${tMap('depot + customers visible — press Start', '仓库+客户点已就位，点击启动')}</span>`;
+  }
 }
 
 function renderChart() {
   const svg = document.getElementById('chart');
-  const pad = {l: 40, r: 20, t: 12, b: 24};
+  const pad = {l: 45, r: 20, t: 14, b: 22};
   const W = 700, H = 180;
   const data = state.results;
   if (!data.length) { svg.innerHTML = ''; return; }
-
-  const wts = data.map(r => r.metric.weighted_tardiness);
-  const wtMax = Math.max(...wts) * 1.05;
-  const wtMin = 0;
+  const ds = data.map(r => r.metric.total_distance);
+  const dMax = Math.max(...ds) * 1.05;
   const xStep = (W - pad.l - pad.r) / Math.max(1, state.numIterations - 1);
-  const y = v => pad.t + (H - pad.t - pad.b) * (1 - (v - wtMin) / (wtMax - wtMin));
+  const y = v => pad.t + (H - pad.t - pad.b) * (1 - v / dMax);
   const x = i => pad.l + i * xStep;
 
-  let bestLine = '', curLine = '', dots = '', bestDots = '';
   let runningBest = Infinity;
-  const bestTrace = [];
-  data.forEach((r, i) => {
-    const wt = r.metric.weighted_tardiness;
-    if (r.kept) runningBest = Math.min(runningBest, wt);
-    bestTrace.push(isFinite(runningBest) ? runningBest : wt);
+  const bestTrace = data.map(r => {
+    if (r.kept) runningBest = Math.min(runningBest, r.metric.total_distance);
+    return isFinite(runningBest) ? runningBest : r.metric.total_distance;
   });
+  let bestLine = '', curLine = '', dots = '';
   data.forEach((r, i) => {
-    const wt = r.metric.weighted_tardiness;
-    curLine += (i === 0 ? 'M' : 'L') + `${x(i)},${y(wt)} `;
+    const d = r.metric.total_distance;
+    curLine += (i === 0 ? 'M' : 'L') + `${x(i)},${y(d)} `;
     bestLine += (i === 0 ? 'M' : 'L') + `${x(i)},${y(bestTrace[i])} `;
     const color = r.kept ? '#10b981' : '#ef4444';
-    dots += `<circle cx="${x(i)}" cy="${y(wt)}" r="4" fill="${color}" stroke="#0b1220" stroke-width="1.5"/>`;
+    dots += `<circle cx="${x(i)}" cy="${y(d)}" r="4" fill="${color}" stroke="#0b1220" stroke-width="1.5"/>`;
   });
-
-  // Axis labels
   const xTicks = [];
   for (let i = 0; i < state.numIterations; i++) {
     xTicks.push(`<text x="${x(i)}" y="${H - 6}" text-anchor="middle" font-size="9" fill="#64748b">v${i}</text>`);
   }
   const yTicks = [0, 0.5, 1].map(t => {
-    const v = wtMin + (wtMax - wtMin) * t;
-    return `<text x="${pad.l - 6}" y="${y(v) + 3}" text-anchor="end" font-size="9" fill="#64748b">${Math.round(v)}</text>
+    const v = dMax * t;
+    return `<text x="${pad.l - 6}" y="${y(v) + 3}" text-anchor="end" font-size="9" fill="#64748b">${v.toFixed(0)}</text>
             <line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="#1e293b" stroke-dasharray="2,3"/>`;
   }).join('');
 
@@ -377,41 +347,41 @@ function renderChart() {
     ${dots}
     ${xTicks.join('')}
     <text x="${pad.l}" y="10" font-size="10" fill="#3b82f6">— best-so-far</text>
-    <text x="${pad.l + 100}" y="10" font-size="10" fill="#94a3b8">— per-iter</text>
+    <text x="${pad.l + 110}" y="10" font-size="10" fill="#94a3b8">— per-iter</text>
   `;
 }
 
 function renderReport(trajectory) {
-  let md = (getLang() === 'zh'
-    ? '# AutoResearch 演进报告 — 排产\n\n'
-    : '# AutoResearch trajectory — scheduling\n\n');
-  md += (getLang() === 'zh'
-    ? `**基准**: ${state.instance.num_orders} 订单 × ${state.instance.num_machines} 机器 · 总工时 ${state.instance.total_work}h\n\n**最优 WT**: **${state.bestWT}**  （从 ${trajectory[0].metric.weighted_tardiness} 降至 ${state.bestWT}，约 ${Math.round((1 - state.bestWT / trajectory[0].metric.weighted_tardiness) * 100)}% 改善）\n\n| 轮次 | 方案 | WT | 延误数 | 保留 | Agent 备注 |\n|:---:|:---|--:|--:|:---:|:---|\n`
-    : `**Benchmark**: ${state.instance.num_orders} orders × ${state.instance.num_machines} machines · total work ${state.instance.total_work}h\n\n**Best WT**: **${state.bestWT}**  (from ${trajectory[0].metric.weighted_tardiness} down to ${state.bestWT}, ~${Math.round((1 - state.bestWT / trajectory[0].metric.weighted_tardiness) * 100)}% improvement)\n\n| iter | variant | WT | late | kept | agent note |\n|:---:|:---|--:|--:|:---:|:---|\n`);
   const nameKey = getLang() === 'zh' ? 'name_zh' : 'name';
+  const zh = getLang() === 'zh';
+  const t0 = trajectory[0].metric.total_distance;
+  const drop = Math.round((1 - state.bestDist / t0) * 100);
+  let md = (zh ? '# AutoResearch 演进报告 — VRP 配送路径\n\n' : '# AutoResearch trajectory — VRP\n\n')
+    + (zh
+      ? `**基准**: ${state.instance.num_customers} 客户 × ${state.instance.num_vehicles} 车辆（容量 ${state.instance.capacity}）\n\n**最优总里程**: **${state.bestDist.toFixed(1)}**（从 ${t0.toFixed(1)} 降至 ${state.bestDist.toFixed(1)}，约 ${drop}% 改善）\n\n| 轮次 | 方案 | 总里程 | 超容 | 保留 | Agent 备注 |\n|:---:|:---|--:|--:|:---:|:---|\n`
+      : `**Benchmark**: ${state.instance.num_customers} customers × ${state.instance.num_vehicles} vehicles (capacity ${state.instance.capacity})\n\n**Best distance**: **${state.bestDist.toFixed(1)}** (from ${t0.toFixed(1)} down to ${state.bestDist.toFixed(1)}, ~${drop}% improvement)\n\n| iter | variant | distance | over-cap | kept | agent note |\n|:---:|:---|--:|--:|:---:|:---|\n`);
   for (const r of trajectory) {
     const flag = r.kept ? '✓' : '✗';
-    md += `| v${r.iter} | ${r[nameKey]} | ${r.metric.weighted_tardiness} | ${r.metric.num_tardy} | ${flag} | ${r.commentary} |\n`;
+    md += `| v${r.iter} | ${r[nameKey]} | ${r.metric.total_distance.toFixed(1)} | ${r.metric.over_capacity} | ${flag} | ${r.commentary} |\n`;
   }
-  md += (getLang() === 'zh'
-    ? '\n## 关键发现\n\n1. 单一调度规则（FIFO/LPT/SPT）无法应对加权延误目标。\n2. EDD 交期优先捕获主导信号，带来最大单步提升。\n3. ATC 动态规则叠加局部搜索与模拟退火，进一步榨取 ~22% 提升。\n4. 两轮假设被证伪（v2 LPT、v4 SPT）并被回滚——这正是自主演进的标志。\n'
-    : '\n## Key findings\n\n1. Single dispatch rules (FIFO/LPT/SPT) cannot chase weighted tardiness.\n2. EDD captures the dominant signal — the biggest single-step improvement.\n3. ATC plus local search plus SA squeezes out another ~22% on top.\n4. Two hypotheses rejected and reverted (v2 LPT, v4 SPT) — exactly how autonomous iteration is supposed to look.\n');
+  md += zh
+    ? '\n## 关键发现\n\n1. 随机分派里程远超贪心，证明geography-aware求解有价值。\n2. 单路径NN违反容量——容量感知的NN将里程砍掉~40%。\n3. Clarke-Wright 1964年的节约算法在本基准上一举锁定绝大部分收益。\n4. 2-opt / Or-opt / 跨路径迁移等局部搜索仅贡献亚百分比级微调。\n5. LNS（摧毁-重建）打破结构性局部最优，把最优推到 558。\n'
+    : '\n## Key findings\n\n1. Random dispatch loses badly to any geography-aware solver.\n2. Single-tour NN breaks capacity — capacity-aware NN cuts distance ~40%.\n3. Clarke-Wright (1964) captures nearly all the gain on this benchmark.\n4. Intra-route 2-opt / Or-opt / inter-route relocate give sub-percent polish.\n5. LNS (destroy + repair) breaks structural local optima — drops best to 558.\n';
   document.getElementById('report-content').innerHTML = marked.parse(md);
   document.getElementById('report-section').classList.remove('hidden');
   document.getElementById('download-btn').onclick = () => {
     const blob = new Blob([md], {type: 'text/markdown'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `autoresearch-scheduling-${Date.now()}.md`;
+    a.download = `autoresearch-vrp-${Date.now()}.md`;
     a.click();
   };
 }
 
 async function loadInstance() {
   const r = await apiGet('instance');
-  state.instance = r.instance;
   state.numIterations = r.num_iterations;
-  renderProgram(r.program_md);
+  document.getElementById('program-md').textContent = r.program_md;
   renderInstanceStats(r.instance);
   document.getElementById('progress-pct').textContent = `0 / ${state.numIterations}`;
 }
@@ -419,21 +389,18 @@ async function loadInstance() {
 async function runLoop() {
   if (state.running) return;
   state.running = true;
-  state.results = [];
-  state.bestWT = null;
-  state.bestSchedule = null;
+  state.results = []; state.bestDist = null; state.bestRoutes = null;
   document.getElementById('results-tbody').innerHTML = '';
   document.getElementById('report-section').classList.add('hidden');
   document.getElementById('start-btn').disabled = true;
   document.getElementById('start-btn').classList.add('opacity-50');
-
   try {
     for (let i = 0; i < state.numIterations; i++) {
-      // Insert placeholder "active" row
       document.getElementById('solver-iter').textContent = `v${i}`;
       document.getElementById('solver-variant').textContent = tMap('running…', '运行中…');
       const placeholder = {iter: i, name: 'running…', name_zh: '运行中…',
-        metric: {weighted_tardiness: '…', num_tardy: '…'}, kept: false, prev_best: state.bestWT,
+        metric: {total_distance: '…', over_capacity: 0}, kept: false, prev_best: state.bestDist,
+        best_so_far: state.bestDist,
         commentary: tMap(`Evaluating variant v${i} against the frozen benchmark…`,
                          `正在用固定基准评估第 v${i} 号变体…`)};
       appendResultsRow(placeholder, true);
@@ -441,12 +408,12 @@ async function runLoop() {
       const res = await apiPost('iterate', {iter_idx: i});
       state.results.push(res);
       if (res.kept) {
-        state.bestWT = res.best_so_far;
-        state.bestSchedule = res.schedule;
+        state.bestDist = res.best_so_far;
+        state.bestRoutes = res.routes;
       }
       renderSolverCode(res);
       appendResultsRow(res, false);
-      renderGantt(state.bestSchedule || res.schedule, state.instance.num_machines);
+      renderMap(state.bestRoutes || res.routes);
       renderChart();
       await new Promise(r => setTimeout(r, 350));
     }
@@ -461,12 +428,6 @@ async function runLoop() {
 }
 
 document.getElementById('start-btn').addEventListener('click', runLoop);
-
-// Re-render report on language change if trajectory exists
-window.addEventListener('storage', () => {
-  if (state.results.length === state.numIterations) renderReport(state.results);
-});
-
 loadInstance().catch(err => {
   document.getElementById('program-md').textContent = `Error loading benchmark: ${err.message}`;
 });

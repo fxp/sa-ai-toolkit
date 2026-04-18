@@ -24,9 +24,9 @@ def _load(demo: str):
     return mod
 
 cores = {name: _load(name) for name in [
-    "industrial-ai", "ceo-agent", "autoresearch", "enterprise-gen", "gstack",
-    "hypothesis", "karpathy-kb", "maestro", "org-uplift", "playwright",
-    "ppt-gen", "sa-toolkit",
+    "industrial-ai", "ceo-agent", "autoresearch", "autoresearch-vrp",
+    "enterprise-gen", "gstack", "hypothesis", "karpathy-kb", "maestro",
+    "org-uplift", "playwright", "ppt-gen", "sa-toolkit",
 ]}
 
 # ── App ──
@@ -77,38 +77,99 @@ async def ceo(action: str = "all", company: str = "NewCo Inc", lang: str = "en",
     if action == "mood": return agent.mood_heatmap(lang=lang)
     if action == "competitors": return {"feed": agent.competitor_feed(lang=lang)}
     if action == "actions": return {"actions": agent.action_queue(lang=lang)}
+    if action == "chips": return {"chips": cores["ceo-agent"].ask_chips(lang=lang)}
+    if action == "projects": return {"projects": agent.projects(lang=lang)}
     if action == "all": return agent.all(brief_idx=idx, lang=lang)
     raise HTTPException(400, f"unknown action {action}")
 
 
-# ==========================
-# 3. AutoResearch
-# ==========================
-@app.post("/api/research")
-async def research_post(action: str = "stage", body: dict = Body(default={})):
-    c = cores["autoresearch"]
-    if action == "stage":
-        topic = body.get("topic") or ""
-        stage_idx = int(body.get("stage_idx", 0))
-        prev = body.get("prev_results") or []
-        result = c.run_stage(topic, stage_idx, prev_results=prev)
-        try:
-            total = len(c.STAGES) if hasattr(c, "STAGES") else 23
-        except Exception:
-            total = 23
-        resp = {"stage": result, "num_stages": total}
-        if stage_idx == total - 1:
-            all_results = prev + [result]
-            resp["report"] = c.build_report(topic, all_results, lang=body.get("lang", "en"))
-        return resp
+@app.post("/api/ceo")
+async def ceo_post(action: str = "ask", body: dict = Body(default={})):
+    CEOAgent = cores["ceo-agent"].CEOAgent
+    agent = CEOAgent(company=body.get("company", "NewCo Inc"))
+    lang = body.get("lang", "en")
+    if action == "ask":
+        return agent.ask(query=body.get("query", ""), lang=lang)
+    if action == "project":
+        detail = agent.project_detail(project_id=body.get("id", ""), lang=lang)
+        if detail is None:
+            raise HTTPException(404, f"project not found: {body.get('id')}")
+        return detail
     raise HTTPException(400, f"unknown action {action}")
 
-@app.get("/api/research")
-async def research_get(action: str = "search", q: str = "", n: int = 5):
+
+# ==========================
+# 3. AutoResearch — autonomous algorithm-discovery loop on scheduling
+# ==========================
+@app.post("/api/research")
+async def research_post(action: str = "iterate", body: dict = Body(default={})):
+    """action=iterate — run one solver variant, return code + metric + schedule
+       action=full    — run all variants and return the full trajectory"""
     c = cores["autoresearch"]
-    if action == "search":
-        results = c._search_duckduckgo(q, n=n) if hasattr(c, "_search_duckduckgo") else []
-        return {"query": q, "results": results, "count": len(results)}
+    lang = body.get("lang", "en")
+    if action == "iterate":
+        iter_idx = int(body.get("iter_idx", 0))
+        return c.run_iteration(iter_idx, lang=lang)
+    if action == "full":
+        return c.run_full(lang=lang)
+    raise HTTPException(400, f"unknown action {action}")
+
+
+@app.get("/api/research")
+async def research_get(action: str = "instance", lang: str = "en"):
+    """action=instance — benchmark orders + program.md
+       action=meta     — variant catalog (name/hypothesis only, no code)"""
+    c = cores["autoresearch"]
+    if action == "instance":
+        return {
+            "instance": c.get_instance_payload(),
+            "program_md": c.get_program_md(lang=lang),
+            "num_iterations": c.NUM_ITERATIONS,
+        }
+    if action == "meta":
+        return {
+            "num_iterations": c.NUM_ITERATIONS,
+            "variants": [
+                {"idx": v["idx"], "name": v["name"], "name_zh": v["name_zh"],
+                 "hypothesis": v["hypothesis"], "hypothesis_zh": v["hypothesis_zh"]}
+                for v in c.VARIANTS
+            ],
+        }
+    raise HTTPException(400, f"unknown action {action}")
+
+
+# ==========================
+# 3b. AutoResearch-VRP — same pattern, applied to last-mile routing
+# ==========================
+@app.post("/api/vrp")
+async def vrp_post(action: str = "iterate", body: dict = Body(default={})):
+    c = cores["autoresearch-vrp"]
+    lang = body.get("lang", "en")
+    if action == "iterate":
+        return c.run_iteration(int(body.get("iter_idx", 0)), lang=lang)
+    if action == "full":
+        return c.run_full(lang=lang)
+    raise HTTPException(400, f"unknown action {action}")
+
+
+@app.get("/api/vrp")
+async def vrp_get(action: str = "instance", lang: str = "en"):
+    c = cores["autoresearch-vrp"]
+    if action == "instance":
+        return {
+            "instance": c.get_instance_payload(),
+            "program_md": c.get_program_md(lang=lang),
+            "num_iterations": c.NUM_ITERATIONS,
+        }
+    if action == "meta":
+        return {
+            "num_iterations": c.NUM_ITERATIONS,
+            "variants": [
+                {"idx": v["idx"], "name": v["name"], "name_zh": v["name_zh"],
+                 "hypothesis": v["hypothesis"], "hypothesis_zh": v["hypothesis_zh"]}
+                for v in c.VARIANTS
+            ],
+        }
     raise HTTPException(400, f"unknown action {action}")
 
 
