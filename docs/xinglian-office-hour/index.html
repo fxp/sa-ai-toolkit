@@ -131,12 +131,29 @@
 
   <!-- How to use -->
   <div class="card p-6 mt-8">
-    <h2 class="text-xl font-bold text-white mb-3" data-en="How to use in Claude Code" data-zh="在 Claude Code 里怎么用">在 Claude Code 里怎么用</h2>
+    <h2 class="text-xl font-bold text-white mb-3" data-en="How to install & use" data-zh="如何安装和使用">如何安装和使用</h2>
     <div class="bg-black/40 rounded-lg p-4 font-mono text-sm">
+      <div class="text-gray-500 mb-1" data-en="# 1. Download the skill file" data-zh="# 1. 下载 skill 文件"># 1. 下载 skill 文件</div>
+      <div class="text-green-400">$ <span class="text-gray-300">mkdir -p ~/.claude/skills/xinglian-office-hour</span></div>
+      <div class="text-green-400">$ <span class="text-gray-300">curl -o ~/.claude/skills/xinglian-office-hour/SKILL.md https://sa-ai-toolkit.vercel.app/xinglian-office-hour/skill/SKILL.md</span></div>
+      <div class="text-gray-500 mt-3 mb-1" data-en="# 2. Trigger in any Claude Code session" data-zh="# 2. 在任何 Claude Code 会话里触发"># 2. 在任何 Claude Code 会话里触发</div>
       <div class="text-green-400">$ <span class="text-gray-300">/xinglian-office-hour</span></div>
-      <div class="text-gray-500 mt-2" data-en="# Or just say 'help me review my AI startup idea' — the skill triggers automatically." data-zh="# 或者直接说「帮我看看这个 AI 创业想法」——skill 会自动触发。"># 或者直接说「帮我看看这个 AI 创业想法」——skill 会自动触发。</div>
+      <div class="text-gray-500 mt-2" data-en="# Or just say 'help me review my AI startup idea' — the skill auto-triggers." data-zh="# 或者直接说「帮我看看这个 AI 创业想法」——skill 会自动触发。"># 或者直接说「帮我看看这个 AI 创业想法」——skill 会自动触发。</div>
     </div>
-    <p class="text-gray-400 text-sm mt-3" data-en='The skill ships as a single SKILL.md file. Drop it in ~/.claude/skills/xinglian-office-hour/ and it works across every project.' data-zh="本 skill 就是一个 SKILL.md 文件。放到 ~/.claude/skills/xinglian-office-hour/ 就能在任何项目里用。">本 skill 就是一个 SKILL.md 文件。放到 <code class="text-orange-400">~/.claude/skills/xinglian-office-hour/</code> 就能在任何项目里用。</p>
+    <div class="mt-4 flex flex-wrap gap-2">
+      <a href="skill/SKILL.md" target="_blank" class="btn-sec text-sm inline-flex items-center gap-2">
+        <span>📄</span><span data-en="View SKILL.md" data-zh="查看 SKILL.md">查看 SKILL.md</span>
+      </a>
+      <a href="skill/DEMOS.md" target="_blank" class="btn-sec text-sm inline-flex items-center gap-2">
+        <span>🎯</span><span data-en="7 Demo Queries" data-zh="7 个 Demo Query">7 个 Demo Query</span>
+      </a>
+      <a href="skill/TRANSCRIPTS.md" target="_blank" class="btn-sec text-sm inline-flex items-center gap-2">
+        <span>💬</span><span data-en="Full transcripts" data-zh="完整对话脚本">完整对话脚本</span>
+      </a>
+      <a href="https://github.com/fxp/sa-ai-toolkit/tree/main/docs/xinglian-office-hour/skill" target="_blank" class="btn-sec text-sm inline-flex items-center gap-2">
+        <span>📦</span><span data-en="GitHub source" data-zh="GitHub 源码">GitHub 源码</span>
+      </a>
+    </div>
   </div>
 
   <!-- Sources -->
