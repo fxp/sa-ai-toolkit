@@ -10,3 +10,4 @@ node_modules/
 .claude/plans/
 /demos/demo1-paperclip/
 .vercel
+.claude/scheduled_tasks.lock
