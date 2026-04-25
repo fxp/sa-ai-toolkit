@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Persona Distill — Build a persona skill from public footprint</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  body { background: #0b1220; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', sans-serif; color: #e2e8f0; }
+  .card { background: rgba(20,30,50,0.7); backdrop-filter: blur(8px); border: 1px solid rgba(100,120,180,0.18); }
+  .card:hover { border-color: rgba(120,150,255,0.4); }
+  #lang-toggle { cursor: pointer; transition: all 0.2s; }
+  #lang-toggle:hover { background: rgba(100,150,255,0.2); }
+  .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 9999px; }
+  .tab-active { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
+  .tab-inactive { background: rgba(40,50,80,0.6); color: #94a3b8; }
+  pre { background: #07101e; border-radius: 6px; padding: 12px 14px; overflow: auto; font-family: 'JetBrains Mono','SF Mono',monospace; font-size: 11.5px; line-height: 1.55; max-height: 420px; }
+  .step-active { background: rgba(59,130,246,0.18); border-left: 2px solid #3b82f6; animation: pulse 1.2s ease-in-out infinite; }
+  .step-done { background: rgba(16,185,129,0.10); border-left: 2px solid #10b981; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.55} }
+  .source-row { transition: background .2s; }
+  .source-row:hover { background: rgba(100,150,255,0.05); }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: '\25B8'; display: inline-block; transition: transform .15s; margin-right: 6px; color: #60a5fa; }
+  details[open] > summary::before { transform: rotate(90deg); }
+  .render-md h1 { font-size: 1.5rem; font-weight: bold; color: #fff; margin-top: 1em; }
+  .render-md h2 { font-size: 1.2rem; font-weight: bold; color: #e2e8f0; margin-top: 1em; }
+  .render-md h3 { font-size: 1.05rem; font-weight: bold; color: #cbd5e1; margin-top: 0.8em; }
+  .render-md p { color: #94a3b8; margin: 0.5em 0; line-height: 1.65; }
+  .render-md ul, .render-md ol { color: #94a3b8; margin: 0.4em 0; padding-left: 1.4em; }
+  .render-md li { margin: 0.2em 0; }
+  .render-md code { background: #1e293b; padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
+  .render-md blockquote { border-left: 3px solid #3b82f6; padding-left: 0.8em; margin: 0.6em 0; color: #cbd5e1; font-style: italic; }
+  .render-md table { border-collapse: collapse; font-size: 0.85em; margin: 1em 0; width: 100%; }
+  .render-md th, .render-md td { border: 1px solid #334155; padding: 4px 8px; }
+  .render-md th { background: #1e293b; }
+  .render-md a { color: #60a5fa; }
+</style>
+</head>
+<body>
+
+<div class="fixed top-4 right-4 z-50">
+  <button id="lang-toggle" class="px-3 py-1.5 rounded-full bg-gray-800/80 backdrop-blur border border-gray-700 text-sm font-medium text-gray-300 flex items-center gap-2">
+    <span>&#127760;</span><span id="lang-label">EN</span>
+  </button>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 py-6">
+
+  <div class="mb-6">
+    <a href="https://sa-ai-toolkit.vercel.app/" class="text-blue-400 hover:text-blue-300 text-sm" data-en="&#8592; Back to home" data-zh="&#8592; 返回首页"></a>
+    <h1 class="text-3xl font-bold text-white mt-2"><span data-en="Persona Distill" data-zh="人格蒸馏 · Persona Distill"></span></h1>
+    <p class="text-gray-400 mt-1 text-sm" data-en="Search a person's public footprint, distill into a Claude Code skill, download — or upload a skill to use." data-zh="搜索一个人的公开痕迹（新闻 / 论文 / 访谈 / 视频），蒸馏成一个 Claude Code Skill，可下载——也可以上传 Skill 来调用它生成内容。"></p>
+    <div class="text-xs text-gray-500 mt-2">
+      <span data-en="Format reference: " data-zh="格式参考：">Format reference: </span>
+      <a href="https://github.com/xixu-me/awesome-persona-distill-skills" target="_blank" class="text-blue-400 hover:underline">awesome-persona-distill-skills</a>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-2 mb-4">
+    <button id="tab-distill" class="tab-active px-4 py-2 rounded-lg text-sm font-bold transition">
+      &#129504; <span data-en="Distill" data-zh="蒸馏"></span>
+    </button>
+    <button id="tab-use" class="tab-inactive px-4 py-2 rounded-lg text-sm font-bold transition">
+      &#128640; <span data-en="Use a skill" data-zh="使用 Skill"></span>
+    </button>
+  </div>
+
+  <!-- ============== DISTILL TAB ============== -->
+  <section id="panel-distill">
+
+    <!-- Input form -->
+    <div class="card rounded-xl p-5 mb-4">
+      <div class="grid md:grid-cols-2 gap-3">
+        <label class="text-sm">
+          <div class="text-gray-300 mb-1" data-en="Company *" data-zh="公司 *"></div>
+          <input id="in-company" class="w-full bg-gray-900/80 border border-gray-700 focus:border-blue-500 rounded-lg px-3 py-2 outline-none text-white text-sm"
+            placeholder="OpenAI" />
+        </label>
+        <label class="text-sm">
+          <div class="text-gray-300 mb-1" data-en="Person (optional)" data-zh="人名（可选）"></div>
+          <input id="in-person" class="w-full bg-gray-900/80 border border-gray-700 focus:border-blue-500 rounded-lg px-3 py-2 outline-none text-white text-sm"
+            placeholder="Sam Altman" />
+        </label>
+      </div>
+      <div class="text-xs text-gray-500 mt-2" data-en="If person is empty, the company's collective voice is distilled." data-zh="不填人名时，蒸馏整个公司的集体语气与决策风格。"></div>
+      <div class="flex flex-wrap items-center gap-2 mt-4">
+        <button id="btn-distill" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:opacity-90">
+          &#9658; <span data-en="Search & distill" data-zh="搜索 + 蒸馏"></span>
+        </button>
+        <span class="text-xs text-gray-500" data-en="Try:" data-zh="试试："></span>
+        <button class="ex-btn text-xs px-3 py-1 bg-gray-800 rounded-full hover:bg-gray-700" data-c="Anthropic" data-p="Dario Amodei">Anthropic · Dario Amodei</button>
+        <button class="ex-btn text-xs px-3 py-1 bg-gray-800 rounded-full hover:bg-gray-700" data-c="NVIDIA" data-p="Jensen Huang">NVIDIA · Jensen Huang</button>
+        <button class="ex-btn text-xs px-3 py-1 bg-gray-800 rounded-full hover:bg-gray-700" data-c="Stanford" data-p="Andrej Karpathy">Stanford · Andrej Karpathy</button>
+        <button class="ex-btn text-xs px-3 py-1 bg-gray-800 rounded-full hover:bg-gray-700" data-c="MrBeast" data-p="">MrBeast (公司即角色)</button>
+      </div>
+    </div>
+
+    <!-- Pipeline progress -->
+    <div id="pipeline" class="card rounded-xl p-4 mb-4 hidden">
+      <h3 class="text-sm font-bold text-gray-300 mb-3">&#9881; <span data-en="Distillation pipeline" data-zh="蒸馏管线"></span></h3>
+      <div class="grid md:grid-cols-5 gap-2 text-xs">
+        <div id="step-1" class="p-2 border border-gray-700 rounded bg-gray-900/40"><span class="text-gray-400">1.</span> <span data-en="Search 6 facets" data-zh="6 个维度搜索"></span></div>
+        <div id="step-2" class="p-2 border border-gray-700 rounded bg-gray-900/40"><span class="text-gray-400">2.</span> <span data-en="Extract patterns" data-zh="提炼模式"></span></div>
+        <div id="step-3" class="p-2 border border-gray-700 rounded bg-gray-900/40"><span class="text-gray-400">3.</span> <span data-en="Render SKILL.md" data-zh="渲染 SKILL.md"></span></div>
+        <div id="step-4" class="p-2 border border-gray-700 rounded bg-gray-900/40"><span class="text-gray-400">4.</span> <span data-en="Build references" data-zh="构建引用清单"></span></div>
+        <div id="step-5" class="p-2 border border-gray-700 rounded bg-gray-900/40"><span class="text-gray-400">5.</span> <span data-en="Bundle .zip" data-zh="打包 .zip"></span></div>
+      </div>
+      <div id="status-msg" class="text-xs text-gray-400 mt-3 italic"></div>
+    </div>
+
+    <!-- Error banner -->
+    <div id="err" class="hidden card rounded-lg p-3 mb-4 border-red-700/60 bg-red-950/40 text-red-200 text-sm"></div>
+
+    <!-- Results -->
+    <div id="result" class="hidden">
+      <!-- Stats strip -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4" id="stats-strip"></div>
+
+      <!-- Sources + extracted patterns side by side -->
+      <div class="grid lg:grid-cols-2 gap-4 mb-4">
+        <div class="card rounded-xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-gray-300">&#128270; <span data-en="Sources by facet" data-zh="搜索来源（按维度）"></span></h3>
+            <span id="n-sources" class="tag bg-blue-900/50 text-blue-300">—</span>
+          </div>
+          <div id="sources-list" class="space-y-3 text-xs max-h-[420px] overflow-y-auto pr-1"></div>
+        </div>
+        <div class="card rounded-xl p-4">
+          <h3 class="text-sm font-bold text-gray-300 mb-3">&#129504; <span data-en="Extracted patterns" data-zh="提炼出的模式"></span></h3>
+          <div id="patterns-out" class="text-xs space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- SKILL.md preview -->
+      <div class="card rounded-xl p-5 mb-4">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h3 class="text-base font-bold text-white">&#128221; SKILL.md</h3>
+          <div class="flex flex-wrap gap-2">
+            <button id="toggle-render" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"><span data-en="Toggle rendered / raw" data-zh="渲染 / 原文"></span></button>
+            <button id="copy-skill" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs">&#128203; <span data-en="Copy" data-zh="复制"></span></button>
+            <button id="dl-md" class="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs font-bold">&#11015; SKILL.md</button>
+            <button id="dl-zip" class="px-3 py-1 bg-purple-700 hover:bg-purple-600 text-white rounded text-xs font-bold">&#128230; <span data-en=".skill bundle (.zip)" data-zh=".skill 包 (.zip)"></span></button>
+            <button id="use-this" class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-bold">&#10142; <span data-en="Try this skill" data-zh="试用此 Skill"></span></button>
+          </div>
+        </div>
+        <div id="skill-rendered" class="render-md prose-sm max-w-none"></div>
+        <pre id="skill-raw" class="hidden"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== USE TAB ============== -->
+  <section id="panel-use" class="hidden">
+    <div class="card rounded-xl p-5 mb-4">
+      <h3 class="text-sm font-bold text-gray-300 mb-3">&#128193; <span data-en="Step 1 — Load a SKILL.md" data-zh="第一步 — 载入 SKILL.md"></span></h3>
+      <div class="grid md:grid-cols-2 gap-3 mb-3">
+        <label class="block">
+          <div class="text-xs text-gray-400 mb-1" data-en="Upload a file" data-zh="上传文件"></div>
+          <input id="file-input" type="file" accept=".md,.txt"
+            class="w-full text-xs text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-blue-700 file:text-white file:cursor-pointer file:text-xs hover:file:bg-blue-600" />
+        </label>
+        <label class="block">
+          <div class="text-xs text-gray-400 mb-1" data-en="Or paste content" data-zh="或粘贴内容"></div>
+          <textarea id="skill-input" rows="3" class="w-full bg-gray-900/80 border border-gray-700 focus:border-blue-500 rounded-lg p-2 text-xs text-white outline-none font-mono" placeholder="---&#10;name: ...&#10;description: ...&#10;---"></textarea>
+        </label>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="parse-btn" class="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-xs font-bold">&#128218; <span data-en="Parse skill" data-zh="解析 Skill"></span></button>
+        <button id="paste-distilled" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs"><span data-en="Use last distilled" data-zh="使用刚才蒸馏的"></span></button>
+        <span id="parse-msg" class="text-xs text-gray-500"></span>
+      </div>
+
+      <div id="parsed-summary" class="mt-3 hidden text-xs space-y-1"></div>
+    </div>
+
+    <div class="card rounded-xl p-5 mb-4">
+      <h3 class="text-sm font-bold text-gray-300 mb-3">&#9889; <span data-en="Step 2 — Generate" data-zh="第二步 — 生成"></span></h3>
+      <div class="grid md:grid-cols-3 gap-3">
+        <label class="block md:col-span-2">
+          <div class="text-xs text-gray-400 mb-1" data-en="Your input / question / draft" data-zh="你的输入 / 问题 / 草稿"></div>
+          <textarea id="user-input" rows="3" class="w-full bg-gray-900/80 border border-gray-700 focus:border-blue-500 rounded-lg p-2 text-sm text-white outline-none" placeholder="e.g. Should I build my Series A around an LLM moat?"></textarea>
+        </label>
+        <label class="block">
+          <div class="text-xs text-gray-400 mb-1" data-en="Mode" data-zh="模式"></div>
+          <select id="gen-mode" class="w-full bg-gray-900/80 border border-gray-700 rounded-lg p-2 text-sm text-white outline-none">
+            <option value="advise">advise — give advice</option>
+            <option value="rewrite">rewrite — rewrite my draft</option>
+            <option value="critique">critique — find weaknesses</option>
+          </select>
+        </label>
+      </div>
+      <button id="gen-btn" class="mt-3 px-5 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-40" disabled>
+        &#127919; <span data-en="Generate response in persona's voice" data-zh="以人格的口吻生成"></span>
+      </button>
+    </div>
+
+    <div id="gen-result" class="hidden card rounded-xl p-5 mb-4">
+      <h3 class="text-sm font-bold text-gray-300 mb-3">&#128172; <span data-en="Output" data-zh="输出"></span></h3>
+      <div id="gen-output" class="render-md text-sm"></div>
+      <details class="mt-3">
+        <summary class="text-xs text-blue-400">debug — applied frameworks / heuristics</summary>
+        <pre id="gen-debug"></pre>
+      </details>
+    </div>
+  </section>
+
+  <footer class="text-center text-xs text-gray-500 py-6 mt-6 border-t border-gray-800">
+    <span data-en="Search: DuckDuckGo · Distill: yake + Jinja2 · No API key required · Self-hosted on Fly.io" data-zh="搜索：DuckDuckGo · 蒸馏：yake + Jinja2 · 无需 API key · Fly.io 自托管"></span>
+  </footer>
+
+</div>
+
+<script>
+// ===== i18n =====
+(function() {
+  const KEY = 'sa-toolkit-lang';
+  let lang = localStorage.getItem(KEY) || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+  function apply(l) {
+    lang = l; localStorage.setItem(KEY, l);
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-en][data-zh]').forEach(el => {
+      const t = el.getAttribute(`data-${l}`); if (t) el.textContent = t;
+    });
+    const lab = document.getElementById('lang-label');
+    if (lab) lab.textContent = l === 'en' ? '中文' : 'EN';
+  }
+  document.getElementById('lang-toggle').addEventListener('click', () => apply(lang === 'en' ? 'zh' : 'en'));
+  apply(lang);
+})();
+
+// ===== Tabs =====
+const tabDistill = document.getElementById('tab-distill');
+const tabUse = document.getElementById('tab-use');
+const panelDistill = document.getElementById('panel-distill');
+const panelUse = document.getElementById('panel-use');
+function showTab(name) {
+  if (name === 'distill') {
+    tabDistill.className = 'tab-active px-4 py-2 rounded-lg text-sm font-bold transition';
+    tabUse.className = 'tab-inactive px-4 py-2 rounded-lg text-sm font-bold transition';
+    panelDistill.classList.remove('hidden'); panelUse.classList.add('hidden');
+  } else {
+    tabUse.className = 'tab-active px-4 py-2 rounded-lg text-sm font-bold transition';
+    tabDistill.className = 'tab-inactive px-4 py-2 rounded-lg text-sm font-bold transition';
+    panelUse.classList.remove('hidden'); panelDistill.classList.add('hidden');
+  }
+}
+tabDistill.addEventListener('click', () => showTab('distill'));
+tabUse.addEventListener('click', () => showTab('use'));
+
+// ===== Helpers =====
+const $ = s => document.querySelector(s);
+const errBox = $('#err');
+function showError(msg) { errBox.textContent = msg; errBox.classList.remove('hidden'); }
+function clearError() { errBox.classList.add('hidden'); }
+
+function setStep(idx, state) {
+  const el = document.getElementById('step-' + idx);
+  if (!el) return;
+  el.classList.remove('step-active', 'step-done');
+  if (state === 'active') el.classList.add('step-active');
+  if (state === 'done') el.classList.add('step-done');
+}
+
+let lastDistilled = null;
+
+// ===== Distill flow =====
+$('#btn-distill').addEventListener('click', async () => {
+  const company = $('#in-company').value.trim();
+  const person  = $('#in-person').value.trim();
+  if (!company && !person) { showError('Provide company or person'); return; }
+  clearError();
+  $('#pipeline').classList.remove('hidden');
+  $('#result').classList.add('hidden');
+  for (let i = 1; i <= 5; i++) setStep(i, 'reset');
+
+  setStep(1, 'active'); $('#status-msg').textContent = 'Searching DuckDuckGo across 6 facets…';
+  await new Promise(r => setTimeout(r, 250));
+  let resp;
+  try {
+    const r = await fetch('/api/persona?action=distill', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({company, person}),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    resp = await r.json();
+  } catch (e) {
+    showError('Distill failed: ' + e.message);
+    return;
+  }
+  setStep(1, 'done'); setStep(2, 'active'); $('#status-msg').textContent = 'Extracting keywords / quotes / decisions / frameworks…';
+  await new Promise(r => setTimeout(r, 200));
+  setStep(2, 'done'); setStep(3, 'active'); $('#status-msg').textContent = 'Rendering SKILL.md from Jinja2 template…';
+  await new Promise(r => setTimeout(r, 200));
+  setStep(3, 'done'); setStep(4, 'active'); $('#status-msg').textContent = 'Building references/sources.md…';
+  await new Promise(r => setTimeout(r, 200));
+  setStep(4, 'done'); setStep(5, 'active'); $('#status-msg').textContent = 'Ready. (Click .zip to bundle on demand.)';
+  await new Promise(r => setTimeout(r, 200));
+  setStep(5, 'done');
+  $('#status-msg').textContent = '';
+  renderResult(resp);
+});
+
+// example chips
+document.querySelectorAll('.ex-btn').forEach(b => b.addEventListener('click', () => {
+  $('#in-company').value = b.dataset.c || '';
+  $('#in-person').value  = b.dataset.p || '';
+}));
+
+function renderResult(resp) {
+  lastDistilled = resp;
+  const skill = resp.skill;
+  const pat = resp.patterns || {};
+  $('#result').classList.remove('hidden');
+
+  // stats
+  const m = skill.meta;
+  $('#stats-strip').innerHTML = `
+    ${statTile(m.n_sources, 'Sources', '来源')}
+    ${statTile(m.n_keywords, 'Keywords', '关键词')}
+    ${statTile(m.n_principles + m.n_frameworks, 'Frameworks+Principles', '框架+原则')}
+    ${statTile(m.n_decisions, 'Decisions', '决策')}
+    ${statTile(m.n_quotes, 'Quotes', '引言')}
+  `;
+  $('#n-sources').textContent = m.n_sources + ' results';
+
+  // sources
+  const sr = resp.search || {};
+  $('#sources-list').innerHTML = Object.entries(sr).map(([facet, items]) => `
+    <details ${items.length ? 'open' : ''}>
+      <summary class="text-gray-300"><span class="font-bold">${facet}</span> <span class="text-gray-500">(${items.length})</span></summary>
+      <div class="mt-1 space-y-1">
+        ${items.length ? items.map(it => `
+          <div class="source-row p-2 border-l-2 border-gray-700 ml-2">
+            <a href="${it.url}" target="_blank" class="text-blue-400 hover:underline font-medium">${escapeHtml(it.title || it.url)}</a>
+            <div class="text-gray-400 mt-0.5">${escapeHtml(it.snippet || '')}</div>
+          </div>`).join('') : '<div class="text-gray-600 text-[10px] ml-2">(no results)</div>'}
+      </div>
+    </details>
+  `).join('');
+
+  // patterns
+  $('#patterns-out').innerHTML = `
+    ${listBlock('Keywords', '关键词', pat.keywords || [], 'tag bg-blue-900/40 text-blue-300', true)}
+    ${listBlock('Quotes', '代表性引言', pat.quotes || [], 'block text-gray-300 italic', false, '“', '”')}
+    ${listBlock('Principles', '原则', pat.principles || [], 'block text-gray-300', false)}
+    ${listBlock('Decisions', '决策', pat.decisions || [], 'block text-gray-300', false)}
+    ${listBlock('Frameworks', '框架', pat.frameworks || [], 'block text-gray-300', false)}
+    ${listBlock('Metrics', '关键数字', pat.metrics || [], 'tag bg-orange-900/40 text-orange-300', true)}
+  `;
+
+  // skill.md preview
+  $('#skill-rendered').innerHTML = marked.parse(skill.skill_md);
+  $('#skill-raw').textContent = skill.skill_md;
+
+  // wire downloads
+  $('#dl-md').onclick = () => downloadBlob(skill.skill_md, `${skill.slug}.md`, 'text/markdown');
+  $('#dl-zip').onclick = async () => {
+    $('#dl-zip').disabled = true;
+    $('#dl-zip').textContent = '… building …';
+    try {
+      const r = await fetch('/api/persona/zip', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          company: m.company, person: m.person,
+          search_results: resp.search,
+        }),
+      });
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${skill.slug}.skill.zip`; a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('zip failed: ' + e.message);
+    } finally {
+      $('#dl-zip').disabled = false;
+      $('#dl-zip').innerHTML = '&#128230; .skill bundle (.zip)';
+    }
+  };
+  $('#copy-skill').onclick = () => navigator.clipboard.writeText(skill.skill_md).then(()=>flashOk('#copy-skill', '✓ copied'));
+  $('#use-this').onclick = () => {
+    showTab('use');
+    $('#skill-input').value = skill.skill_md;
+    document.getElementById('parse-btn').click();
+  };
+}
+
+function statTile(value, en, zh) {
+  return `<div class="card rounded p-3 text-center">
+    <div class="text-xs text-gray-500" data-en="${en}" data-zh="${zh}">${en}</div>
+    <div class="text-xl text-white font-bold">${value ?? 0}</div>
+  </div>`;
+}
+
+function listBlock(en, zh, items, cls, inline, pre='', post='') {
+  if (!items.length) return '';
+  const list = inline
+    ? items.map(x => `<span class="inline-block ${cls} mr-1 mb-1">${escapeHtml(x)}</span>`).join('')
+    : items.map(x => `<div class="${cls} pl-3 border-l border-gray-700">${escapeHtml(pre)}${escapeHtml(x)}${escapeHtml(post)}</div>`).join('');
+  return `<div>
+    <div class="text-[11px] text-gray-500 uppercase tracking-wider mb-1" data-en="${en}" data-zh="${zh}">${en}</div>
+    <div>${list}</div>
+  </div>`;
+}
+
+$('#toggle-render').addEventListener('click', () => {
+  const r = $('#skill-rendered'), p = $('#skill-raw');
+  if (p.classList.contains('hidden')) { p.classList.remove('hidden'); r.classList.add('hidden'); }
+  else                                 { p.classList.add('hidden');    r.classList.remove('hidden'); }
+});
+
+// ===== Use flow =====
+$('#file-input').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  const text = await f.text();
+  $('#skill-input').value = text;
+});
+$('#paste-distilled').addEventListener('click', () => {
+  if (!lastDistilled) { alert('Distill something first'); return; }
+  $('#skill-input').value = lastDistilled.skill.skill_md;
+});
+$('#parse-btn').addEventListener('click', async () => {
+  const md = $('#skill-input').value.trim();
+  if (!md) { $('#parse-msg').textContent = '(empty)'; return; }
+  try {
+    const r = await fetch('/api/persona?action=parse', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({skill_md: md}),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const p = await r.json();
+    $('#parsed-summary').classList.remove('hidden');
+    $('#parsed-summary').innerHTML = `
+      <div class="text-gray-300"><span class="text-gray-500">name:</span> <span class="text-white font-bold">${escapeHtml(p.name || '?')}</span></div>
+      <div class="text-gray-400 text-[11px]">${escapeHtml((p.description || '').slice(0, 200))}…</div>
+      <div class="text-gray-500 text-[11px]">sections: ${(p.sections || []).map(escapeHtml).join(', ')}</div>
+      <div class="text-gray-500 text-[11px]">frameworks=${p.frameworks.length}, heuristics=${p.heuristics.length}, principles=${p.principles.length}, quotes=${p.quotes.length}</div>
+    `;
+    $('#parse-msg').textContent = '✓ parsed';
+    $('#gen-btn').disabled = false;
+  } catch (e) {
+    $('#parse-msg').textContent = 'parse failed: ' + e.message;
+    $('#gen-btn').disabled = true;
+  }
+});
+
+$('#gen-btn').addEventListener('click', async () => {
+  const md = $('#skill-input').value.trim();
+  const input = $('#user-input').value.trim();
+  const mode = $('#gen-mode').value;
+  if (!md || !input) { alert('Need both skill + input'); return; }
+  $('#gen-btn').disabled = true;
+  $('#gen-btn').textContent = 'generating…';
+  try {
+    const r = await fetch('/api/persona?action=use', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({skill_md: md, input, mode}),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const result = await r.json();
+    $('#gen-result').classList.remove('hidden');
+    $('#gen-output').innerHTML = marked.parse(result.output);
+    $('#gen-debug').textContent = JSON.stringify({
+      persona: result.persona,
+      mode: result.mode,
+      applied_frameworks: result.applied_frameworks,
+      applied_heuristics: result.applied_heuristics,
+      applied_principles: result.applied_principles,
+      voice_quote: result.voice_quote,
+    }, null, 2);
+  } catch (e) {
+    alert('generate failed: ' + e.message);
+  } finally {
+    $('#gen-btn').disabled = false;
+    $('#gen-btn').innerHTML = '&#127919; <span data-en="Generate response in persona\\'s voice" data-zh="以人格的口吻生成"></span>';
+  }
+});
+
+// ===== Utilities =====
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function downloadBlob(text, name, mime) {
+  const blob = new Blob([text], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+function flashOk(sel, msg) {
+  const el = document.querySelector(sel);
+  const old = el.innerHTML; el.textContent = msg;
+  setTimeout(() => el.innerHTML = old, 1200);
+}
+</script>
+</body>
+</html>

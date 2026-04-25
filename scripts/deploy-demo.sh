@@ -7,8 +7,9 @@ cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
 DEMOS=(
-  industrial-ai ceo-agent autoresearch enterprise-gen gstack
+  industrial-ai ceo-agent autoresearch autoresearch-vrp enterprise-gen gstack
   hypothesis karpathy-kb maestro org-uplift playwright ppt-gen sa-toolkit
+  persona-distill
 )
 
 deploy_one() {

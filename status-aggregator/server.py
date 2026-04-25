@@ -55,6 +55,9 @@ DEMOS: list[dict[str, Any]] = [
     {"name": "sa-toolkit",     "url": "https://sa-sa-toolkit.fly.dev",
      "method": "POST", "path": "/api/sa_toolkit?action=gen",
      "json": {"company": "Tencent"}},
+    {"name": "persona-distill", "url": "https://sa-persona-distill.fly.dev",
+     "method": "POST", "path": "/api/persona?action=parse",
+     "json": {"skill_md": "---\nname: smoke\ndescription: smoke test\n---\n## Heuristics\n- be sharp\n"}},
 ]
 
 SLOW_MS = 2000      # slower than this → "slow"
