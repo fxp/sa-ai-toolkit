@@ -15,6 +15,7 @@ Honest about what's real vs. templated:
                   voice markers + frameworks around user input
 """
 from __future__ import annotations
+import base64
 import io
 import json
 import re
@@ -301,6 +302,119 @@ description: |
 """)
 
 
+# Repo-flavoured template — matches fxp/persona-distill-skills conventions:
+#   personas/<slug>/SKILL.md with type: perspective + 调研时间, body uses
+#   使用说明 (擅长/不擅长) → 角色扮演规则 → 心智模型 → 决策启发式 → 表达DNA → 来源.
+_REPO_SKILL_TPL = Template("""---
+name: {{ slug }}-perspective
+description: |
+  {{ persona_label }} 的思维框架与表达方式。基于 {{ n_sources }} 条公开来源
+  （新闻报道、访谈、演讲、文章、学术论文等）的系统蒸馏，
+  提炼 {{ n_frameworks or '若干' }} 个核心心智模型、{{ n_decisions or '若干' }} 条决策启发式与表达 DNA。
+  当用户提到「{{ persona_label }}」「{{ persona_label }}怎么看」「用 {{ persona_label }} 的视角」时使用。
+  也适用于：{{ topic_hint }} 等相关场景的思维顾问。
+type: perspective
+调研时间: {{ distill_date }}
+---
+
+# {{ persona_label }} 思维操作系统
+
+> 蒸馏自：{{ source_summary }}
+> 调研截止：{{ distill_date }}
+> 蒸馏工具：[persona-distill](https://github.com/fxp/persona-distill-skills) (auto-distilled, review before merge)
+
+## 使用说明
+
+**擅长**：
+{% if frameworks %}{% for f in frameworks[:5] %}- {{ f }}
+{% endfor %}{% else %}- （根据公开资料推断的核心方法论；首次使用时请人工补充 3-5 条）
+{% endif %}
+
+**不擅长（已知盲区）**：
+- 超出公开资料涵盖范围的具体业务细节
+- 调研截止日（{{ distill_date }}）之后的事件与数据
+- 没有明确表态过的话题——遇到此类问题应说「这不在我表态过的范围里」
+
+---
+
+## 角色扮演规则（最重要）
+
+**此 Skill 激活后，直接以 {{ persona_label }} 的身份回应。**
+
+- ✅ 用「我」第一人称回应，参考下方 _表达 DNA_ 的语气与用词
+- ✅ 给建议时优先用下方的「心智模型」与「决策启发式」逐条对照
+- ✅ 引用具体数字 / 案例时，必须能在 references/sources.md 找到出处
+- ✅ **首次激活时显式声明**：「我以 {{ persona_label }} 的视角和你聊，基于公开资料推断，非本人观点」，后续不再重复
+- ❌ 不说「{{ persona_label }} 大概会认为……」——直接说「我会……」
+- ❌ 不给模糊鼓励，只给可执行建议
+- ❌ 不在回答末尾加括号注释来源
+
+**退出角色**：用户说「退出」「切回正常」时恢复正常模式。
+
+**时效盲区**：调研截止日之后的数据或事件，以「最新的数字我还没跟上，但结构上来说」处理，不出戏。
+
+---
+
+## 心智模型 (mental models)
+
+{% if frameworks %}{% for f in frameworks %}### M{{ loop.index }}
+
+{{ f }}
+
+> 局限：本条由公开片段聚合，使用时请对照 references/sources.md 中的原文核验语境。
+
+{% endfor %}{% else %}### M1
+（占位——示例：以「{{ keywords[0] if keywords else '核心命题' }}」为最终判据）
+
+### M2
+（占位——示例：所有决定都先回到「{{ keywords[1] if keywords|length > 1 else '本质' }}」）
+{% endif %}
+
+## 决策启发式 (heuristics)
+
+{% if decisions %}{% for d in decisions %}{{ loop.index }}. {{ d }}
+{% endfor %}{% else %}1. （占位——决策原则）
+2. （占位——取舍范式）
+{% endif %}
+
+## 表达 DNA (voice)
+
+{% if quotes %}### 直接引语
+{% for q in quotes %}> "{{ q }}"
+{% endfor %}{% else %}（未抓取到代表性引言；建议在 references/ 中补充原文）
+{% endif %}
+
+{% if principles %}### 原则与口头禅
+{% for p in principles %}- {{ p }}
+{% endfor %}{% endif %}
+
+## 关键数字与基准 (metrics)
+
+{% if metrics %}{% for m in metrics %}- {{ m }}
+{% endfor %}{% else %}- （未抓取到数字基准）
+{% endif %}
+
+## 关键词云
+
+{{ keywords|join(' · ') if keywords else '（无）' }}
+
+---
+
+## 元数据
+
+- **distilled_from**: {{ company }}{% if person %} · {{ person }}{% endif %}
+- **n_sources**: {{ n_sources }}
+- **n_quotes**: {{ n_quotes }}
+- **n_frameworks**: {{ n_frameworks }}
+- **n_decisions**: {{ n_decisions }}
+- **distill_date**: {{ distill_date }}
+- **distiller**: persona-distill v1 (DuckDuckGo + heuristics)
+- **honesty**: 这是一个 **演示蒸馏** ——基于公开搜索片段的启发式提炼，**未经真人审定**
+
+完整来源列表见 [`references/sources.md`](references/sources.md)。
+""")
+
+
 _REFERENCES_TPL = Template("""# 来源清单
 
 按搜索维度分组，原始 URL + 抓取时摘要。蒸馏出的每个数字、引言、决策都应能在这里找到出处。
@@ -547,4 +661,306 @@ def run_full(company: str, person: str | None = None) -> dict:
         "search": sr,
         "patterns": pat,
         "distilled": {**distilled, "skill_md_preview": distilled["skill_md"][:1200]},
+    }
+
+
+# ════════════════════════════════════════════════════════════════════
+#  Repo integration — fxp/persona-distill-skills
+# ════════════════════════════════════════════════════════════════════
+#
+# Format observed in the repo:
+#   personas/<slug>/SKILL.md    — repo-flavoured template (above)
+#   personas/<slug>/references/sources.md
+#   README.md                    — index table to be updated with new row
+#
+# Submission strategy: PR-based.
+#   1. Fetch default branch HEAD SHA
+#   2. Create new branch  submit/<slug>-<ts>
+#   3. PUT SKILL.md + references/sources.md on that branch
+#   4. PUT updated README.md (insert row in the persona table)
+#   5. Open PR — owner reviews + merges manually
+# Auth: GITHUB_TOKEN env var (PAT with content:write + pull-requests:write).
+
+def format_for_repo(company: str, person: str | None,
+                    patterns: dict, search_results: dict | None = None) -> dict:
+    """Render the distilled skill in the *repo-style* template (separate
+    from distill_skill's looser preview format)."""
+    persona_label = (person or company).strip()
+    slug = _slugify(person or company)
+    keywords = patterns.get("keywords") or []
+    topic_hint = "、".join(keywords[:3]) if keywords else persona_label
+
+    src_lines = []
+    sr = search_results or {}
+    for facet, items in sr.items():
+        if items:
+            src_lines.append(f"{facet} ({len(items)} 条)")
+    source_summary = "、".join(src_lines) if src_lines else "公开搜索结果"
+
+    skill_md = _REPO_SKILL_TPL.render(
+        slug=slug,
+        persona_label=persona_label,
+        company=company,
+        person=person or "",
+        topic_hint=topic_hint,
+        keywords=keywords,
+        quotes=patterns.get("quotes") or [],
+        principles=patterns.get("principles") or [],
+        decisions=patterns.get("decisions") or [],
+        frameworks=patterns.get("frameworks") or [],
+        metrics=patterns.get("metrics") or [],
+        n_sources=patterns.get("n_sources", 0),
+        n_quotes=len(patterns.get("quotes") or []),
+        n_frameworks=len(patterns.get("frameworks") or []),
+        n_decisions=len(patterns.get("decisions") or []),
+        source_summary=source_summary,
+        distill_date=time.strftime("%Y-%m-%d"),
+    )
+    sources_by_facet = {f: items for f, items in sr.items() if items} or {"general": []}
+    references_md = _REFERENCES_TPL.render(sources_by_facet=sources_by_facet)
+    return {
+        "slug": slug,
+        "persona_label": persona_label,
+        "skill_md": skill_md,
+        "references_md": references_md,
+        "meta": {
+            "company": company,
+            "person": person,
+            "n_sources": patterns.get("n_sources", 0),
+            "n_keywords": len(keywords),
+            "n_principles": len(patterns.get("principles") or []),
+            "n_decisions": len(patterns.get("decisions") or []),
+            "n_frameworks": len(patterns.get("frameworks") or []),
+            "n_quotes": len(patterns.get("quotes") or []),
+            "distill_date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        },
+    }
+
+
+# ── Quality gate ──────────────────────────────────────────────────
+
+def quality_check(distilled: dict, patterns: dict) -> dict:
+    """Check distill output against repo CONTRIBUTING.md quality bar.
+    Returns {passed: bool, score: 0-100, issues: [...]}."""
+    issues = []
+    nq = len(patterns.get("quotes") or [])
+    nd = len(patterns.get("decisions") or [])
+    nf = len(patterns.get("frameworks") or [])
+    np = len(patterns.get("principles") or [])
+    ns = patterns.get("n_sources", 0)
+
+    if ns < 3:
+        issues.append(f"too few sources ({ns}); recommend ≥3, ideally ≥5")
+    if nq + nd + nf + np < 3:
+        issues.append("not enough extracted patterns (quotes+decisions+frameworks+principles<3)")
+    if nq == 0:
+        issues.append("no quotes extracted — repo recommends ≥5 direct quotes with sources")
+    if nf == 0:
+        issues.append("no mental models extracted — repo recommends 3-7 frameworks")
+
+    score = 0
+    score += min(40, ns * 5)              # sources up to 40
+    score += min(30, nq * 5)              # quotes up to 30
+    score += min(20, nf * 5)              # frameworks up to 20
+    score += min(10, (nd + np) * 2)       # decisions + principles up to 10
+    return {
+        "passed": len(issues) == 0,
+        "score": score,
+        "issues": issues,
+        "stats": {"sources": ns, "quotes": nq, "decisions": nd,
+                  "frameworks": nf, "principles": np},
+    }
+
+
+# ── GitHub helpers (raw REST API; no extra deps) ──────────────────
+
+import urllib.request as _urlreq
+import urllib.error as _urlerr
+
+
+def _gh_request(token: str, method: str, path: str, body: dict | None = None,
+                accept: str = "application/vnd.github+json") -> dict | str | None:
+    url = "https://api.github.com" + path
+    data = json.dumps(body).encode() if body is not None else None
+    req = _urlreq.Request(url, data=data, method=method)
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", accept)
+    req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    req.add_header("User-Agent", "persona-distill")
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with _urlreq.urlopen(req, timeout=20) as r:
+            text = r.read().decode("utf-8", errors="ignore")
+            if not text:
+                return None
+            try:
+                return json.loads(text)
+            except Exception:
+                return text
+    except _urlerr.HTTPError as e:
+        try:
+            payload = e.read().decode("utf-8", errors="ignore")
+        except Exception:
+            payload = ""
+        raise RuntimeError(f"GitHub {method} {path} → HTTP {e.code}: {payload[:300]}")
+
+
+def _gh_put_file(token: str, repo: str, branch: str, path: str,
+                 content: str, message: str, sha: str | None = None) -> dict:
+    body = {
+        "message": message,
+        "content": base64_b64encode(content),
+        "branch": branch,
+    }
+    if sha:
+        body["sha"] = sha
+    return _gh_request(token, "PUT", f"/repos/{repo}/contents/{path}", body)
+
+
+def base64_b64encode(s: str) -> str:
+    return base64.b64encode(s.encode("utf-8")).decode("ascii")
+
+
+def _readme_with_new_row(readme_md: str, slug: str, persona_label: str,
+                         company: str, person: str | None,
+                         description_short: str) -> str:
+    """Insert a new row into the | Persona | 领域 | 触发词 | 简介 | table.
+    Idempotent: if a row for the slug already exists, returns input unchanged."""
+    domain = company.strip() or persona_label
+    triggers = " ".join(filter(None, [
+        f"`{persona_label}`",
+        f"`{person}`" if person and person != persona_label else None,
+        f"`{slug}`",
+    ]))
+    new_row = (
+        f"| [**{persona_label}**](personas/{slug}/) | {domain} | {triggers} | "
+        f"{description_short.strip()[:120]} |"
+    )
+    if f"](personas/{slug}/)" in readme_md:
+        return readme_md  # already present — do nothing
+
+    lines = readme_md.splitlines()
+    # find a markdown table whose header mentions Persona/触发词
+    header_idx = -1
+    for i, ln in enumerate(lines):
+        if ln.lstrip().startswith("|") and ("Persona" in ln or "persona" in ln) and ("触发" in ln or "trigger" in ln.lower()):
+            header_idx = i
+            break
+    if header_idx < 0:
+        # fallback: append a new "Auto-distilled" section at end
+        lines.append("")
+        lines.append("## Auto-distilled (pending review)")
+        lines.append("")
+        lines.append("| Persona | 领域 | 触发词 | 简介 |")
+        lines.append("|---------|------|--------|------|")
+        lines.append(new_row)
+        return "\n".join(lines) + "\n"
+
+    # insert after the divider row (header_idx+1) and any existing rows in this table
+    insert_at = header_idx + 2
+    while insert_at < len(lines) and lines[insert_at].lstrip().startswith("|"):
+        insert_at += 1
+    lines.insert(insert_at, new_row)
+    return "\n".join(lines) + ("\n" if not readme_md.endswith("\n") else "")
+
+
+def submit_to_repo(distilled: dict, github_token: str,
+                   repo: str = "fxp/persona-distill-skills",
+                   base_branch: str = "main") -> dict:
+    """Open a PR with the distilled skill against the repo. Returns
+    {pr_url, branch, files: [...]}.
+
+    Caller must supply a repo-style distilled bundle (use format_for_repo())."""
+    if not github_token:
+        raise RuntimeError("GITHUB_TOKEN not configured on this server")
+
+    slug = distilled["slug"]
+    persona_label = distilled["persona_label"]
+    skill_md = distilled["skill_md"]
+    references_md = distilled["references_md"]
+    description_short = (
+        f"基于 {distilled['meta']['n_sources']} 条公开来源自动蒸馏的 "
+        f"{persona_label} 思维框架。"
+    )
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    branch = f"submit/{slug}-{ts}"
+
+    # 1) Get base branch HEAD SHA
+    ref = _gh_request(github_token, "GET", f"/repos/{repo}/git/ref/heads/{base_branch}")
+    base_sha = ref["object"]["sha"]
+
+    # 2) Create new branch from base
+    _gh_request(github_token, "POST", f"/repos/{repo}/git/refs",
+                {"ref": f"refs/heads/{branch}", "sha": base_sha})
+
+    # 3) PUT SKILL.md and references/sources.md
+    files_committed = []
+    for path, content, msg in [
+        (f"personas/{slug}/SKILL.md", skill_md,
+         f"persona({slug}): add SKILL.md (auto-distilled)"),
+        (f"personas/{slug}/references/sources.md", references_md,
+         f"persona({slug}): add references/sources.md"),
+    ]:
+        # check if file exists on this branch (it shouldn't; new branch)
+        try:
+            existing = _gh_request(github_token, "GET",
+                                   f"/repos/{repo}/contents/{path}?ref={branch}")
+            sha = existing.get("sha") if isinstance(existing, dict) else None
+        except RuntimeError:
+            sha = None
+        _gh_put_file(github_token, repo, branch, path, content, msg, sha=sha)
+        files_committed.append(path)
+
+    # 4) Update README.md
+    try:
+        readme = _gh_request(github_token, "GET", f"/repos/{repo}/contents/README.md?ref={branch}")
+        readme_b64 = readme.get("content", "")
+        readme_sha = readme.get("sha")
+        readme_md = base64.b64decode(readme_b64).decode("utf-8")
+        new_readme = _readme_with_new_row(readme_md, slug, persona_label,
+                                          distilled["meta"]["company"] or "",
+                                          distilled["meta"]["person"] or None,
+                                          description_short)
+        if new_readme != readme_md:
+            _gh_put_file(github_token, repo, branch, "README.md",
+                         new_readme,
+                         f"docs: list {persona_label} in README", sha=readme_sha)
+            files_committed.append("README.md")
+    except RuntimeError as e:
+        # README update is best-effort
+        files_committed.append(f"README.md (skipped: {e})")
+
+    # 5) Open PR
+    pr_body = (
+        f"## Auto-distilled persona: **{persona_label}**\n\n"
+        f"- **Slug**: `{slug}`\n"
+        f"- **Distilled from**: {distilled['meta']['company']}"
+        f"{(' · ' + distilled['meta']['person']) if distilled['meta']['person'] else ''}\n"
+        f"- **Distill date**: {distilled['meta']['distill_date']}\n"
+        f"- **Sources scanned**: {distilled['meta']['n_sources']}\n"
+        f"- **Quotes / Decisions / Frameworks / Principles**: "
+        f"{distilled['meta']['n_quotes']} / {distilled['meta']['n_decisions']} / "
+        f"{distilled['meta']['n_frameworks']} / {distilled['meta']['n_principles']}\n"
+        f"- **Distiller**: persona-distill v1 (DuckDuckGo + heuristics; no LLM)\n\n"
+        f"### ⚠️  Review before merging\n\n"
+        f"This is a **machine-distilled** draft. Per `CONTRIBUTING.md` quality bar, "
+        f"please review and edit before merging:\n\n"
+        f"- [ ] Quotes verified against original sources\n"
+        f"- [ ] Mental models renamed and given limitations\n"
+        f"- [ ] Filled in 「不擅长」 (known blind spots)\n"
+        f"- [ ] At least 5 direct quotes with citation\n\n"
+        f"_Submitted via_ https://sa-persona-distill.fly.dev"
+    )
+    pr = _gh_request(github_token, "POST", f"/repos/{repo}/pulls",
+                     {"title": f"persona({slug}): {persona_label}",
+                      "head": branch, "base": base_branch, "body": pr_body, "draft": True})
+
+    return {
+        "pr_url": pr.get("html_url"),
+        "pr_number": pr.get("number"),
+        "branch": branch,
+        "files": files_committed,
+        "review_required": True,
+        "compare_url": f"https://github.com/{repo}/compare/{base_branch}...{branch}",
     }

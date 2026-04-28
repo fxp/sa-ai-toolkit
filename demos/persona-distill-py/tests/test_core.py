@@ -84,3 +84,73 @@ def test_generate_with_skill_uses_persona():
 def test_slugify():
     assert _slugify("Jensen Huang") == "jensen-huang"
     assert _slugify("张雪峰") == "张雪峰"
+
+
+# ─── Repo integration ───────────────────────────────────────────────
+
+from core import format_for_repo, quality_check, _readme_with_new_row
+
+
+def test_format_for_repo_matches_repo_conventions():
+    pat = extract_patterns(_fake_search())
+    out = format_for_repo("NVIDIA", "Jensen Huang", pat, search_results=_fake_search())
+    md = out["skill_md"]
+    # YAML frontmatter with the repo's required keys
+    assert md.startswith("---\nname:")
+    assert "type: perspective" in md
+    assert "调研时间:" in md
+    # body sections that match repo conventions
+    assert "## 使用说明" in md
+    assert "## 角色扮演规则" in md
+    assert "## 心智模型" in md
+    assert "## 决策启发式" in md
+    assert "## 表达 DNA" in md
+    # path-style refs link
+    assert "references/sources.md" in md
+
+
+def test_quality_check_flags_thin_distill():
+    qc = quality_check({}, {"n_sources": 1, "quotes": [], "decisions": [],
+                            "frameworks": [], "principles": []})
+    assert not qc["passed"]
+    assert qc["score"] < 30
+    assert any("source" in i for i in qc["issues"])
+
+
+def test_quality_check_passes_richer_distill():
+    pat = extract_patterns(_fake_search())
+    pat["n_sources"] = 8
+    pat["quotes"] = ["q1", "q2", "q3", "q4", "q5"]
+    pat["frameworks"] = ["f1", "f2", "f3"]
+    pat["decisions"] = ["d1", "d2"]
+    pat["principles"] = ["p1"]
+    qc = quality_check({}, pat)
+    assert qc["score"] >= 60
+
+
+def test_readme_table_insertion_idempotent():
+    readme = (
+        "# Persona Distill Skills\n\n"
+        "## Persona 目录\n\n"
+        "### 公众人物与方法论视角\n\n"
+        "| Persona | 领域 | 触发词 | 简介 |\n"
+        "|---------|------|--------|------|\n"
+        "| [**香帅**](personas/xiangshuai/) | 金融 | `香帅` | 中国经济观察者 |\n"
+    )
+    new = _readme_with_new_row(readme, "jensen-huang", "Jensen Huang",
+                               "NVIDIA", "Jensen Huang", "GPU 战略 + 加速计算")
+    assert "[**Jensen Huang**](personas/jensen-huang/)" in new
+    # idempotent
+    new2 = _readme_with_new_row(new, "jensen-huang", "Jensen Huang",
+                                "NVIDIA", "Jensen Huang", "GPU 战略 + 加速计算")
+    assert new2 == new
+    # original row preserved
+    assert "[**香帅**](personas/xiangshuai/)" in new2
+
+
+def test_readme_table_appends_new_section_when_table_missing():
+    readme = "# Just a README\n\nNo table here yet.\n"
+    new = _readme_with_new_row(readme, "test-slug", "Test",
+                               "TestCo", None, "smoke test")
+    assert "Auto-distilled" in new
+    assert "[**Test**](personas/test-slug/)" in new

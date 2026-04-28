@@ -1,6 +1,7 @@
 """Standalone FastAPI for Persona Distill demo."""
 from __future__ import annotations
 import base64
+import os
 import pathlib
 from fastapi import FastAPI, HTTPException, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +11,11 @@ from fastapi.staticfiles import StaticFiles
 from core import (
     search_persona, extract_patterns, distill_skill, package_zip,
     parse_skill, generate_with_skill, run_full,
+    format_for_repo, quality_check, submit_to_repo,
 )
+
+REPO_TARGET = os.environ.get("PERSONA_REPO", "fxp/persona-distill-skills")
+REPO_BASE_BRANCH = os.environ.get("PERSONA_REPO_BRANCH", "main")
 
 STATIC = pathlib.Path("/app/static")
 
@@ -73,7 +78,68 @@ async def persona_post(action: str = Query("distill"), body: dict = Body(default
             raise HTTPException(400, "skill_md required")
         return parse_skill(skill_md)
 
+    if action == "format_for_repo":
+        # Same input as 'distill', but renders in the repo's exact format
+        if not company and not person:
+            raise HTTPException(400, "company or person required")
+        sr = body.get("search_results") or search_persona(company or person, person if company else None)
+        pat = extract_patterns(sr)
+        out = format_for_repo(company or person, person, pat, search_results=sr)
+        qc = quality_check(out, pat)
+        return {"skill": out, "quality": qc, "search": sr,
+                "patterns": {k: v for k, v in pat.items() if k != "sources"}}
+
+    if action == "submit":
+        # Open a draft PR against fxp/persona-distill-skills
+        token = os.environ.get("GITHUB_TOKEN")
+        if not token:
+            raise HTTPException(503, "GITHUB_TOKEN not configured on server")
+        # Two ways to call: provide a precomputed bundle, or do it from scratch
+        bundle = body.get("bundle")
+        if not bundle:
+            if not company and not person:
+                raise HTTPException(400, "company/person or bundle required")
+            sr = body.get("search_results") or search_persona(company or person, person if company else None)
+            pat = extract_patterns(sr)
+            bundle = format_for_repo(company or person, person, pat, search_results=sr)
+            qc = quality_check(bundle, pat)
+        else:
+            # rebuild a tiny patterns dict from bundle.meta for QC
+            pat_from_meta = {
+                "n_sources": bundle.get("meta", {}).get("n_sources", 0),
+                "quotes": [None] * bundle.get("meta", {}).get("n_quotes", 0),
+                "decisions": [None] * bundle.get("meta", {}).get("n_decisions", 0),
+                "frameworks": [None] * bundle.get("meta", {}).get("n_frameworks", 0),
+                "principles": [None] * bundle.get("meta", {}).get("n_principles", 0),
+            }
+            qc = quality_check(bundle, pat_from_meta)
+        # Soft gate: require at least 1 source. Caller can choose to ignore quality issues.
+        if bundle.get("meta", {}).get("n_sources", 0) == 0:
+            raise HTTPException(400, "no sources to submit; refusing")
+        force = bool(body.get("force", False))
+        if not force and not qc["passed"] and qc["score"] < 30:
+            raise HTTPException(400, {"error": "quality_gate_failed", "quality": qc})
+        try:
+            pr = submit_to_repo(bundle, token,
+                                repo=body.get("repo", REPO_TARGET),
+                                base_branch=body.get("base_branch", REPO_BASE_BRANCH))
+        except Exception as e:
+            raise HTTPException(502, f"submit failed: {e}")
+        return {"submitted": True, "quality": qc, "pull_request": pr,
+                "repo": body.get("repo", REPO_TARGET)}
+
     raise HTTPException(400, f"unknown action: {action}")
+
+
+@app.get("/api/persona/repo")
+async def repo_info():
+    """Tells the frontend whether submit is available, and where it goes."""
+    return {
+        "repo": REPO_TARGET,
+        "base_branch": REPO_BASE_BRANCH,
+        "submit_enabled": bool(os.environ.get("GITHUB_TOKEN")),
+        "repo_url": f"https://github.com/{REPO_TARGET}",
+    }
 
 
 @app.post("/api/persona/zip")

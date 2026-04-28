@@ -53,9 +53,13 @@
     <a href="https://sa-ai-toolkit.vercel.app/" class="text-blue-400 hover:text-blue-300 text-sm" data-en="&#8592; Back to home" data-zh="&#8592; 返回首页"></a>
     <h1 class="text-3xl font-bold text-white mt-2"><span data-en="Persona Distill" data-zh="人格蒸馏 · Persona Distill"></span></h1>
     <p class="text-gray-400 mt-1 text-sm" data-en="Search a person's public footprint, distill into a Claude Code skill, download — or upload a skill to use." data-zh="搜索一个人的公开痕迹（新闻 / 论文 / 访谈 / 视频），蒸馏成一个 Claude Code Skill，可下载——也可以上传 Skill 来调用它生成内容。"></p>
-    <div class="text-xs text-gray-500 mt-2">
-      <span data-en="Format reference: " data-zh="格式参考：">Format reference: </span>
+    <div class="text-xs text-gray-500 mt-2 flex flex-wrap items-center gap-2">
+      <span data-en="Format reference:" data-zh="格式参考："></span>
       <a href="https://github.com/xixu-me/awesome-persona-distill-skills" target="_blank" class="text-blue-400 hover:underline">awesome-persona-distill-skills</a>
+      <span class="text-gray-600">·</span>
+      <span data-en="Skills repo:" data-zh="技能合集："></span>
+      <a id="repo-link" href="https://github.com/fxp/persona-distill-skills" target="_blank" class="text-blue-400 hover:underline">fxp/persona-distill-skills</a>
+      <span id="submit-status" class="ml-1"></span>
     </div>
   </div>
 
@@ -145,10 +149,14 @@
             <button id="dl-md" class="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs font-bold">&#11015; SKILL.md</button>
             <button id="dl-zip" class="px-3 py-1 bg-purple-700 hover:bg-purple-600 text-white rounded text-xs font-bold">&#128230; <span data-en=".skill bundle (.zip)" data-zh=".skill 包 (.zip)"></span></button>
             <button id="use-this" class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-bold">&#10142; <span data-en="Try this skill" data-zh="试用此 Skill"></span></button>
+            <button id="submit-repo" class="px-3 py-1 bg-orange-700 hover:bg-orange-600 text-white rounded text-xs font-bold">&#128737;&#65039; <span data-en="Submit to repo (PR)" data-zh="提交到 repo (PR)"></span></button>
           </div>
         </div>
         <div id="skill-rendered" class="render-md prose-sm max-w-none"></div>
         <pre id="skill-raw" class="hidden"></pre>
+
+        <!-- Submit-to-repo result panel -->
+        <div id="submit-panel" class="hidden mt-4 border-t border-gray-700 pt-3"></div>
       </div>
     </div>
   </section>
@@ -387,7 +395,104 @@ function renderResult(resp) {
     $('#skill-input').value = skill.skill_md;
     document.getElementById('parse-btn').click();
   };
+  $('#submit-repo').onclick = submitToRepo;
 }
+
+// ===== Submit to repo (opens PR against fxp/persona-distill-skills) =====
+let repoInfo = null;
+async function loadRepoInfo() {
+  try {
+    const r = await fetch('/api/persona/repo');
+    if (!r.ok) return;
+    repoInfo = await r.json();
+    const link = document.getElementById('repo-link');
+    if (link && repoInfo.repo_url) { link.href = repoInfo.repo_url; link.textContent = repoInfo.repo; }
+    const status = document.getElementById('submit-status');
+    if (status) {
+      status.innerHTML = repoInfo.submit_enabled
+        ? '<span class="px-1.5 py-0.5 bg-green-900/40 text-green-300 rounded text-[10px]">submit ✓ enabled</span>'
+        : '<span class="px-1.5 py-0.5 bg-yellow-900/40 text-yellow-300 rounded text-[10px]" title="GITHUB_TOKEN not set on server">submit · disabled</span>';
+    }
+    // grey out submit button if disabled
+    if (!repoInfo.submit_enabled) {
+      const btn = document.getElementById('submit-repo');
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-40', 'cursor-not-allowed');
+        btn.title = 'Submit disabled — GITHUB_TOKEN not configured on server';
+      }
+    }
+  } catch {}
+}
+
+async function submitToRepo() {
+  if (!lastDistilled) { alert('Distill something first'); return; }
+  const meta = lastDistilled.skill.meta;
+  if (!confirm(`Open a draft PR for "${lastDistilled.skill.persona_label}" against ${repoInfo?.repo || 'the repo'}?\n\n` +
+               `Sources: ${meta.n_sources} · Quotes: ${meta.n_quotes} · Frameworks: ${meta.n_frameworks}\n\n` +
+               `The PR will be DRAFT — you review and merge on GitHub.`)) return;
+
+  const panel = $('#submit-panel');
+  panel.classList.remove('hidden');
+  panel.innerHTML = '<div class="text-xs text-gray-400 italic">submitting → creating branch → committing files → opening PR…</div>';
+
+  // Re-format using the repo-style template before submit
+  let bundle;
+  try {
+    const r = await fetch('/api/persona?action=format_for_repo', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        company: meta.company, person: meta.person,
+        search_results: lastDistilled.search,
+      }),
+    });
+    if (!r.ok) throw new Error(`format HTTP ${r.status}`);
+    const j = await r.json();
+    bundle = j.skill;
+    if (j.quality && !j.quality.passed) {
+      const proceed = confirm(
+        `⚠️  Quality gate score: ${j.quality.score}/100\n\n` +
+        j.quality.issues.map(i => '• ' + i).join('\n') +
+        `\n\nThe PR will still be a DRAFT. Submit anyway?`
+      );
+      if (!proceed) { panel.innerHTML = '<div class="text-xs text-yellow-400">cancelled</div>'; return; }
+    }
+  } catch (e) {
+    panel.innerHTML = `<div class="text-xs text-red-400">format failed: ${escapeHtml(e.message)}</div>`;
+    return;
+  }
+
+  try {
+    const r = await fetch('/api/persona?action=submit', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({bundle, force: true,
+        company: meta.company, person: meta.person,
+        search_results: lastDistilled.search}),
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      panel.innerHTML = `<div class="text-xs text-red-400 break-all">submit failed: ${escapeHtml(JSON.stringify(j))}</div>`;
+      return;
+    }
+    const pr = j.pull_request;
+    panel.innerHTML = `
+      <div class="bg-green-900/20 border border-green-700/50 rounded-lg p-3">
+        <div class="text-sm font-bold text-green-300 mb-2">&#128737;&#65039; <span data-en="Draft PR opened" data-zh="草稿 PR 已创建"></span></div>
+        <div class="text-xs text-gray-300 space-y-1">
+          <div><span class="text-gray-500">PR:</span> <a class="text-blue-400 hover:underline" href="${pr.pr_url}" target="_blank">#${pr.pr_number}</a></div>
+          <div><span class="text-gray-500">branch:</span> <code class="bg-gray-800 px-1.5 py-0.5 rounded">${escapeHtml(pr.branch)}</code></div>
+          <div><span class="text-gray-500">files:</span> ${pr.files.map(f => `<code class="bg-gray-800 px-1.5 py-0.5 rounded text-[10px]">${escapeHtml(f)}</code>`).join(' ')}</div>
+          <div class="text-yellow-400 text-[10px] mt-2">Review the draft, edit if needed, then merge on GitHub.</div>
+        </div>
+        <div class="mt-3"><a href="${pr.pr_url}" target="_blank" class="inline-block px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold">Open PR on GitHub →</a></div>
+      </div>
+    `;
+  } catch (e) {
+    panel.innerHTML = `<div class="text-xs text-red-400">submit failed: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+loadRepoInfo();
 
 function statTile(value, en, zh) {
   return `<div class="card rounded p-3 text-center">
