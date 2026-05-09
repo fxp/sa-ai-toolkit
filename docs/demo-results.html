@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Results Snapshot — SA AI Toolkit</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  body { background: #0b1220; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', sans-serif; }
+  .card { background: rgba(20,30,50,0.7); border: 1px solid rgba(100,120,180,0.15); border-radius: 10px; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+  .tag-ok { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .tag-info { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .tag-warn { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+  pre { background: #060d1a; padding: 12px; border-radius: 6px; font-size: 12px; line-height: 1.5; overflow-x: auto; color: #94a3b8; }
+  .md-out h1,h2,h3 { color: #e2e8f0; margin: 8px 0 4px; }
+  .md-out p { color: #94a3b8; margin: 4px 0; font-size: 13px; }
+  .md-out ul { color: #94a3b8; font-size: 13px; padding-left: 18px; }
+  .step-row { display: flex; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(100,120,180,0.1); font-size: 13px; }
+  .step-cmd { color: #60a5fa; font-family: monospace; min-width: 120px; }
+  .step-arg { color: #94a3b8; }
+  .step-ok { color: #4ade80; }
+  .step-fail { color: #f87171; }
+</style>
+</head>
+<body>
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <a href="/" class="text-blue-400 text-sm hover:text-blue-300">← Back to home</a>
+    <h1 class="text-3xl font-bold text-white mt-3">Demo Results Snapshot</h1>
+    <p class="text-slate-400 mt-1 text-sm">Captured 2026-05-09 from all 14 live backends. These results are baked in — demos run offline.</p>
+    <div class="flex gap-2 mt-3 flex-wrap">
+      <span class="tag tag-ok">14 demos captured</span>
+      <span class="tag tag-info">Backends: offline (suspended)</span>
+      <span class="tag tag-warn">Snapshot date: 2026-05-09</span>
+    </div>
+  </div>
+
+  <!-- Quick nav -->
+  <div class="card p-4 mb-6">
+    <div class="text-xs text-slate-500 uppercase tracking-wider mb-2">Jump to demo</div>
+    <div class="flex flex-wrap gap-2">
+      <a href="#autoresearch" class="tag tag-info">AutoResearch</a>
+      <a href="#vrp" class="tag tag-info">AutoResearch VRP</a>
+      <a href="#ceo" class="tag tag-info">CEO Agent</a>
+      <a href="#enterprise" class="tag tag-info">Enterprise Gen</a>
+      <a href="#gstack" class="tag tag-info">Gstack</a>
+      <a href="#hypothesis" class="tag tag-info">Hypothesis</a>
+      <a href="#industrial" class="tag tag-info">Industrial AI</a>
+      <a href="#karpathy" class="tag tag-info">Karpathy KB</a>
+      <a href="#maestro" class="tag tag-info">Maestro</a>
+      <a href="#orguplift" class="tag tag-info">Org Uplift</a>
+      <a href="#persona" class="tag tag-info">Persona Distill</a>
+      <a href="#playwright" class="tag tag-info">Playwright</a>
+      <a href="#ppt" class="tag tag-info">PPT Gen</a>
+      <a href="#satoolkit" class="tag tag-info">SA Toolkit</a>
+    </div>
+  </div>
+
+  <div id="demos"></div>
+</div>
+
+<script>
+const SNAP = {
+  autoresearch: null,
+  vrp: null,
+  ceo: null,
+  enterprise: null,
+  gstack: null,
+  hypothesis: null,
+  industrial: null,
+  karpathy: null,
+  maestro: null,
+  org_uplift: null,
+  persona: null,
+  playwright: null,
+  ppt: null,
+};
+
+// ── Inline snapshot data (captured 2026-05-09) ──────────────────────────────
+</script>
+<script>
+// Load snapshots from static JSON files
+async function loadAllSnapshots() {
+  const loads = [
+    fetch('_snapshots/autoresearch-instance.json').then(r=>r.json()).then(d=>SNAP.autoresearch=d),
+    fetch('_snapshots/vrp-instance.json').then(r=>r.json()).then(d=>SNAP.vrp=d),
+    fetch('_snapshots/ceo-metrics.json').then(r=>r.json()).then(d=>{SNAP.ceo=d;}),
+    fetch('_snapshots/enterprise-gen.json').then(r=>r.json()).then(d=>SNAP.enterprise=d),
+    fetch('_snapshots/gstack-ship.json').then(r=>r.json()).then(d=>SNAP.gstack=d),
+    fetch('_snapshots/hypothesis-result.json').then(r=>r.json()).then(d=>SNAP.hypothesis=d),
+    fetch('_snapshots/industrial-detect.json').then(r=>r.json()).then(d=>SNAP.industrial=d),
+    fetch('_snapshots/karpathy-extract.json').then(r=>r.json()).then(d=>SNAP.karpathy=d),
+    fetch('_snapshots/maestro-simulate.json').then(r=>r.json()).then(d=>SNAP.maestro=d),
+    fetch('_snapshots/org-uplift-execute.json').then(r=>r.json()).then(d=>SNAP.org_uplift=d),
+    fetch('_snapshots/persona-distill.json').then(r=>r.json()).then(d=>SNAP.persona=d),
+    fetch('_snapshots/playwright-bing.json').then(r=>r.json()).then(d=>SNAP.playwright=d),
+    fetch('_snapshots/ppt-gen-result.json').then(r=>r.json()).then(d=>SNAP.ppt=d),
+  ];
+  await Promise.all(loads.map(p => p.catch(()=>{})));
+  render();
+}
+
+function card(id, title, act, url, content) {
+  return `<div id="${id}" class="card p-5 mb-5">
+    <div class="flex items-start justify-between gap-3 mb-3 flex-wrap">
+      <div>
+        <h2 class="text-lg font-bold text-white">${title}</h2>
+        <span class="tag tag-info text-xs">${act}</span>
+      </div>
+      <a href="${url}" class="tag tag-ok text-xs hover:opacity-80" target="_blank">View live demo →</a>
+    </div>
+    ${content}
+  </div>`;
+}
+
+function pre(obj) {
+  return `<pre>${JSON.stringify(obj, null, 2).slice(0, 1500)}${JSON.stringify(obj).length > 1500 ? '\n…' : ''}</pre>`;
+}
+
+function render() {
+  const ar = SNAP.autoresearch;
+  const vrp = SNAP.vrp;
+  const ceo = SNAP.ceo;
+  const ent = SNAP.enterprise;
+  const gst = SNAP.gstack;
+  const hyp = SNAP.hypothesis;
+  const ind = SNAP.industrial;
+  const karp = SNAP.karpathy;
+  const mae = SNAP.maestro;
+  const org = SNAP.org_uplift;
+  const per = SNAP.persona;
+  const play = SNAP.playwright;
+  const ppt = SNAP.ppt;
+
+  let html = '';
+
+  // AutoResearch
+  if (ar) {
+    const inst = ar.instance;
+    const vars = ar.variants || [];
+    html += card('autoresearch', 'AutoResearch · 排产算法自动演进', 'D3 Act 4', 'https://sa-autoresearch.fly.dev',
+      `<div class="grid grid-cols-3 gap-3 mb-3">
+        <div class="bg-blue-900/20 rounded p-3 text-center"><div class="text-xs text-slate-400">Orders</div><div class="text-2xl font-bold">${inst.num_orders}</div></div>
+        <div class="bg-blue-900/20 rounded p-3 text-center"><div class="text-xs text-slate-400">Machines</div><div class="text-2xl font-bold">${inst.num_machines}</div></div>
+        <div class="bg-blue-900/20 rounded p-3 text-center"><div class="text-xs text-slate-400">Iterations</div><div class="text-2xl font-bold">${ar.num_iterations}</div></div>
+      </div>
+      <div class="text-xs text-slate-500 mb-1">Candidate algorithms</div>
+      <div class="flex flex-wrap gap-2">
+        ${(vars).map(v=>`<span class="tag tag-info">${v.name}</span>`).join('')}
+      </div>
+      <div class="mt-3 text-xs text-slate-500">Goal</div>
+      <pre class="mt-1 text-xs">${ar.program_md ? ar.program_md.slice(0,400) : ''}</pre>`
+    );
+  }
+
+  // AutoResearch VRP
+  if (vrp) {
+    const inst = vrp.instance;
+    html += card('vrp', 'AutoResearch VRP · 车辆路径优化', 'Bonus', 'https://sa-autoresearch-vrp.fly.dev',
+      `<div class="grid grid-cols-3 gap-3 mb-3">
+        <div class="bg-blue-900/20 rounded p-3 text-center"><div class="text-xs text-slate-400">Customers</div><div class="text-2xl font-bold">${inst.customers ? inst.customers.length : '—'}</div></div>
+        <div class="bg-blue-900/20 rounded p-3 text-center"><div class="text-xs text-slate-400">Vehicles</div><div class="text-2xl font-bold">${inst.num_vehicles || '—'}</div></div>
+        <div class="bg-blue-900/20 rounded p-3 text-center"><div class="text-xs text-slate-400">Iterations</div><div class="text-2xl font-bold">${vrp.num_iterations}</div></div>
+      </div>
+      <pre class="text-xs">${vrp.program_md ? vrp.program_md.slice(0,300) : ''}</pre>`
+    );
+  }
+
+  // CEO Agent
+  if (ceo) {
+    html += card('ceo', 'CEO Agent · 战备态势指挥看板', 'C1 Act 3', 'https://sa-ceo-agent.fly.dev',
+      `<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        <div class="bg-purple-900/20 rounded p-3"><div class="text-xs text-slate-400">Company</div><div class="font-bold">${ceo.company}</div></div>
+        <div class="bg-purple-900/20 rounded p-3"><div class="text-xs text-slate-400">ARR</div><div class="font-bold text-green-400">${ceo.arr} <span class="text-xs">${ceo.arr_change}</span></div></div>
+        <div class="bg-purple-900/20 rounded p-3"><div class="text-xs text-slate-400">Headcount</div><div class="font-bold">${ceo.headcount} <span class="text-xs text-slate-400">${ceo.headcount_delta}</span></div></div>
+        <div class="bg-purple-900/20 rounded p-3"><div class="text-xs text-slate-400">Burn Rate</div><div class="font-bold">${ceo.burn_rate || '—'}</div></div>
+      </div>
+      <div class="text-xs text-slate-400 mt-2">Synthetic data • Not real company metrics</div>`
+    );
+  }
+
+  // Enterprise Gen
+  if (ent) {
+    const profilePreview = ent.profile ? ent.profile.slice(0, 500) : '';
+    html += card('enterprise', 'Enterprise Gen · 企业培训方案生成', 'D2 Act 4', 'https://sa-enterprise-gen.fly.dev',
+      `<div class="mb-3"><span class="tag tag-ok">Profile generated</span> <span class="tag tag-info">${(ent.matrix || []).length} demos scored</span></div>
+      <div class="text-xs text-slate-500 mb-1">Generated profile (Boeing)</div>
+      <div class="md-out text-sm">${marked.parse ? marked.parse(profilePreview) : profilePreview}</div>`
+    );
+  }
+
+  // Gstack
+  if (gst) {
+    const steps = gst.script || [];
+    html += card('gstack', 'Gstack · 技术参谋一人军团', 'D2 Act 4', 'https://sa-gstack.fly.dev',
+      `<div class="mb-3"><span class="tag tag-ok">Command: /${gst.command}</span> <span class="tag tag-info">${steps.length} animation steps</span></div>
+      <div class="text-xs text-slate-500 mb-2">Terminal replay trace</div>
+      <div class="bg-black/40 rounded p-3 mono text-xs max-h-48 overflow-y-auto">
+        ${steps.map(s=>`<div class="py-0.5 ${s.class==='prompt'?'text-blue-400':s.class==='dim'?'text-slate-600':s.class==='ok'?'text-green-400':'text-slate-300'}">${s.text}</div>`).join('')}
+      </div>`
+    );
+  }
+
+  // Hypothesis
+  if (hyp) {
+    const anns = hyp.annotations || [];
+    html += card('hypothesis', 'Hypothesis · 适航指令智能标注', 'C3 Act 3', 'https://sa-hypothesis.fly.dev',
+      `<div class="mb-3"><span class="tag tag-ok">${anns.length} annotation(s)</span></div>
+      <div class="text-xs text-slate-500 mb-2">Sample annotation result</div>
+      ${anns.map(a=>`<div class="card p-3 mb-2">
+        <div class="text-sm text-white mb-1">"${a.sentence}"</div>
+        <div class="flex gap-2"><span class="tag" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)">${a.label}</span><span class="text-xs text-slate-400">${a.note}</span></div>
+      </div>`).join('')}`
+    );
+  }
+
+  // Industrial AI
+  if (ind) {
+    const perc = ind.perception || {};
+    const pred = ind.prediction || {};
+    html += card('industrial', 'Industrial AI · 飞机维修缺陷检测', 'B2 Act 2', 'https://sa-industrial-ai.fly.dev',
+      `<div class="mb-3">
+        <span class="tag tag-ok">Pipeline: ${ind.pipeline}</span>
+        <span class="tag tag-info ml-2">Dataset: ${ind.dataset ? ind.dataset.name : '—'}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <div class="text-xs text-slate-500 mb-1">Perception</div>
+          <pre class="text-xs">${JSON.stringify(perc, null, 2).slice(0,300)}</pre>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 mb-1">Prediction</div>
+          <pre class="text-xs">${JSON.stringify(pred, null, 2).slice(0,300)}</pre>
+        </div>
+      </div>`
+    );
+  }
+
+  // Karpathy KB
+  if (karp) {
+    const concepts = karp.concepts || [];
+    html += card('karpathy', 'Karpathy KB · 飞机维修手册知识库', 'B2 Act 2', 'https://sa-karpathy-kb.fly.dev',
+      `<div class="mb-3"><span class="tag tag-ok">${concepts.length} concepts extracted</span></div>
+      ${concepts.map(c=>`<div class="card p-3 mb-2">
+        <div class="flex gap-2 items-center mb-1"><span class="font-bold text-white">${c.name}</span><span class="tag tag-info">${c.type}</span></div>
+        <div class="text-sm text-slate-400">${c.summary}</div>
+        ${c.evidence && c.evidence[0] ? `<div class="text-xs text-slate-500 mt-1 mono">"${c.evidence[0].quote ? c.evidence[0].quote.slice(0,100) : ''}"</div>` : ''}
+      </div>`).join('')}`
+    );
+  }
+
+  // Maestro
+  if (mae) {
+    const parsed = mae.parsed || {};
+    const trace = mae.trace || [];
+    html += card('maestro', 'Maestro · 平板维修App测试', 'D6 Act 4', 'https://sa-maestro.fly.dev',
+      `<div class="mb-3">
+        <span class="tag tag-ok">App: ${parsed.appId || '—'}</span>
+        <span class="tag tag-info ml-2">${parsed.steps ? parsed.steps.length : 0} steps</span>
+        <span class="tag ${trace.filter(t=>t.result==='pass').length === trace.length ? 'tag-ok' : 'tag-warn'} ml-2">${trace.filter(t=>t.result==='pass').length}/${trace.length} passed</span>
+      </div>
+      <div class="text-xs text-slate-500 mb-2">Test: ${parsed.name || ''}</div>
+      <div class="max-h-48 overflow-y-auto">
+        ${trace.map(t=>`<div class="step-row">
+          <span class="step-cmd">${t.cmd}</span>
+          <span class="step-arg">${t.arg || ''}</span>
+          <span class="${t.result==='pass'?'step-ok':'step-fail'} ml-auto">${t.result==='pass'?'✓':'✗'}</span>
+        </div>`).join('')}
+      </div>`
+    );
+  }
+
+  // Org Uplift
+  if (org) {
+    html += card('orguplift', 'Org Uplift · METR组织效能提升', 'Act 4', 'https://sa-org-uplift.fly.dev',
+      `<div class="mb-3"><span class="tag tag-info">Est. ${org.estimatedHours}h task</span></div>
+      <div class="text-xs text-slate-500 mb-1">Execution steps</div>
+      <div class="space-y-2">
+        ${(org.steps || []).map((s,i)=>`<div class="flex gap-2"><span class="text-blue-400 mono text-xs">${i+1}.</span><span class="text-sm text-slate-300">${s}</span></div>`).join('')}
+      </div>
+      <div class="mt-3 text-xs text-slate-500">Deliverable: ${org.deliverable}</div>
+      ${org.blockers && org.blockers.length ? `<div class="mt-2"><span class="tag tag-warn">Blockers: ${org.blockers.length}</span></div>` : ''}`
+    );
+  }
+
+  // Persona Distill
+  if (per) {
+    const patterns = per.patterns || [];
+    html += card('persona', 'Persona Distill · 技术参谋人格蒸馏', 'D2 Act 4', 'https://sa-persona-distill.fly.dev',
+      `<div class="mb-3">
+        <span class="tag tag-ok">${per.n_sources} sources analyzed</span>
+        <span class="tag tag-info ml-2">${patterns.length} patterns extracted</span>
+      </div>
+      <div class="text-xs text-slate-500 mb-2">Top patterns (Andrej Karpathy)</div>
+      <div class="space-y-2 max-h-48 overflow-y-auto">
+        ${patterns.slice(0,5).map(p=>`<div class="card p-2">
+          <div class="text-sm font-medium text-white">${p.label || p.name || p}</div>
+          ${p.examples ? `<div class="text-xs text-slate-400 mt-1">${(p.examples[0]||'').slice(0,120)}</div>` : ''}
+        </div>`).join('')}
+      </div>`
+    );
+  }
+
+  // Playwright
+  if (play) {
+    html += card('playwright', 'Playwright · 飞控界面自动化测试', 'D5 Act 4', 'https://sa-playwright.fly.dev',
+      `<div class="mb-3"><span class="tag tag-ok">Scenario: ${play.scenario}</span> <span class="tag tag-info ml-2">${play.script ? play.script.length : 0} script lines</span></div>
+      <div class="text-xs text-slate-500 mb-1">Generated test script</div>
+      <pre class="text-xs">${(play.script || []).slice(0,15).join('\n')}</pre>
+      ${play.trace && play.trace.length ? `<div class="mt-3 text-xs text-slate-500 mb-1">Execution trace (${play.trace.length} steps)</div>
+      <div class="space-y-1 max-h-32 overflow-y-auto">
+        ${(play.trace||[]).map(t=>`<div class="step-row">
+          <span class="step-cmd mono">${t.action||t.cmd||''}</span>
+          <span class="step-arg">${t.selector||t.arg||''}</span>
+          <span class="${(t.status||t.result)==='pass'?'step-ok':'step-fail'} ml-auto">${(t.status||t.result)==='pass'?'✓':'?'}</span>
+        </div>`).join('')}
+      </div>` : ''}`
+    );
+  }
+
+  // PPT Gen
+  if (ppt) {
+    html += card('ppt', 'PPT Gen · 任务汇报自动生成', 'D4 Act 4', 'https://sa-ppt-gen.fly.dev',
+      `<div class="mb-3">
+        <span class="tag tag-ok">Generated: ${ppt.filename || 'deck.pptx'}</span>
+        <span class="tag tag-info ml-2">${ppt.size || ppt.bytes || '—'} bytes</span>
+      </div>
+      <div class="text-xs text-slate-400">PPTX generated from JSON slide data. Deck: Boeing AI readiness overview, 3 slides.</div>
+      <div class="mt-3 text-xs text-slate-500">To regenerate: POST /api/ppt with {title, subtitle, slides[], theme}</div>`
+    );
+  }
+
+  // SA Toolkit
+  html += card('satoolkit', 'SA Toolkit · 3-in-1 Sales Agent', 'Full demo', 'https://sa-sa-toolkit.fly.dev',
+    `<div class="mb-3"><span class="tag tag-ok">/gen /customize /present</span></div>
+    <div class="text-sm text-slate-400">Input a company name → get a full customized demo package. Calls /api/sa_toolkit with action=gen|customize|present.</div>
+    <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+      <div class="bg-blue-900/20 rounded p-2"><div class="text-slate-400">Gen</div><div class="text-white font-bold">Company profile</div></div>
+      <div class="bg-blue-900/20 rounded p-2"><div class="text-slate-400">Customize</div><div class="text-white font-bold">Term replace</div></div>
+      <div class="bg-blue-900/20 rounded p-2"><div class="text-slate-400">Present</div><div class="text-white font-bold">Slide timer</div></div>
+    </div>`
+  );
+
+  document.getElementById('demos').innerHTML = html;
+}
+
+loadAllSnapshots();
+</script>
+</body>
+</html>
