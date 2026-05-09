@@ -11,6 +11,8 @@
     { "source": "/xinglian-office-hour", "destination": "/docs/xinglian-office-hour/index.html", "statusCode": 308 },
     { "source": "/xinglian-office-hour/", "destination": "/docs/xinglian-office-hour/index.html", "statusCode": 308 },
     { "source": "/autoresearch-lab", "destination": "/docs/autoresearch-lab/index.html", "statusCode": 308 },
-    { "source": "/autoresearch-lab/", "destination": "/docs/autoresearch-lab/index.html", "statusCode": 308 }
+    { "source": "/autoresearch-lab/", "destination": "/docs/autoresearch-lab/index.html", "statusCode": 308 },
+    { "source": "/demo-results.html", "destination": "/docs/demo-results.html", "statusCode": 308 },
+    { "source": "/_snapshots/:path*", "destination": "/docs/_snapshots/:path*", "statusCode": 308 }
   ]
 }
