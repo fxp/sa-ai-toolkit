@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from core import extract_concepts, lint_kb
+from core import extract_concepts, lint_kb, build_graph, compare_concepts, compile_brief
 
 STATIC = pathlib.Path("/app/static")
 
@@ -30,6 +30,22 @@ async def karpathy(action: str = "extract", body: dict = Body(default={})):
     if action == "lint":
         concepts = body.get("concepts") or []
         return lint_kb(concepts)
+    if action == "graph":
+        # Frontend reads data.nodes / data.edges / data.type_counts /
+        # data.num_contradictions for the cytoscape view.
+        concepts = body.get("concepts") or []
+        return build_graph(concepts)
+    if action == "compare":
+        # Frontend reads data.selected / data.metrics / data.rowcount
+        concepts = body.get("concepts") or []
+        names = body.get("names") or []
+        return compare_concepts(concepts, names)
+    if action == "brief":
+        concepts = body.get("concepts") or []
+        name = body.get("name") or ""
+        lang = body.get("lang") or "en"
+        return {"brief_md": compile_brief(concepts, name, lang=lang),
+                "name": name, "lang": lang}
     raise HTTPException(400, f"unknown action {action}")
 
 

@@ -25,7 +25,8 @@ async def maestro(action: str = "parse", body: dict = Body(default={})):
     yaml_text = body.get("yaml") or ""
     parsed = parse_yaml(yaml_text)
     if action == "parse":
-        return parsed
+        # Frontend reads `data.parsed.steps`, so wrap consistently with simulate
+        return {"parsed": parsed}
     if action == "simulate":
         return {"parsed": parsed, "trace": simulate_execution(parsed)}
     raise HTTPException(400, f"unknown action {action}")
