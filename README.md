@@ -62,6 +62,23 @@ Instead of building demo content from scratch for each client, you type one comm
 | Autonomous Agent | Agent that works 24/7 with boundaries | Scheduled Tasks |
 | Skill Governance | Deduplication, scoring, workflow orchestration | Catalog |
 
+## Deployment / 部署
+
+Two-layer cloud setup — see **[DEPLOY.md](DEPLOY.md)** for the full guide (EN + 中文):
+
+- **Vercel** hosts the static landing page (`docs/`) — a pure aggregation page, auto-deployed on push to `main`.
+- **Fly.io** runs one isolated app per demo (`sa-<name>.fly.dev`), each a FastAPI backend + static frontend in one container, scaling to **0 machines when idle** ($0 idle cost). A `sa-status` aggregator polls every demo's health.
+
+```bash
+# Deploy one demo (or --all) to Fly.io
+./scripts/deploy-demo.sh industrial-ai
+./scripts/deploy-demo.sh --all
+
+# Vercel: just push to main (auto-builds docs/)
+```
+
+> 双层架构:Vercel 托管静态汇总页,Fly.io 每个 demo 一个独立应用、空闲缩到 0 实现零成本。完整步骤与排错见 [DEPLOY.md](DEPLOY.md)。
+
 ## Live Demos
 
 ### Org-Uplift Game (Web App)
