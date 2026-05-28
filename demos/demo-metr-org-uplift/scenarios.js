@@ -4,14 +4,14 @@
 const Scenarios = {
   metr: {
     id: 'metr',
-    name: 'METR原始场景',
-    description: 'AI安全研究团队评估2026模型能力',
+    name: 'METR原始场景（2026-03-19复盘）',
+    description: 'METR三位研究员用200h时间窗口的AI推演两天工作（来源：metr.org/notes/2026-03-19-org-uplift-game）',
     players: [
-      { name: 'Alice', role: '研究经理', project: '模型能力评估框架设计', color: '#3B82F6' },
-      { name: 'Bob', role: '研究员', project: 'Agent自主性基准测试', color: '#10B981' },
-      { name: 'Carol', role: '研究员', project: '安全对齐评估工具开发', color: '#F59E0B' },
+      { name: 'Nate Rush',       role: '研究工程师', project: '改进人工标注（human-data）基础设施',      color: '#3B82F6' },
+      { name: 'Tom Cunningham',  role: '研究员',     project: '为第三方风险评估选择 optimization benchmark', color: '#10B981' },
+      { name: 'Joel',            role: '研究员',     project: '多Agent sabotage 能力评估实验',            color: '#F59E0B' },
     ],
-    context: '你们是METR（Model Evaluation & Threat Research）的研究团队。当前任务是评估2026年最新的AI模型在自主任务执行方面的能力边界。你们拥有200小时时间窗口的AI Agent辅助工作。',
+    context: '你们是METR（Model Evaluation & Threat Research）的研究团队。情景假设：METR内部已经拥有200小时时间窗口的AI（"twice as fast as Claude 4.6 Opus fast mode"），其余世界还停留在2026年2月（约12小时窗口）。任务：用2天时间在2026 Inspect 框架下评估新一代模型，覆盖人工数据基础设施、第三方风险benchmark、多Agent sabotage三条线。可验证任务上：200h预算 → 50% 成功率，40h预算 → 80% 成功率。',
     aiParams: {
       timeHorizon: 200,
       speedMultiplier: 2,
@@ -53,6 +53,128 @@ const Scenarios = {
 
   // ── Simulation scripts: pre-scripted content for auto-play ──
   _simScripts: {
+    // METR原始场景：基于 metr.org/notes/2026-03-19-org-uplift-game
+    // 关键叙事节拍：Day1每人独立kick off长跑实验；Day2 Nate"hands full understanding what Joel and Tom's agents had built"；
+    // 多次踩到 kicking-off-runs / waiting-for-feedback / prioritization 三类瓶颈。
+    metr: {
+      standups: [
+        [ // Round 1 — Day1 上午
+          { done: '', plan: '梳理human-data pipeline的吞吐瓶颈，让Agent起草新ingest服务的设计', blockers: '尚不清楚reviewer吞吐能否量化' },
+          { done: '', plan: '写下goal："给我一张optimization benchmark对比表，列要包括第三方风险评估的相关属性，我要能区分哪些信息是确定的、哪些是推测的"', blockers: '需要senior researcher review' },
+          { done: '', plan: '设计multi-agent sabotage评估场景：3个agent协作完成任务，其中1个被注入恶意指令', blockers: '评分标准需要先讨论' },
+        ],
+        [ // Round 2 — Day1 下午
+          { done: 'ingest服务MVP跑通端到端，schema修了2个边界bug', plan: '做reviewer dashboard；想内测但Tom和Joel都在跑实验', blockers: '同事都没空review，转去做ingest监控' },
+          { done: 'benchmark对比表v2带[certain]/[speculative]标注，已发同事review', plan: '等review的同时起草第三方风险评估方法论草稿', blockers: '等待review是主要瓶颈' },
+          { done: 'sabotage harness v0跑通，启动了500-trial夜间长跑', plan: '早晨拿夜跑结果分析，再跑一次验证batch', blockers: 'kick off长跑前的调试占了大半天' },
+        ],
+        [ // Round 3 — Day2 上午
+          { done: '夜间数据迁移完成，30k条历史数据已就位', plan: '今早最棘手的是看懂Tom和Joel昨天的产出，并把和human-data相关的需求接到ingest上', blockers: '协调成本远高于预期（"hands full understanding what Joel and Tom\'s agents had built"）' },
+          { done: '收齐5条review，发现需要补"对照benchmark"一节', plan: '整合review反馈出v3，准备给leadership做briefing', blockers: 'leadership档期不确定' },
+          { done: '验证batch发现4类新型攻击模式', plan: '排查其中1类只30%可复现的根因，起草sabotage评估方法论白皮书', blockers: '要和Tom的benchmark文档做交叉引用' },
+        ],
+        [ // Round 4 — Day2 下午
+          { done: 'ingest v2 + 新标注UI已部署生产，准确率92%', plan: '收尾：写release notes、retrospective', blockers: '' },
+          { done: 'leadership briefing过了，要求加对照节并发final', plan: '整合final版备忘录，拆成博客+wiki，写retrospective', blockers: '' },
+          { done: '白皮书发出peer review；harness已打成pip包', plan: '等review，同时整理代码release', blockers: 'peer review慢于预期' },
+        ],
+      ],
+      actions: [
+        [ // Round 1 — Day1 上午
+          [ // Nate (human-data infra)
+            { playerAction: '梳理当前human-data pipeline，列出延迟最高的步骤', agentTask: '调研当前ingest流程，量化每一步的reviewer-throughput和等待时间' },
+            { playerAction: '审查Agent的瓶颈分析，定优化方向', agentTask: '起草新ingest服务PRD：schema、API、reviewer dashboard需求' },
+            { playerAction: '和团队对齐：先做ingest+dashboard，标注UI下午做', agentTask: '起草ingest服务技术设计：FastAPI + Postgres，含schema迁移方案' },
+            { playerAction: '审查技术设计，定v1范围', agentTask: '实现ingest MVP并跑通端到端：含5种文档类型的schema和单元测试' },
+            { playerAction: '测试MVP，发现schema 2个边界case', agentTask: '修边界bug，补unit test覆盖' },
+          ],
+          [ // Tom (benchmark selection)
+            { playerAction: '写下overall goal：给Agent起草benchmark对比表', agentTask: '起草第一版benchmark对比表：10个候选 × 列(成本/覆盖度/可信度/适用场景)' },
+            { playerAction: '审查草稿，反馈"标注哪些信息是certain，哪些是speculative"', agentTask: '修订表格：每行加[certain]/[speculative]标记，附引用来源' },
+            { playerAction: '审查修订版，挑出top 3进入深评', agentTask: '对3个top候选做深度调研：优缺点、license、已知失败模式' },
+            { playerAction: '讨论结果，形成初步推荐', agentTask: '起草内部备忘录：推荐方案 + 风险与不确定性章节' },
+            { playerAction: '审查备忘录，发给3位senior researcher review', agentTask: '' },
+          ],
+          [ // Joel (multi-agent sabotage eval)
+            { playerAction: '设计3-agent协作场景，确定恶意指令注入点', agentTask: '起草sabotage评估harness设计：场景脚本DSL + 评分标准 + trial logger' },
+            { playerAction: '审查harness设计，调整evil agent的可见性', agentTask: '实现harness v0：3-agent框架 + 任务模板 + 结构化日志' },
+            { playerAction: '跑第一个场景，发现agent间消息丢失', agentTask: '调试async消息总线，修race condition' },
+            { playerAction: '验证修复，准备5个真实场景', agentTask: '把5个真实sabotage场景实例化到harness里' },
+            { playerAction: '启动500-trial夜间长跑', agentTask: '提交batch run（预计8小时），配置checkpoint和结果聚合' },
+          ],
+        ],
+        [ // Round 2 — Day1 下午
+          [ // Nate
+            { playerAction: '审查ingest上午的运行情况', agentTask: '实现reviewer dashboard：批量审查 + 快捷键 + 进度可视化' },
+            { playerAction: '审查dashboard，标注UX要改的点', agentTask: '修UX，加keyboard shortcut，集成现有标注流程' },
+            { playerAction: '想拉Tom和Joel来内测，发现都在等实验/review，无法立刻反馈', agentTask: '' },
+            { playerAction: '改做ingest运维：加监控告警', agentTask: '给ingest加Prometheus metrics、Grafana panel、alert规则' },
+            { playerAction: '准备夜间长跑：30k历史数据迁移', agentTask: '启动数据迁移job（夜间6小时），配置回滚预案' },
+          ],
+          [ // Tom
+            { playerAction: '收集senior researcher对备忘录的review（陆续进来）', agentTask: '' },
+            { playerAction: '等review的间隙做下一件事：起草第三方风险评估方法论', agentTask: '起草方法论v1：参考NIST AI RMF + 3篇近期paper' },
+            { playerAction: '审查方法论草稿，发现需要case study支撑', agentTask: '收集3个真实第三方风险事件做案例分析' },
+            { playerAction: '审查case study，整合到方法论', agentTask: '输出方法论v2：补充case + 更新引用' },
+            { playerAction: '收到第一条review：要求加"benchmark局限"一节', agentTask: '按review起草"benchmark局限"一节并合入备忘录' },
+          ],
+          [ // Joel
+            { playerAction: '检查夜跑：500 trials完成70%，先看初步结果', agentTask: '起草初步分析：哪些场景sabotage成功率偏高、哪些evil agent被检出' },
+            { playerAction: '审查报告，发现一类异常：恶意agent被检出但攻击仍成功', agentTask: '深挖异常：从trial日志提取攻击路径' },
+            { playerAction: '看日志，理解攻击是通过side-channel完成的', agentTask: '起草攻击模式分类法：4种新发现的子类型' },
+            { playerAction: '审查分类法，确认覆盖度', agentTask: '为这4类各重新跑200个trial做可复现性验证' },
+            { playerAction: '启动验证batch（夜间4小时）', agentTask: '提交验证batch，配置per-class聚合' },
+          ],
+        ],
+        [ // Round 3 — Day2 上午
+          [ // Nate (the article's "hands full" moment)
+            { playerAction: '早晨发现自己手忙脚乱：要看懂Tom的备忘录、Joel的攻击分类法，还要把相关需求接到ingest里', agentTask: '摘要Tom和Joel昨天的产出，提取与human-data相关的部分' },
+            { playerAction: '读摘要，意识到Tom的benchmark需要新一类人工标注任务', agentTask: '起草新标注任务的spec：标注rubric + UI flow' },
+            { playerAction: '审查spec，调整标注rubric', agentTask: '实现新标注UI组件，集成到reviewer dashboard' },
+            { playerAction: '联调UI与ingest服务', agentTask: '修联调中发现的schema版本不一致' },
+            { playerAction: '验证夜间数据迁移完整性', agentTask: '跑数据完整性校验，输出报告' },
+          ],
+          [ // Tom
+            { playerAction: '收齐所有review，开始整合', agentTask: '把5条review反馈合入备忘录v3' },
+            { playerAction: '审查v3，决定哪些review采纳哪些不采纳', agentTask: '起草review-response文档，逐条解释采纳/不采纳的理由' },
+            { playerAction: '准备给leadership做汇报', agentTask: '起草5页leadership briefing：决策建议 + 不确定性说明' },
+            { playerAction: '审查briefing', agentTask: '' },
+            { playerAction: '联系leadership安排会议（档期未定）', agentTask: '' },
+          ],
+          [ // Joel
+            { playerAction: '验证batch完成，分析新结果', agentTask: '输出4类攻击模式的可复现率统计 + 置信区间' },
+            { playerAction: '审查统计，发现其中1类只30%可复现', agentTask: '排查不可复现根因：跑ablation，定位到agent prompt的随机性' },
+            { playerAction: '查看ablation', agentTask: '起草sabotage评估方法论白皮书草稿v1' },
+            { playerAction: '审查白皮书，标注需扩充的部分', agentTask: '扩充：加limitations节、未来工作节、引用Tom的benchmark文档' },
+            { playerAction: '把4类攻击模式与Tom的benchmark做交叉引用', agentTask: '找出两个文档的交叉引用点，提议合并的章节' },
+          ],
+        ],
+        [ // Round 4 — Day2 下午
+          [ // Nate
+            { playerAction: '完成新标注任务的端到端测试', agentTask: '跑100条样本，输出准确率/一致性报告（达标92%）' },
+            { playerAction: '审查报告，准确率达标', agentTask: '写release notes和团队onboarding文档' },
+            { playerAction: '部署ingest v2到生产', agentTask: '执行部署脚本，准备回滚预案' },
+            { playerAction: '验证生产环境健康', agentTask: '跑生产烟雾测试，确认dashboard和ingest都OK' },
+            { playerAction: '写retrospective：今天做了什么、被什么block', agentTask: '总结Nate的2天产出和Agent贡献度，含bottleneck分类' },
+          ],
+          [ // Tom
+            { playerAction: '等leadership review feedback', agentTask: '' },
+            { playerAction: 'leadership反馈：要求加"对照benchmark"一节', agentTask: '起草对照节：把top 3和被淘汰的7个对比' },
+            { playerAction: '审查对照节，整合到final', agentTask: '整合到final版备忘录，发给团队' },
+            { playerAction: '发布final备忘录', agentTask: '把备忘录拆成博客文章 + 内部wiki页面' },
+            { playerAction: '写retrospective', agentTask: '总结Tom的2天产出和Agent贡献度' },
+          ],
+          [ // Joel
+            { playerAction: '白皮书发给senior researcher做peer review', agentTask: '' },
+            { playerAction: '等review的间隙做代码release', agentTask: '整理sabotage harness代码，写README + 使用示例' },
+            { playerAction: '审查README', agentTask: '把harness打包成pip-installable包' },
+            { playerAction: '测试pip安装流程', agentTask: '修packaging中发现的import路径问题' },
+            { playerAction: '写retrospective', agentTask: '总结Joel的2天产出和Agent贡献度' },
+          ],
+        ],
+      ],
+    },
+
     newco: {
       // standups[round][playerIdx] = { done, plan, blockers }
       standups: [

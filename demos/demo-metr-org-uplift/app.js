@@ -322,7 +322,7 @@ const App = (() => {
   async function runAutoSimulation() {
     const script = Scenarios._simScripts?.[state.scenario];
     if (!script) {
-      alert('当前场景暂无模拟脚本，请选择 NewCo客服产品 场景');
+      alert('当前场景暂无模拟脚本。已支持自动模拟的场景：METR原始场景 / NewCo客服产品');
       state.phase = 'setup';
       render();
       return;

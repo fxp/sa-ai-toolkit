@@ -23,6 +23,12 @@
 | 12 | 12-mobile-testing.md | 移动端自动化测试 | 跨平台UI测试 | ★★★★★ (5/10) | |
 | 13 | 13-group-intelligence.md | 群体智能推演 | 多Agent博弈模拟 | ★★★★★★★★★ (9/10) | |
 | 14 | 14-ralph-loop.md | Ralph自主迭代Loop | 自主反思与改进 | ★★★★★★★ (7/10) | |
+| 15 | 15-bid-review.md | 标书智能审查 | 文档质量看门 | ★★★★★★★★ (8/10) | |
+| 16 | 16-doc-consistency.md | 文档一致性检查 | 文档质量看门 | ★★★★★★★ (7/10) | |
+| 17 | 17-contract-approval.md | 合同智能审批 | 文档质量看门 | ★★★★★★★★ (8/10) | |
+| 18 | 18-visual-qc.md | 外观质检 | 视觉质量看门 | ★★★★★★★ (7/10) | |
+
+> **Demo 15-18 来自 Enterprise AI Training 项目 merge**：四个工业垂直 Demo，配套可运行 Python 代码在 `methodology/demo-templates-vertical/`。
 
 ---
 

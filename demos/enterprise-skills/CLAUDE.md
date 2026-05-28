@@ -162,6 +162,24 @@ python3.11 outputs/{slug}/newco_crew.py --run-tool kb # 单工具测试
 
 ---
 
+## 方法论扩展 (methodology/)
+
+> 2026-04 从 Enterprise AI Training 项目 merge 进来的培训方法论与垂直 Demo。
+
+- **`methodology/pre-night-interview.md`** — D-1 前夜深度对话 90 分钟模板（央国企培训关键差异化）
+- **`methodology/full-workflow-demo.md`** — D-7→D+1 全流程模拟（中航锂电案例）
+- **`methodology/training-architecture.md`** — 5 层 AI 需求金字塔 + 120/60/30 分钟三档日程
+- **`methodology/pain-point-framework.md`** — 12 节点价值链痛点扫描
+- **`methodology/query-templates.md`** — 12 类 Query 骨架 + Browser-Use 自动化场景
+- **`methodology/demo-templates-vertical/`** — 4 个工业垂直 Demo 可运行 .py（对应 demo-library 15-18）
+- **`qa-agent/qa_agent.py`** — 培训现场 QA Agent（8 类 33+ FAQ KB + LLM 兜底）
+- **`qa-agent/pain_point_generator.py`** — 输入企业名 → LLM 生成痛点+Demo 匹配的 CLI
+- **`skills/{gen,customize,present}/`** — Claude Code Skill 形式（替代 generator.py 的 LLM-native 入口）
+
+详见 `methodology/README.md`。
+
+---
+
 ## Demo库 (14个模板)
 
 每个模板位于 `demo-library/` 目录，包含：
